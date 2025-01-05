@@ -12,7 +12,7 @@ const CropsPage = () => {
     useEffect(() => {
         const fetchCrops = async () => {
             try {
-                const response = await axios.get('http://localhost:5000/recommended-crops');
+                const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/recommended-crops`);
                 setCrops(response.data);
             } catch (error) {
                 console.error('Error fetching crops:', error);
@@ -25,14 +25,13 @@ const CropsPage = () => {
         fetchCrops();
     }, []);
 
-  
-
     if (error) return <div className="text-center mt-8 text-red-500">{error}</div>;
 
     // Function to create URL-friendly slug from crop name
     const createSlug = (name) => {
         return name.toLowerCase().replace(/\s+/g, '-').replace(/[^\w\-]+/g, '');
     };
+
     return (
         <div className="container mx-auto px-4 py-8 bg-green-500/10">
             <h1 className="text-3xl  text-center mb-8">Crops</h1>
@@ -57,4 +56,3 @@ const CropsPage = () => {
 };
 
 export default CropsPage;
-

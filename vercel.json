@@ -1,10 +1,10 @@
 {
-  "build": {
-    "env": {
-      "NODE_ENV": "production"
-    }
-  },
-  "engines": {
-    "node": "16.x"
-  }
+     "builds": [
+        { "src": "api/**/*.js", "use": "@vercel/node" }
+    ],
+    "routes": [
+        { "src": "/.*", "dest": "/" }
+    ]
+    
 }
+
