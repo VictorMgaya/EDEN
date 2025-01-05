@@ -1,0 +1,13 @@
+/* Ensures the map is positioned on the left side */
+.map-container {
+  width: 75%; /* Adjust the width as needed */
+  height: 100vh; /* Full viewport height */
+  float: left; /* Float to the left */
+  border-right: 1px solid #ccc; /* Optional: Add a border to separate sections */
+}
+
+/* Optional: Styling for the rest of the content */
+.content {
+  margin-left: 50%; /* Matches the map width */
+  padding: 20px;
+}
