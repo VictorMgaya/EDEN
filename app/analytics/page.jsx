@@ -60,6 +60,7 @@ function AnalyticsPage() {
     <div className="responsive-container rounded-lg">
       {/* Map Section */}
       <div
+        className="container mx-auto px-4 py-8      bg-green-500/10";
         style={{
           flex: 3,
           zIndex: 0,
