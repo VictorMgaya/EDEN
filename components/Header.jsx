@@ -74,12 +74,13 @@ const Header = () => {
       <header
   className={` header py-2 md:py-4 xl:py-6 rounded-2xl ${
     currentTheme === "light"
-      ? "text-black bg-gradient-to-r from-blue-500 to-green-500 p-6 md:p-10"
-      : "text-white bg-gradient-to-r from-gray-900 to-green-950 p-6 md:p-10"
-  } fixed top-0 left-0 right-0 z-10 font-primary`}
+      ? "text-black bg-gradient-to-r from-blue-500/90 to-green-500/90 p-6 md:p-10"
+      : "text-white bg-gradient-to-r from-gray-900/95 to-green-950/95 p-6 md:p-10"
+  } justify-items-center z-10 font-primary`}
 >
         <div className="container mx-auto flex justify-between items-center">
           {/* Logo */}
+       
           <Link href="/" className="flex items-center gap-2">
             <h1 className="text-xl md:text-3xl font-bold-200 ">
               Eden
@@ -88,75 +89,19 @@ const Header = () => {
 
           {/* Search bar */}
           <div className="hidden md:flex items-center gap-4 relative">
-            <input
+                        <input
               type="text"
-              placeholder={`Search in ${searchCategory}...`}
+              placeholder={`S e a r c h . . . .`}
               className={`px-4 py-2 rounded-lg border ${currentTheme === "light" ? "border-black" : "border-white"} bg-${currentTheme === "light" ? "white" : "green-900"} text-${currentTheme === "light" ? "black" : "white"}`}
-              onChange={(e) => {
-                if (searchCategory === "Location") {
-                  fetchLocationSuggestions(e.target.value);
-                }
-              }}
+            
             />
-            <Button type="button" className={`${currentTheme === "light" ? "bg-green-500" : "bg-green-900"}`}
-              onClick={() => {
-                if (searchCategory === "Location" && locationSuggestions.length > 0) {
-                  const topSuggestion = locationSuggestions[0];
-                  const url = new URL(window.location.href);
-                  url.searchParams.set("lon", topSuggestion.geometry.lng);
-                  url.searchParams.set("lat", topSuggestion.geometry.lat);
-                  window.location.href = url.toString();
-                }
-              }}
-            >
+            <Button type="button" className={`${currentTheme === "light" ? "bg-green-500" : "bg-green-900"}`}>
               <Search />
-            </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  className={`px-4 py-2 rounded-lg border ${currentTheme === "light" ? "border-black" : "border-white"} bg-${currentTheme === "light" ? "green-500" : "green-900"} text-${currentTheme === "light" ? "black" : "white"} flex items-center gap-2`}
-                >
-                  {searchCategory}<ChevronDown />
-                </Button>
-              </DropdownMenuTrigger>
-
-              <DropdownMenuContent className={`${currentTheme === "light" ? "text-black bg-green-400" : "text-white bg-green-900"} padding-2 font-primary`}>
-                <DropdownMenuItem onClick={() => setSearchCategory("General")}><Home />General</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setSearchCategory("Location")}><MapPin />Location</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setSearchCategory("Description")}><BookOpen />Description</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setSearchCategory("Community")}><ShoppingBag />Products</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            {searchCategory === "Location" && (
-              <Button 
-  type="button" 
-  onClick={requestUserLocation} 
-  className={`${currentTheme === "light" ? "bg-green-500" : "bg-green-900"}`}
->
-  <MapPin />
-</Button>
-
-            )}
-            {searchCategory === "Location" && locationSuggestions.length > 0 && (
-              <div className={`absolute top-full left-0 right-0 bg-${currentTheme === "light" ? "white" : "green-900"} border ${currentTheme === "light" ? "border-t-green-950" : "border-green-500"} rounded-lg mt-2`}>
-                {locationSuggestions.map((suggestion) => (
-                  <button
-                    key={suggestion.geometry.lat + suggestion.geometry.lng}
-                    className={`px-4 py-2 hover:bg-${currentTheme === "light" ? "gray-200" : "green-700"} cursor-pointer w-full text-left`}
-                    onClick={() => {
-                      router.push(`/analytics?lon=${suggestion.geometry.lng}&lat=${suggestion.geometry.lat}`);
-                      setLocationSuggestions([]);
-                    }}
-                  >
-                    {suggestion.formatted}
-                  </button>
-                ))}
-              </div>
-            )}
+           </Button>
           </div>
 
           {/* Desktop Nav */}
-          <div className="hidden md:flex items-center gap-8">
+          <div className="hidden md:flex items-end gap-8">
             <Nav />
             <Button type="buton" ><User2Icon/></Button>
             <Button
@@ -169,24 +114,18 @@ const Header = () => {
           </div>
 
           {/* Mobile Nav */}
-          <div className="md:hidden flex items-center gap-4  font-primary">
+          <div className="md:hidden flex items-start gap-4  font-primary">
+            <input
+              type="text"
+              placeholder={`Search. . . .`}
+              className={`px-4 py-2 rounded-lg border ${currentTheme === "light" ? "border-black" : "border-white"} bg-${currentTheme === "light" ? "white" : "green-900"} text-${currentTheme === "light" ? "black" : "white"}`}
+            
+            />
             <Button
-              type="button"
-              onClick={() => {
-                setIsSearchOpen(!isSearchOpen);
-                if (searchCategory === "Location" && locationSuggestions.length > 0) {
-                  const topSuggestion = locationSuggestions[0];
-                  const url = new URL(window.location.href);
-                  url.searchParams.set("lon", topSuggestion.geometry.lng);
-                  url.searchParams.set("lat", topSuggestion.geometry.lat);
-                  window.location.href = url.toString();
-                }
-              }}
-              className={`${currentTheme === "light" ? "bg-green-500" : "bg-green-900"}`}
-            >
+              type="button">
               <Search />
             </Button>
-            <DropdownMenu className="font-primary">
+            <DropdownMenu className="font-primary align-start">
               <DropdownMenuTrigger asChild>
                 <Button className={`${currentTheme === "light" ? "bg-green-500" : "bg-green-900"}`}>
                   <Menu />  
@@ -196,10 +135,10 @@ const Header = () => {
                 <DropdownMenuItem >
                   <Button type="button" className={` px-3 py-2 rounded-lg ${currentTheme === "light" ? "bg-green-500" : "bg-green-950"}`}><User /></Button>Account
                 </DropdownMenuItem>
-                <DropdownMenuItem url="/">
+                <DropdownMenuItem hrfe="/">
                   <Button type="button" className={` px-3 py-2 rounded-lg ${currentTheme === "light" ? "bg-green-500" : "bg-green-950"}`}><Home /></Button>Home
                 </DropdownMenuItem>
-                <DropdownMenuItem url="/analytics">
+                <DropdownMenuItem hrfe="./analytics">
                   <Button type="button"  className={` px-3 py-2 rounded-lg ${currentTheme === "light" ? "bg-green-500" : "bg-green-950"}`}><BarChart2 /></Button>Analytics
                 </DropdownMenuItem>
                 <DropdownMenuItem url="/market">
@@ -230,75 +169,6 @@ const Header = () => {
             </DropdownMenu>
           </div>
         </div>
-         {isSearchOpen && (
-          <div className={`md:hidden flex justify-center mt-4 relative ${currentTheme === "light" ? "text-black bg-gradient-to-t from-blue-500 to-green-500 p-6 md:p-10" : "text-white bg-gradient-to-r from-gray-900 to-green-950 p-6 md:p-10 "} font-primary`}>
-            <input
-              type="text"
-              placeholder={`Search in ${searchCategory}...`}
-              className={`px-4 py-2 rounded-lg border ${currentTheme === "light" ? "border-black" : "border-white"} bg-${currentTheme === "light" ? "white" : "green-900"} text-${currentTheme === "light" ? "black" : "white"}`}
-              onChange={(e) => {
-                if (searchCategory === "Location") {
-                  fetchLocationSuggestions(e.target.value);
-                }
-              }}
-            />
-            <Button className={`${currentTheme === "light" ? "bg-green-500" : "bg-green-900"}`}>
-              <Search />
-            </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button className={`px-4 py-2 rounded-lg border ${currentTheme === "light" ? "border-black " : "border-white"} bg-${currentTheme === "light" ? "green-500" : "green-900"} text-${currentTheme === "light" ? "black" : "white"} flex items-center gap-2`}>
-                   <ChevronDown />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className={`${currentTheme === "light" ? "text-black bg-green-500" : "text-white bg-green-900"} font-primary`}>
-                <DropdownMenuItem onClick={() => setSearchCategory("General")}><Home/>General</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setSearchCategory("Location")}><MapPin/>Location</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setSearchCategory("Description")}><BookOpen/>Description</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setSearchCategory("Community")}><ShoppingBag/>Products</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            {searchCategory === "Location" && (
-  <Button 
-    type="button" 
-   onClick={ requestUserLocation }
-    
-    className={`${currentTheme === "light" ? "bg-green-500" : "bg-green-900"}`}
-  >
-    <MapPin />
-  </Button>
-)}
-
-{searchCategory === "Location" && locationSuggestions.length > 0 && (
-  <div
-    className={`absolute top-full left-0 right-0 z-50 bg-${currentTheme === "light" ? "white" : "green-900"} border ${currentTheme === "light" ? "border-black" : "border-white"} rounded-lg mt-2`}
-    style={{
-      maxHeight: '300px', 
-      overflowY: 'auto', 
-      position: 'absolute', 
-      width: '100%',
-      boxSizing: 'border-box', 
-    }}
-  >
-    {locationSuggestions.map((suggestion) => (
-      <button
-        key={suggestion.geometry.lat + suggestion.geometry.lng}
-        className={`px-4 py-2 hover:bg-${currentTheme === "light" ? "gray-200" : "green-700"} cursor-pointer w-full text-left`}
-        onClick={() => {
-          router.push(`/analytics?lon=${suggestion.geometry.lng}&lat=${suggestion.geometry.lat}`);
-          setLocationSuggestions([]);
-          window.location.href = `/analytics?lon=${suggestion.geometry.lng}&lat=${suggestion.geometry.lat}`;
-         setLocationSuggestions([]);
-        }}
-      >
-        {suggestion.formatted}
-      </button>
-    ))}
-  </div>
-)}
-
-          </div>
-        )}
       </header>
     </>
   );

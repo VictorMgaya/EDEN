@@ -5,8 +5,6 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
-import { SpeedInsights } from "@vercel/speed-insights/next"
-import { Analytics } from "@vercel/analytics/react"
 
 //components
 import Header from "@/components/Header";
@@ -37,11 +35,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={Lexend.variable}
-        style={{
-          marginTop: "75px",
-        }}
-      >
+  className={Lexend.variable}
+  
+>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
@@ -54,8 +50,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           ) : (
             children
           )}
-          <SpeedInsights />
-          <Analytics />
         </ThemeProvider>
       </body>
     </html>

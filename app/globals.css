@@ -65,14 +65,14 @@
   }
   body {
     background-color: var(--background-light);
-    color: black;
+    color: linear-gradient(to right, rgb(1, 1, 38), rgb(1, 29, 6));
     .dark & {
       background-color: var(--background-dark);
-      color: white;
+      color: linear-gradient(to right, rgb(119, 170, 215), rgb(202, 255, 213));
     }
 
     font-family: var(--font-lexend), monospace;
-   }
+  }
 }
 
 /* NProgress styles */
