@@ -36,7 +36,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" suppressHydrationWarning>
       <body
   className={Lexend.variable}
-  
+  style={{
+    marginTop: "75px",
+    position: "relative", // Ensures it doesn't adjust based on other elements
+    top: "0", // Prevents any unintentional shifting
+  }}
 >
         <ThemeProvider
           attribute="class"

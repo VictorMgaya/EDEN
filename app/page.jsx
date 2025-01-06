@@ -28,7 +28,7 @@ export default function Home() {
             setLocation({ lat: latitude, lon: longitude });
 
             // Update the URL with the user's location
-            router.push(`/analytics?lon=${longitude}&lat=${latitude}`, undefined, { shallow: true });
+            router.push(`?lon=${longitude}&lat=${latitude}`, undefined, { shallow: true });
           },
           (error) => {
             // Log the error properly with a fallback message

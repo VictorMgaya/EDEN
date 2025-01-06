@@ -72,15 +72,14 @@ const Header = () => {
   return (
     <>
       <header
-  className={` header py-2 md:py-4 xl:py-6 rounded-2xl ${
+  className={` header py-2 md:py-6 xl:py-6 rounded-b-2xl ${
     currentTheme === "light"
       ? "text-black bg-gradient-to-r from-blue-500/90 to-green-500/90 p-6 md:p-10"
       : "text-white bg-gradient-to-r from-gray-900/95 to-green-950/95 p-6 md:p-10"
-  } justify-items-center z-10 font-primary`}
+  } fixed top-0 left-0 right-0 z-10 font-primary`}
 >
         <div className="container mx-auto flex justify-between items-center">
           {/* Logo */}
-       
           <Link href="/" className="flex items-center gap-2">
             <h1 className="text-xl md:text-3xl font-bold-200 ">
               Eden
@@ -95,7 +94,7 @@ const Header = () => {
               className={`px-4 py-2 rounded-lg border ${currentTheme === "light" ? "border-black" : "border-white"} bg-${currentTheme === "light" ? "white" : "green-900"} text-${currentTheme === "light" ? "black" : "white"}`}
             
             />
-            <Button type="button" className={`${currentTheme === "light" ? "bg-green-500" : "bg-green-900"}`}>
+            <Button type="button" className={`${currentTheme === "light" ? "bg-green-600/90" : "bg-green-950/90"}`}>
               <Search />
            </Button>
           </div>
@@ -135,10 +134,10 @@ const Header = () => {
                 <DropdownMenuItem >
                   <Button type="button" className={` px-3 py-2 rounded-lg ${currentTheme === "light" ? "bg-green-500" : "bg-green-950"}`}><User /></Button>Account
                 </DropdownMenuItem>
-                <DropdownMenuItem hrfe="/">
+                <DropdownMenuItem url="/">
                   <Button type="button" className={` px-3 py-2 rounded-lg ${currentTheme === "light" ? "bg-green-500" : "bg-green-950"}`}><Home /></Button>Home
                 </DropdownMenuItem>
-                <DropdownMenuItem hrfe="./analytics">
+                <DropdownMenuItem url="/analytics">
                   <Button type="button"  className={` px-3 py-2 rounded-lg ${currentTheme === "light" ? "bg-green-500" : "bg-green-950"}`}><BarChart2 /></Button>Analytics
                 </DropdownMenuItem>
                 <DropdownMenuItem url="/market">
