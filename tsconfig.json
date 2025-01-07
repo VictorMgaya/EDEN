@@ -19,9 +19,20 @@
       }
     ],
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "@/models/*": ["models/*"],
+      "@/lib/*": ["lib/*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    "components/charts/BarChart.jsx",
+    "components/charts/BarChart.jsx",
+    "app/page.jsx",
+    "components/charts/BarChart.jsx"
+  ],
   "exclude": ["node_modules"]
 }

@@ -6,7 +6,7 @@ import dynamic from 'next/dynamic';
 
 // Dynamic imports for charts with SSR disabled
 const AreaChart = dynamic(() => import('@/components/charts/AreaChartGradient'), { ssr: false });
-const BarChart = dynamic(() => import('@/components/charts/BarChart'), { ssr: false });
+const SoilClassChart = dynamic(() => import('@/components/charts/BarChart'), { ssr: false });
 const LineChart = dynamic(() => import('@/components/charts/LineChart'), { ssr: false });
 const PieChart = dynamic(() => import('@/components/charts/PieChart'), { ssr: false });
 
@@ -56,7 +56,7 @@ export default function Home() {
   return (
     <div className="grid gap-6 p-6 md:grid-cols-2 lg:grid-cols-2">
       {/* Pass location to each chart if necessary */}
-      <BarChart location={location} />
+      <SoilClassChart location={location} />
       <AreaChart location={location} />
       <LineChart location={location} />
       <PieChart location={location} />

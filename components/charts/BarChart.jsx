@@ -1,3 +1,5 @@
+// BarChart.jsx
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -16,40 +18,44 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
+import { fetchSoilData } from "./SoilData";
 import { useRouter } from "next/navigation";
 
 export default function SoilClassChart() {
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const router = useRouter();
 
-  const fetchSoilData = async (longitude, latitude) => {
-    try {
-      const response = await fetch(
-        `https://rest.isric.org/soilgrids/v2.0/classification/query?lon=${longitude}&lat=${latitude}&number_classes=5`
-      );
-      const data = await response.json();
-      const formattedData = data.wrb_class_probability.map(([className, value]) => ({
-        soilClass: className,
-        probability: value,
-        fill: "hsl(var(--chart-" + Math.floor(Math.random() * 5 + 1) + "))",
-      }));
-      setChartData(formattedData);
-    } catch (error) {
-      console.error("Failed to fetch soil data:", error);
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    if (!router.isReady) return; // Ensure the router is ready
+
+    // Parse coordinates as floats
+    const { lon, lat } = router.query;
+
+    // Debugging the coordinates
+    console.log("Router Query:", lon, lat);
+
+    const longitude = parseFloat(lon);
+    const latitude = parseFloat(lat);
+
+    if (!isNaN(longitude) && !isNaN(latitude)) {
+      // Fetch soil data
+      setLoading(true);
+      fetchSoilData(longitude, latitude)
+        .then(data => {
+          setChartData(data);
+          setLoading(false);
+        })
+        .catch(error => {
+          setError(error.message);
+          setLoading(false);
+        });
+    } else {
+      setError("Invalid coordinates provided");
+      setLoading(false); // Stop loading if coordinates are invalid
     }
-  };
-useEffect(() => {
-  if (!router.isReady) return; // Ensure the router is ready
-  const { lon, lat } = router.query;
-  if (lon && lat) {
-    fetchSoilData(lon, lat);
-  } else {
-    setLoading(false); // Avoid infinite loading if lon and lat are missing
-  }
-}, [router.isReady, router.query]);
+  }, [router.isReady, router.query]);
 
   const chartConfig = {
     probability: {
@@ -58,7 +64,7 @@ useEffect(() => {
   };
 
   return (
-    <Card>
+    <Card className="bg-green-500/20 backdrop-blur-md font-primary">
       <CardHeader>
         <CardTitle>Soil Class Rankings</CardTitle>
         <CardDescription>Probability distribution of soil classes</CardDescription>
@@ -66,6 +72,8 @@ useEffect(() => {
       <CardContent>
         {loading ? (
           <div>Loading...</div>
+        ) : error ? (
+          <div>{error}</div>
         ) : (
           <ChartContainer config={chartConfig}>
             <BarChart
@@ -86,7 +94,15 @@ useEffect(() => {
                 cursor={false}
                 content={<ChartTooltipContent hideLabel />}
               />
-              <Bar dataKey="probability" layout="vertical" radius={5} />
+              {chartData.map((entry, index) => (
+                <Bar
+                  key={index}
+                  dataKey="probability"
+                  layout="vertical"
+                  radius={5}
+                  fill={entry.highlight ? "hsl(var(--chart-1))" : `hsl(var(--chart-${Math.floor(Math.random() * 5 + 1)}))`} // Highlight the top class
+                />
+              ))}
             </BarChart>
           </ChartContainer>
         )}

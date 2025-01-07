@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation"; // Use next/navigation for useRoute
 import axios from "axios"; 
 
 
+
 // Components
 import Nav from "./Nav";
 
@@ -72,15 +73,15 @@ const Header = () => {
   return (
     <>
       <header
-  className={` header py-2 md:py-6 xl:py-6 rounded-b-2xl ${
+  className={` header sm:py-2 sm:px-2 py-3 md:py-4 xl:py-4 rounded-b-2xl align-content-start justify-between items-center flex-wrap ${
     currentTheme === "light"
       ? "text-black bg-gradient-to-r from-blue-500/90 to-green-500/90 p-6 md:p-10"
       : "text-white bg-gradient-to-r from-gray-900/95 to-green-950/95 p-6 md:p-10"
-  } fixed top-0 left-0 right-0 z-10 font-primary`}
+  } fixed top-0 left-0 right-0 z-10 font-primary animate-accordion-down easy-transition`}
 >
         <div className="container mx-auto flex justify-between items-center">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2">
+          <Link href="/" className="flex items-left gap-2">
             <h1 className="text-xl md:text-3xl font-bold-200 ">
               Eden
             </h1>
@@ -91,7 +92,7 @@ const Header = () => {
                         <input
               type="text"
               placeholder={`S e a r c h . . . .`}
-              className={`px-4 py-2 rounded-lg border ${currentTheme === "light" ? "border-black" : "border-white"} bg-${currentTheme === "light" ? "white" : "green-900"} text-${currentTheme === "light" ? "black" : "white"}`}
+              className={`px-4 py-2 rounded-2xl border ${currentTheme === "light" ? "border-black" : "border-white"} bg-${currentTheme === "light" ? "white" : "green-900"} text-${currentTheme === "light" ? "black" : "white"}`}
             
             />
             <Button type="button" className={`${currentTheme === "light" ? "bg-green-600/90" : "bg-green-950/90"}`}>
@@ -113,20 +114,21 @@ const Header = () => {
           </div>
 
           {/* Mobile Nav */}
-          <div className="md:hidden flex items-start gap-4  font-primary">
+          <div className="md:hidden flex items-center gap-4  font-primary">
             <input
               type="text"
               placeholder={`Search. . . .`}
-              className={`px-4 py-2 rounded-lg border ${currentTheme === "light" ? "border-black" : "border-white"} bg-${currentTheme === "light" ? "white" : "green-900"} text-${currentTheme === "light" ? "black" : "white"}`}
+              className={`py-2 px-1 rounded-2xl sm:flex-auto border ${currentTheme === "light" ? "border-black" : "border-white"} bg-${currentTheme === "light" ? "white" : "green-900"} text-${currentTheme === "light" ? "black" : "white"} `}
             
             />
             <Button
-              type="button">
+              type="button"
+              className={`${currentTheme === "light" ? "bg-green-500" : "bg-green-900"} py-2 px-2`}>
               <Search />
             </Button>
             <DropdownMenu className="font-primary align-start">
               <DropdownMenuTrigger asChild>
-                <Button className={`${currentTheme === "light" ? "bg-green-500" : "bg-green-900"}`}>
+                <Button className={`${currentTheme === "light" ? "bg-green-500" : "bg-green-900"} px-2 py-2`}>
                   <Menu />  
                 </Button>
               </DropdownMenuTrigger>
