@@ -5,6 +5,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
+import Footer from "@/components/footer"
 
 //components
 import Header from "@/components/Header";
@@ -34,6 +35,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <meta name="google-adsense-account" content="ca-pub-9431888211578782"></meta>
+      </head>
       <body
   className={Lexend.variable}
   style={{
@@ -55,6 +59,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             children
           )}
         </ThemeProvider>
+        <Footer />
       </body>
     </html>
   );
