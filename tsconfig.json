@@ -19,9 +19,7 @@
       }
     ],
     "paths": {
-      "@/*": ["./*"],
-      "@/models/*": ["models/*"],
-      "@/lib/*": ["lib/*"]
+      "@/*": ["./*"]
     }
   },
   "include": [
@@ -29,10 +27,10 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    "components/charts/BarChart.jsx",
-    "components/charts/BarChart.jsx",
+    "components/charts/BarChart.tsx",
+    "components/charts/BarChart.tsx",
     "app/page.jsx",
-    "components/charts/BarChart.jsx"
+    "components/charts/BarChart.tsx"
   ],
   "exclude": ["node_modules"]
 }

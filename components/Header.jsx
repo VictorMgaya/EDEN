@@ -7,6 +7,8 @@ import { Sun, Moon, Menu, User, Settings, Search, BarChart2, ChevronDown, MapPin
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation"; // Use next/navigation for useRouter
 import axios from "axios"; 
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+
 
 
 
@@ -19,7 +21,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { User2Icon } from "lucide-react";
 
 const Header = () => {
   const { theme, setTheme, resolvedTheme } = useTheme();
@@ -101,9 +102,13 @@ const Header = () => {
           </div>
 
           {/* Desktop Nav */}
-          <div className="hidden md:flex items-end gap-8">
+          <div className="hidden md:flex items-end gap-8 font-primary">
             <Nav />
-            <Button type="buton" ><User2Icon/></Button>
+            <Avatar>
+  <AvatarImage src="https://github.com/shadcn.png" />
+  <AvatarFallback>CN</AvatarFallback>
+</Avatar>
+
             <Button
               type="button"
               onClick={() => setTheme(currentTheme === "light" ? "dark" : "light")}
@@ -118,7 +123,7 @@ const Header = () => {
             <input
               type="text"
               placeholder={`Search. . . .`}
-              className={`py-2 px-1 rounded-2xl sm:flex-auto border ${currentTheme === "light" ? "border-black" : "border-white"} bg-${currentTheme === "light" ? "white" : "green-900"} text-${currentTheme === "light" ? "black" : "white"} `}
+              className={`py-2 px-2 w-28 rounded-2xl sm:flex-auto border ${currentTheme === "light" ? "border-black" : "border-white"} bg-${currentTheme === "light" ? "white" : "green-900"} text-${currentTheme === "light" ? "black" : "white"} `}
             
             />
             <Button
@@ -128,7 +133,7 @@ const Header = () => {
             </Button>
             <DropdownMenu className="font-primary align-start">
               <DropdownMenuTrigger asChild>
-                <Button className={`${currentTheme === "light" ? "bg-green-500" : "bg-green-900"} px-2 py-2`}>
+                <Button className={`${currentTheme === "light" ? "bg-green-500" : "bg-green-900"} px-3 py-3`}>
                   <Menu />  
                 </Button>
               </DropdownMenuTrigger>
