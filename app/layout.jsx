@@ -23,7 +23,7 @@ export const Metadata = {
   description: "{crop.description}",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({ children }) {
   const pathname = usePathname();
   const [loading, setLoading] = useState(true);
 
@@ -36,17 +36,27 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        {/* Google tag (gtag.js) */}
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-54BWW075M3"></script>
+        <script dangerouslySetInnerHTML={{
+          __html: `
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-54BWW075M3');
+          `
+        }} />
         <meta name="google-adsense-account" content="ca-pub-9431888211578782"></meta>
         <meta name="google-site-verification" content="xhS9AxO9_lnZW5qXS9B3tCziTO-v0E0pAv8OicFMsd4" />
       </head>
       <body
-  className={Lexend.variable}
-  style={{
-    marginTop: "75px",
-    position: "relative", // Ensures it doesn't adjust based on other elements
-    top: "0", // Prevents any unintentional shifting
-  }}
->
+        className={Lexend.variable}
+        style={{
+          marginTop: "75px",
+          position: "relative", // Ensures it doesn't adjust based on other elements
+          top: "0", // Prevents any unintentional shifting
+        }}
+      >
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

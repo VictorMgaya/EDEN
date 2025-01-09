@@ -55,11 +55,13 @@ export default function Page() {
           }}
         >
           <div style={{ display: "flex", alignItems: "flex-start", marginBottom: "16px" }}>
+
             <img
               src={randomCrop.imageUrl || "/default-crop-image.jpg"}
               alt={randomCrop.name}
+              width={200}
+              height={200}
               style={{
-                flex: "0 0 200px",
                 maxWidth: "200px",
                 height: "auto",
                 borderRadius: "12px",

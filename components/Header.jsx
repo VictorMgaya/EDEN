@@ -74,13 +74,24 @@ const Header = () => {
   return (
     <>
       <header
-  className={` header sm:py-2 sm:px-4 md:py-3 xl:py-1 rounded-b-2xl justify-center flex-auto ${
+  className={` header sm:py-2 sm:px-2 md:py-2 xl:py-1 rounded-b-2xl justify-center flex-auto ${
     currentTheme === "light"
       ? "text-black bg-gradient-to-r from-blue-500/90 to-green-500/90 p-6 md:p-10"
       : "text-white bg-gradient-to-r from-gray-900/95 to-green-950/95 p-6 md:p-10"
   } fixed top-0 left-0 right-0 z-10 font-primary animate-accordion-down easy-transition`}
 >
-  <meta name="google-adsense-account" content="ca-pub-9431888211578782"></meta>
+  {/* Google tag (gtag.js) */}
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-54BWW075M3"></script>
+<script>
+  {`
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments)}
+  gtag('js', new Date());
+
+  gtag('config', 'G-54BWW075M3');
+  `}
+</script>
+  <meta name="google-adsense-account" content="ca-pub-9431888211578782" />
   <meta name="google-site-verification" content="xhS9AxO9_lnZW5qXS9B3tCziTO-v0E0pAv8OicFMsd4" />
         <div className="container mx-auto flex justify-between items-center">
           {/* Logo */}
@@ -189,5 +200,4 @@ const Header = () => {
     </>
   );
 
-};
-export default Header; 
+};export default Header; 
