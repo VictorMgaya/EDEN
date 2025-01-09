@@ -30,7 +30,11 @@
     "components/charts/BarChart.tsx",
     "components/charts/BarChart.tsx",
     "app/page.jsx",
-    "components/charts/BarChart.tsx"
+    "components/charts/BarChart.tsx",
+    "app/crops/page.jsx",
+    "components/footer.jsx",
+    "components/footer.jsx",
+    "components/footer.jsx"
   ],
   "exclude": ["node_modules"]
 }

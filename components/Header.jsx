@@ -80,6 +80,7 @@ const Header = () => {
       : "text-white bg-gradient-to-r from-gray-900/95 to-green-950/95 p-6 md:p-10"
   } fixed top-0 left-0 right-0 z-10 font-primary animate-accordion-down easy-transition`}
 >
+  <meta name="google-adsense-account" content="ca-pub-9431888211578782"></meta>
         <div className="container mx-auto flex justify-between items-center">
           {/* Logo */}
           <Link href="/" className="flex items-left gap-2">
@@ -92,7 +93,7 @@ const Header = () => {
           <div className="hidden md:flex items-center gap-4 relative">
                         <input
               type="text"
-              placeholder={`S e a r c h . . . .`}
+              placeholder={`Type to Search...`}
               className={`px-4 py-2 rounded-2xl border ${currentTheme === "light" ? "border-black" : "border-white"} bg-${currentTheme === "light" ? "white" : "green-900"} text-${currentTheme === "light" ? "black" : "white"}`}
             
             />
@@ -104,11 +105,13 @@ const Header = () => {
           {/* Desktop Nav */}
           <div className="hidden md:flex items-end gap-8 font-primary">
             <Nav />
+            <Link
+                href="/auth">
             <Avatar>
   <AvatarImage src="https://github.com/shadcn.png" />
   <AvatarFallback>CN</AvatarFallback>
 </Avatar>
-
+</Link>
             <Button
               type="button"
               onClick={() => setTheme(currentTheme === "light" ? "dark" : "light")}
@@ -139,7 +142,13 @@ const Header = () => {
               </DropdownMenuTrigger>
               <DropdownMenuContent className={` ${currentTheme === "light" ? "text-black bg-green-400" : "text-white bg-green-950"} font-primary`}>
                 <DropdownMenuItem >
-                  <Button type="button" className={` px-3 py-2 rounded-lg ${currentTheme === "light" ? "bg-green-500" : "bg-green-950"}`}><User /></Button>Account
+                   <Link
+                href="/auth">
+            <Avatar>
+  <AvatarImage src="https://github.com/shadcn.png" />
+  <AvatarFallback>CN</AvatarFallback>
+</Avatar>
+</Link>My Account
                 </DropdownMenuItem>
                 <DropdownMenuItem url="/">
                   <Button type="button" className={` px-3 py-2 rounded-lg ${currentTheme === "light" ? "bg-green-500" : "bg-green-950"}`}><Home /></Button>Home

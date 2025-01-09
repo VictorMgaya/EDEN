@@ -1,0 +1,21 @@
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - echo "Starting pre-build phase"
+        - cp .env.local .env.production # Copy .env.local to .env.production for use in production builds
+        - npm ci
+    build:
+      commands:
+        - echo "Starting build phase"
+        - cat .env.production # Display the content of .env.production for debugging (optional)
+        - npm run build
+  artifacts:
+    baseDirectory: .next
+    files:
+      - "**/*"
+  cache:
+    paths:
+      - node_modules/**/*
+      - .next/cache/**/*

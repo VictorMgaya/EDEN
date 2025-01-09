@@ -21,7 +21,7 @@ const Nav = () => {
   const pathname = usePathname();
   return (
     <nav>
-      <ul className="flex items-centre gap-8">
+      <ul className="flex items-centre align-middle gap-8">
         {links.map((link, index) => {
           return (
             <li key={index}>
