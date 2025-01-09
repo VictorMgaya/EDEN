@@ -20,71 +20,51 @@ const EditCropPage = () => {
         imageUrl: ''
     });
     const [message, setMessage] = useState('');
+      const handleSearch = async () => {
+          try {
+              const response = await axios.get(`/api/crops?name=${searchTerm}`);
+              if (response.data && response.data.length > 0) {
+                  setCropData(response.data[0]); // Take the first matching crop
+                  setMessage('Crop found successfully');
+              } else {
+                  setMessage('Crop not found');
+                  setCropData({
+                      name: '',
+                      biologicalName: '',
+                      soilClass: '',
+                      avgGrowthTime: '',
+                      description: '',
+                      Kc: 0,
+                      infosources: '',
+                      imageUrl: ''
+                  });
+              }
+          } catch (error) {
+              console.error('Error searching for crop:', error);
+              setMessage('Error searching for crop');
+          }
+      };
 
-    const handleSearch = async () => {
-        try {
-            const response = await axios.get(`http://localhost:5000/admin/crop-by-name/${searchTerm}`);
-            if (response.data) {
-                setCropData(response.data);
-                setMessage('');
-            } else {
-                setMessage('Crop not found');
-                setCropData({
-                    name: '',
-                    biologicalName: '',
-                    soilClass: '',
-                    avgGrowthTime: '',
-                    description: '',
-                    Kc: '',
-                    infosources: '',
-                    imageUrl: ''
-                });
-            }
-        } catch (error) {
-            console.error('Error searching for crop:', error);
-            setMessage('Error searching for crop');
-        }
-    };
-
-    const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setCropData((prevData) => ({
-            ...prevData,
-            [name]: value,
-        }));
-    };
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        if (!cropData._id) {
-            setMessage('No crop selected for editing');
-            return;
-        }
-        try {
-            const response = await axios.put(`http://localhost:5000/admin/edit-crop/${cropData._id}`, cropData);
-            if (response.data) {
-                setMessage('Crop updated successfully!');
-                // Optionally, you can update the cropData state with the returned data
-                setCropData(response.data);
-            } else {
-                setMessage('Failed to update crop. Please try again.');
-            }
-        } catch (error) {
-            console.error('Error updating crop:', error);
-            if (error.response) {
-                // The request was made and the server responded with a status code
-                // that falls out of the range of 2xx
-                setMessage(`Failed to update crop. Server responded with ${error.response.status}: ${error.response.data}`);
-            } else if (error.request) {
-                // The request was made but no response was received
-                setMessage('Failed to update crop. No response received from server.');
-            } else {
-                // Something happened in setting up the request that triggered an Error
-                setMessage('Failed to update crop. Error: ' + error.message);
-            }
-        }
-    };
-
+      const handleInputChange = (e) => {
+          const { name, value, type } = e.target;
+          setCropData((prevData) => ({
+              ...prevData,
+              [name]: type === 'number' ? Number(value) : value,
+          }));
+      };
+      const handleSubmit = async (e) => {
+          e.preventDefault();
+          try {
+              const response = await axios.put(`/api/admin/crops`, cropData);
+              if (response.data) {
+                  setMessage('Crop updated successfully!');
+                  setCropData(response.data);
+              }
+          } catch (error) {
+              console.error('Error updating crop:', error);
+              setMessage('Failed to update crop: ' + error.message);
+          }
+      };
 
 
 
@@ -129,7 +109,7 @@ const EditCropPage = () => {
                                 type="text"
                                 name="biologicalName"
                                 value={cropData.biologicalName}
-                                onChange={handleChange}
+                                onChange={handleInputChange}
                                 className="w-full px-3 py-2 border rounded"
                                 required
                             />
@@ -140,7 +120,7 @@ const EditCropPage = () => {
                                 type="text"
                                 name="soilClass"
                                 value={cropData.soilClass}
-                                onChange={handleChange}
+                                onChange={handleInputChange}
                                 className="w-full px-3 py-2 border rounded"
                                 required
                             />
@@ -151,7 +131,7 @@ const EditCropPage = () => {
                                 type="text"
                                 name="avgGrowthTime"
                                 value={cropData.avgGrowthTime}
-                                onChange={handleChange}
+                                onChange={handleInputChange}
                                 className="w-full px-3 py-2 border rounded"
                                 required
                             />
@@ -161,7 +141,7 @@ const EditCropPage = () => {
                             <textarea
                                 name="description"
                                 value={cropData.description}
-                                onChange={handleChange}
+                                onChange={handleInputChange}
                                 className="w-full px-3 py-2 border rounded"
                                 required
                             />
@@ -172,7 +152,7 @@ const EditCropPage = () => {
                                 type="number"
                                 name="Kc"
                                 value={cropData.Kc}
-                                onChange={handleChange}
+                                onChange={handleInputChange}
                                 className="w-full px-3 py-2 border rounded"
                                 required
                             />
@@ -183,7 +163,7 @@ const EditCropPage = () => {
                                 type="text"
                                 name="infosources"
                                 value={cropData.infosources}
-                                onChange={handleChange}
+                                onChange={handleInputChange}
                                 className="w-full px-3 py-2 border rounded"
                                 required
                             />
@@ -194,7 +174,7 @@ const EditCropPage = () => {
                                 type="text"
                                 name="imageUrl"
                                 value={cropData.imageUrl}
-                                onChange={handleChange}
+                                onChange={handleInputChange}
                                 className="w-full px-3 py-2 border rounded"
                             />
                         </div>
@@ -207,10 +187,32 @@ const EditCropPage = () => {
                             Add Crop
                         </Link>
                     </div>
+                    <div className="mb-4">
+                        <label className="block text-sm font-bold mb-2">Biological Name</label>
+                        <input
+                            type="text"
+                            name="biologicalName"
+                            value={cropData.biologicalName}
+                            onChange={handleInputChange}
+                            className="w-full px-3 py-2 border rounded"
+                            required
+                        />
+                    </div>
+                    <div className="mb-4">
+                        <label className="block text-sm font-bold mb-2">Biological Name</label>
+                        <input
+                            type="text"
+                            name="biologicalName"
+                            value={cropData.biologicalName}
+                            onChange={handleInputChange}
+                            className="w-full px-3 py-2 border rounded"
+                            required
+                        />
+                    </div>
                 </>
             )}
         </div>
-
-    );};
+    );
+};
 
 export default EditCropPage;

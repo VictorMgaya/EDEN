@@ -34,7 +34,9 @@
     "app/crops/page.jsx",
     "components/footer.jsx",
     "components/footer.jsx",
-    "components/footer.jsx"
+    "components/footer.jsx",
+    "app/layout.jsx",
+    "components/Header.jsx"
   ],
   "exclude": ["node_modules"]
 }

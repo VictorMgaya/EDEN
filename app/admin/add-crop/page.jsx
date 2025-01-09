@@ -25,21 +25,24 @@ const AddCropPage = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await axios.post('http://localhost:5000/admin/add-crop', cropData);
-            setMessage('Crop added successfully!');
-            setCropData({
-                name: '',
-                biologicalName: '',
-                soilClass: '',
-                avgGrowthTime: '',
-                description: '',
-                Kc: '',
-                infosources: '',
-                imageUrl: ''
-            });
+            const response = await axios.post('/api/admin/crops', cropData);
+            if (response.data) {
+                setMessage('Crop added successfully!');
+                // Reset form
+                setCropData({
+                    name: '',
+                    biologicalName: '',
+                    soilClass: '',
+                    avgGrowthTime: '',
+                    description: '',
+                    Kc: 0,
+                    infosources: '',
+                    imageUrl: ''
+                });
+            }
         } catch (error) {
             console.error('Error adding crop:', error);
-            setMessage('Failed to add crop.');
+            setMessage('Failed to add crop: ' + error.message);
         }
     };
 
