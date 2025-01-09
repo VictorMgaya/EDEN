@@ -19,7 +19,7 @@ const Footer = () => {
       <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <p style={{ marginRight: '10px' }}>Developed by</p>
         <img src="/eden.svg" alt="Eden Logo" style={{ width: '150px', height: 'auto' }} />
-        <p style={{ marginLeft: '10px' }}>Technologies</p>
+        <p style={{ marginLeft: '10px' }}>AgroTechnologies</p>
         </div>
     </footer>
   );

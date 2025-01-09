@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import Page from '@/components/crops';
+import AdsContainer from '@/components/monetization/containerBannerads';
 
 // Dynamic imports for charts with SSR disabled
 const AreaChart = dynamic(() => import('@/components/charts/AreaChartGradient'), { ssr: false });
@@ -62,8 +63,10 @@ export default function Home() {
       <LineChart location={location} />
       <Page/>
       <Page/>
+      <AdsContainer/>
       <Page/>
      <Page />
+     <AdsContainer/>
     </div>
   );
 }
