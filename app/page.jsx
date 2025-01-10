@@ -58,15 +58,15 @@ export default function Home() {
     <div className="grid gap-6 p-6 md:grid-cols-2 lg:grid-cols-2">
       {/* Pass location to each chart if necessary */}
       <AreaChart location={location} />
-      <Page/>
+      <Page />
       <PieChart location={location} />
       <LineChart location={location} />
-      <Page/>
-      <Page/>
-      <AdsContainer/>
-      <Page/>
-     <Page />
-     <AdsContainer/>
+      <Page />
+      <Page />
+      <AdsContainer />
+      <Page />
+      <Page />
+      <AdsContainer />
     </div>
   );
 }

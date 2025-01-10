@@ -29,14 +29,14 @@
     ".next/types/**/*.ts",
     "components/charts/BarChart.tsx",
     "components/charts/BarChart.tsx",
-    "app/page.jsx",
+    "app/page.tsx",
     "components/charts/BarChart.tsx",
-    "app/crops-Library/page.jsx",
+    "app/crops-library/page.jsx",
     "components/footer.jsx",
     "components/footer.jsx",
     "components/footer.jsx",
     "app/layout.jsx",
     "components/Header.jsx"
-  ],
+, "app/api/crops/[biologicalName/route.js", "components/crops.jsx", "components/weather/daily.jsx"  ],
   "exclude": ["node_modules"]
 }

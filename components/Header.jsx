@@ -74,7 +74,7 @@ const Header = () => {
   return (
     <>
       <header
-  className={` header sm:py-2 sm:px-2 md:py-2 xl:py-1 rounded-b-2xl justify-center flex-auto ${
+  className={` header sm:py-0 sm:px-1 md:py-1 xl:py-1 rounded-b-2xl justify-center flex-auto ${
     currentTheme === "light"
       ? "text-black bg-gradient-to-r from-blue-500/90 to-green-500/90 p-6 md:p-10"
       : "text-white bg-gradient-to-r from-gray-900/95 to-green-950/95 p-6 md:p-10"
