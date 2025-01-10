@@ -8,9 +8,10 @@ export async function GET(request: Request) {
     const name = searchParams.get('name');
 
     try {
-        const crops = name 
-            ? await Crop.find({ name: { $regex: `^${name}`, $options: 'i' }})
-            : await Crop.find({});
+    // The API is correctly set up to fetch crops by name
+    const crops = name 
+        ? await Crop.find({ name: { $regex: `^${name}`, $options: 'i' }})
+        : await Crop.find({});
 
         return NextResponse.json(crops);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

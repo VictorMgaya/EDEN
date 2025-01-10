@@ -31,7 +31,7 @@
     "components/charts/BarChart.tsx",
     "app/page.jsx",
     "components/charts/BarChart.tsx",
-    "app/crops/page.jsx",
+    "app/crops-Library/page.jsx",
     "components/footer.jsx",
     "components/footer.jsx",
     "components/footer.jsx",
