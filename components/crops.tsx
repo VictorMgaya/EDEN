@@ -1,6 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @next/next/no-img-element */
 'use client'
 
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+
 
 export default function Page() {
   const fetchCrops = async () => {
@@ -8,11 +12,12 @@ export default function Page() {
     const crops = await res.json();
     return crops;
   };
+  const router = useRouter();
 
   const [, setCrops] = useState([]);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [randomCrop, setRandomCrop] = useState<any>(null);
-  const [showDetails, setShowDetails] = useState(false); // New state to track the details view
+  // New state to track the details view
 
   const limitText = (text: string | undefined, wordLimit: number) => {
     if (!text) return ""; // Handle case where text is undefined
@@ -30,15 +35,17 @@ export default function Page() {
     });
   }, []);
 
-  const handleClick = () => {
-    setShowDetails(!showDetails); // Toggle the details view on click
+  const handleViewDetails = (id: any) => {
+    // Use router to navigate to a details page
+    router.push(`/crops/${id}`);
   };
+
 
   return (
     <div style={{ padding: "20px" }}>
       {randomCrop && (
         <div
-          onClick={handleClick} // Add click handler to toggle details
+          onClick={() => handleViewDetails(randomCrop._id)}
           style={{
             display: "flex",
             flexDirection: "column",
@@ -83,18 +90,9 @@ export default function Page() {
           <p>
             {limitText(randomCrop.description, 60)} {/* Limit to 60 words */}
           </p>
-          {showDetails && ( // Conditionally render the detailed view if `showDetails` is true
-            <div style={{ marginTop: "16px", padding: "10px", borderTop: "1px solid rgba(0, 128, 0, 0.2)" }}>
-              <h3>Additional Information:</h3>
-              <p><strong>Soil Requirements:</strong> {randomCrop.soilRequirements}</p>
-              <p><strong>Watering Needs:</strong> {randomCrop.wateringNeeds}</p>
-              <p><strong>Harvesting Time:</strong> {randomCrop.harvestingTime} months</p>
-              <p><strong>Common Pests:</strong> {randomCrop.commonPests}</p>
-              <p><strong>Optimal Temperature:</strong> {randomCrop.optimalTemperature}°C</p>
-            </div>
-          )}
         </div>
-      )}
-    </div>
+      )
+      }
+    </div >
   );
 }

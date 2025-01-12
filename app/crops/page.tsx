@@ -65,9 +65,9 @@ export default function Page() {
 
   const displayedCrops = crops.slice(0, page * cropsPerLoad);
 
-  const handleViewDetails = (_id: any) => {
+  const handleViewDetails = (id: any) => {
     // Use router to navigate to a details page
-    router.push(`/crop-library/${_id}`);
+    router.push(`/crops/${id}`);
   };
 
   return (
@@ -76,7 +76,7 @@ export default function Page() {
         <div
           key={crop._id}
           className="flex flex-col md:flex-row items-start font-primary rounded-lg p-4 sm:p-5 mb-4 bg-green-600/10 cursor-pointer hover:shadow-lg transition-shadow"
-
+          onClick={() => handleViewDetails(crop._id)}
         >
           <img
             src={crop.imageUrl || "/default-crop-image.jpg"}

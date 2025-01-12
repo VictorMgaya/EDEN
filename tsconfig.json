@@ -31,12 +31,12 @@
     "components/charts/BarChart.tsx",
     "app/page.tsx",
     "components/charts/BarChart.tsx",
-    "app/crops-library/page.jsx",
+    "app/crops/page.jsx",
     "components/footer.jsx",
     "components/footer.jsx",
     "components/footer.jsx",
     "app/layout.jsx",
     "components/Header.jsx"
-, "app/api/crops/[biologicalName/route.js", "components/crops.jsx", "components/weather/daily.jsx"  ],
+, "app/api/crops/[biologicalName/route.js", "components/crops.jsx", "components/weather/daily.jsx", "app/crops/[id]/page.jsx"  ],
   "exclude": ["node_modules"]
 }
