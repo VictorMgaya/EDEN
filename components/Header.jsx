@@ -6,7 +6,7 @@ import { useTheme } from "next-themes";
 import { Sun, Moon, Menu, User, Settings, Search, BarChart2, ChevronDown, MapPin, Home, ShoppingCart, ShoppingBag, BookOpen } from "react-feather"; // Add MapPin import
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation"; // Use next/navigation for useRouter
-import axios from "axios"; 
+import axios from "axios";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 
@@ -53,46 +53,45 @@ const Header = () => {
 
   // Function to request user location
   const requestUserLocation = async () => {
-  if ("geolocation" in navigator) {
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
 
-        router.push(`/analytics?lon=${longitude}&lat=${latitude}`);
-        // Force a reload
-      },
-      (error) => {
-        console.error("Error retrieving user location:", error);
-      }
-    );
-  } else {
-    alert("Geolocation is not available in your browser.");
-  }
-};
+          router.push(`/analytics?lon=${longitude}&lat=${latitude}`);
+          // Force a reload
+        },
+        (error) => {
+          console.error("Error retrieving user location:", error);
+        }
+      );
+    } else {
+      alert("Geolocation is not available in your browser.");
+    }
+  };
 
 
   return (
     <>
       <header
-  className={` header sm:py-0 sm:px-1 md:py-1 xl:py-1 rounded-b-2xl justify-center flex-auto ${
-    currentTheme === "light"
-      ? "text-black bg-gradient-to-r from-blue-500/90 to-green-500/90 p-6 md:p-10"
-      : "text-white bg-gradient-to-r from-gray-900/95 to-green-950/95 p-6 md:p-10"
-  } fixed top-0 left-0 right-0 z-10 font-primary animate-accordion-down easy-transition`}
->
-  {/* Google tag (gtag.js) */}
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-54BWW075M3"></script>
-<script>
-  {`
+        className={` header sm:py-0 sm:px-1 md:py-1 xl:py-1 rounded-b-2xl justify-center flex-auto ${currentTheme === "light"
+          ? "text-black bg-gradient-to-r from-blue-500/90 to-green-500/90 p-6 md:p-10"
+          : "text-white bg-gradient-to-r from-gray-900/95 to-green-950/95 p-6 md:p-10"
+          } fixed top-0 left-0 right-0 z-10 font-primary animate-accordion-down easy-transition`}
+      >
+        {/* Google tag (gtag.js) */}
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-54BWW075M3"></script>
+        <script>
+          {`
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments)}
   gtag('js', new Date());
 
   gtag('config', 'G-54BWW075M3');
   `}
-</script>
-  <meta name="google-adsense-account" content="ca-pub-9431888211578782" />
-  <meta name="google-site-verification" content="xhS9AxO9_lnZW5qXS9B3tCziTO-v0E0pAv8OicFMsd4" />
+        </script>
+        <meta name="google-adsense-account" content="ca-pub-9431888211578782" />
+        <meta name="google-site-verification" content="xhS9AxO9_lnZW5qXS9B3tCziTO-v0E0pAv8OicFMsd4" />
         <div className="container mx-auto flex justify-between items-center">
           {/* Logo */}
           <Link href="/" className="flex items-left gap-2">
@@ -103,27 +102,27 @@ const Header = () => {
 
           {/* Search bar */}
           <div className="hidden md:flex items-center gap-4 relative">
-                        <input
+            <input
               type="text"
-              placeholder={`Type to Search...`}
+              placeholder={`Search...`}
               className={`px-4 py-2 rounded-2xl border ${currentTheme === "light" ? "border-black" : "border-white"} bg-${currentTheme === "light" ? "white" : "green-900"} text-${currentTheme === "light" ? "black" : "white"}`}
-            
+
             />
             <Button type="button" className={`${currentTheme === "light" ? "bg-green-600/90" : "bg-green-950/90"}`}>
               <Search />
-           </Button>
+            </Button>
           </div>
 
           {/* Desktop Nav */}
           <div className="hidden md:flex items-center gap-8 font-primary">
             <Nav />
             <Link
-                href="/auth">
-            <Avatar>
-  <AvatarImage src="https://github.com/shadcn.png" />
-  <AvatarFallback>CN</AvatarFallback>
-</Avatar>
-</Link>
+              href="/auth">
+              <Avatar>
+                <AvatarImage src="https://github.com/shadcn.png" />
+                <AvatarFallback>CN</AvatarFallback>
+              </Avatar>
+            </Link>
             <Button
               type="button"
               onClick={() => setTheme(currentTheme === "light" ? "dark" : "light")}
@@ -139,7 +138,7 @@ const Header = () => {
               type="text"
               placeholder={`Search. . . .`}
               className={`py-2 px-2 w-28 rounded-2xl sm:flex-auto border ${currentTheme === "light" ? "border-black" : "border-white"} bg-${currentTheme === "light" ? "white" : "green-900"} text-${currentTheme === "light" ? "black" : "white"} `}
-            
+
             />
             <Button
               type="button"
@@ -149,33 +148,33 @@ const Header = () => {
             <DropdownMenu className="font-primary align-start">
               <DropdownMenuTrigger asChild>
                 <Button className={`${currentTheme === "light" ? "bg-green-500" : "bg-green-900"} px-3 py-3`}>
-                  <Menu />  
+                  <Menu />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className={` ${currentTheme === "light" ? "text-black bg-green-400" : "text-white bg-green-950"} font-primary`}>
                 <DropdownMenuItem >
-                   <Link
-                href="/auth">
-            <Avatar>
-  <AvatarImage src="https://github.com/shadcn.png" />
-  <AvatarFallback>CN</AvatarFallback>
-</Avatar>
-</Link>My Account
+                  <Link
+                    href="/auth">
+                    <Avatar>
+                      <AvatarImage src="https://github.com/shadcn.png" />
+                      <AvatarFallback>CN</AvatarFallback>
+                    </Avatar>
+                  </Link>My Account
                 </DropdownMenuItem>
                 <DropdownMenuItem url="/">
                   <Button type="button" className={` px-3 py-2 rounded-lg ${currentTheme === "light" ? "bg-green-500" : "bg-green-950"}`}><Home /></Button>Home
                 </DropdownMenuItem>
                 <DropdownMenuItem url="/analytics">
-                  <Button type="button"  className={` px-3 py-2 rounded-lg ${currentTheme === "light" ? "bg-green-500" : "bg-green-950"}`}><BarChart2 /></Button>Analytics
+                  <Button type="button" className={` px-3 py-2 rounded-lg ${currentTheme === "light" ? "bg-green-500" : "bg-green-950"}`}><BarChart2 /></Button>Analytics
                 </DropdownMenuItem>
                 <DropdownMenuItem url="/market">
                   <Button type="button" className={` px-3 py-2 rounded-lg ${currentTheme === "light" ? "bg-green-500" : "bg-green-950"}`}><ShoppingCart /></Button>Market
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={(e) => {
-                      e.preventDefault();
-                      setTheme(currentTheme === "light" ? "dark" : "light");
-                    }}
-                    className={`${currentTheme === "light" ? "bg-green-950/10" : "bg-green-500/10"}`}>
+                  e.preventDefault();
+                  setTheme(currentTheme === "light" ? "dark" : "light");
+                }}
+                  className={`${currentTheme === "light" ? "bg-green-950/10" : "bg-green-500/10"}`}>
                   <Button
                     type="button"
                     onClick={(e) => {
@@ -200,4 +199,4 @@ const Header = () => {
     </>
   );
 
-};export default Header; 
+}; export default Header; 

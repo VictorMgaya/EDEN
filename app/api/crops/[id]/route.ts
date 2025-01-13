@@ -2,9 +2,12 @@
 import dbConnect from "@/app/lib/dbConnect";
 import Crop from "@/app/model/crops";
 import { NextRequest, NextResponse } from "next/server";
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+// Define the type for params
+type tParams = Promise<{ id: string }>;
+
+export async function GET(req: NextRequest, { params }: { params: tParams }) {
     const { id } = await params;
 
     try {
@@ -23,10 +26,11 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
             return NextResponse.json({ message: 'Crop not found' }, { status: 404 });
         }
 
-        // Return the crop data
-        return NextResponse.json(crop, { status: 200 });
+        // Convert _id to a string and return crop data
+        const cropData = { ...crop.toObject(), _id: crop._id.toString() };
+
+        return NextResponse.json(cropData, { status: 200 });
     } catch (error: any) {
-        // Handle errors and return an appropriate response
         return NextResponse.json(
             {
                 message: 'Error fetching crop',

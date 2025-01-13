@@ -1,22 +1,25 @@
 /* eslint-disable @next/next/no-img-element */
+// Client-Side Component
 'use client';
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Head from 'next/head';
 import Loading from '@/components/Loader';
+import Crop from '@/app/model/crops';
 
 type Crop = {
+
     _id: string;
     name: string;
     biologicalName: string;
-    avgGrowthTime: number;
     soilClass: string;
-    Kc: number;
-    imageUrl: string;
+    avgGrowthTime: string;
     description: string;
+    Kc: Float32Array;
+    infosources: string;
+    imageUrl: string;
 };
-
 export default function CropDetailsPage() {
     const [crop, setCrop] = useState<Crop | null>(null);
     const params = useParams(); // Use this hook to get `params`
@@ -29,7 +32,7 @@ export default function CropDetailsPage() {
             try {
                 const response = await fetch(`/api/crops/${id}`);
                 if (response.ok) {
-                    const data = await response.json();
+                    const data: Crop = await response.json();
                     setCrop(data);
                 } else {
                     console.error('Error fetching crop:', response.statusText);
@@ -43,7 +46,7 @@ export default function CropDetailsPage() {
     }, [id]);
 
     if (!crop) {
-        return <Loading />
+        return <Loading />;
     }
 
     return (
