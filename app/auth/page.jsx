@@ -1,39 +1,14 @@
-"use client";
+import { signIn } from "next-auth/react";
 
-import { useState } from "react";
-import Link from "next/link";
-import Image from "next/image";
-
-export default function AuthPage() {
+const AuthPage = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState(""); // For registration
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState(null);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const route = isLogin ? "/api/login" : "/api/register";
-    const payload = { email, password, ...(isLogin ? {} : { confirmPassword }) };
-
-    try {
-      const response = await fetch(route, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        alert(isLogin ? "Login successful!" : "Registration successful! Please log in.");
-        if (!isLogin) setIsLogin(true); // Switch to login after registration
-      } else {
-        setError(data.error || "Something went wrong.");
-      }
-    } catch (err) {
-      setError("An error occurred. Please try again.");
-    }
+  const handleSocialLogin = (provider) => {
+    signIn(provider).catch(() => setError("Social login failed."));
   };
 
   return (
@@ -45,7 +20,28 @@ export default function AuthPage() {
         <h1 className="text-2xl font-bold text-center text-green-500">
           {isLogin ? "Welcome back!" : "Create an account"}
         </h1>
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4 mt-6">
+        <div className="flex flex-col gap-4 mt-4">
+          <button
+            onClick={() => handleSocialLogin("google")}
+            className="bg-red-600 text-white p-3 rounded-lg text-lg hover:bg-red-700 transition duration-300"
+          >
+            Continue with Google
+          </button>
+          <button
+            onClick={() => handleSocialLogin("azure-ad")}
+            className="bg-blue-600 text-white p-3 rounded-lg text-lg hover:bg-blue-700 transition duration-300"
+          >
+            Continue with Microsoft
+          </button>
+          <button
+            onClick={() => handleSocialLogin("apple")}
+            className="bg-black text-white p-3 rounded-lg text-lg hover:bg-gray-800 transition duration-300"
+          >
+            Continue with Apple
+          </button>
+        </div>
+        <p className="text-center my-4">or</p>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <input
             type="email"
             placeholder="Email"
@@ -96,4 +92,6 @@ export default function AuthPage() {
       </div>
     </div>
   );
-}
+};
+
+export default AuthPage;
