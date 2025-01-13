@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Head from 'next/head';
 import Loading from '@/components/Loader';
+import type Crop from '@/app/model/crops';
 
 
 
