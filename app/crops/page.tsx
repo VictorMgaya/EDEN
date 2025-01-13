@@ -1,93 +1,127 @@
 /* eslint-disable @next/next/no-img-element */
-// Client-Side Component (crops.tsx)
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
-import Head from 'next/head';
-import Loading from '@/components/Loader';
-import type Crop from '@/app/model/crops';
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useEffect, useState, useRef, useCallback } from "react";
+import { useRouter } from "next/navigation";
 
+export default function Page() {
+  const [crops, setCrops] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const observer = useRef<IntersectionObserver | null>(null);
+  const loadingRef = useRef<HTMLDivElement | null>(null);
+  const cropsPerLoad = 5;
+  const router = useRouter();
 
+  const fetchCrops = async () => {
+    const res = await fetch("/api/crops");
+    const crops = await res.json();
+    return crops.sort((a: any, b: any) => a.name.localeCompare(b.name));
+  };
 
-type Crop = {
-
-  _id: string;
-  name: string;
-  biologicalName: string;
-  soilClass: string;
-  avgGrowthTime: string;
-  description: string;
-  Kc: Float32Array;
-  infosources: string;
-  imageUrl: string;
-};
-
-export default function CropDetailsPage() {
-  const [crop, setCrop] = useState<Crop | null>(null);
-  const params = useParams();
-  const id = params?.id; // Get dynamic `id` from `params`
+  const loadMoreCrops = useCallback((entries: IntersectionObserverEntry[]) => {
+    const target = entries[0];
+    if (target.isIntersecting) {
+      setPage((prev) => prev + 1);
+    }
+  }, []);
 
   useEffect(() => {
-    const fetchCrop = async () => {
-      if (!id) return;
-
-      try {
-        const response = await fetch(`/api/crops/${id}`);
-        if (response.ok) {
-          const data: Crop = await response.json();
-          setCrop(data);
-        } else {
-          console.error('Error fetching crop:', response.statusText);
-        }
-      } catch (error) {
-        console.error('Failed to fetch crop:', error);
-      }
+    const options = {
+      root: null,
+      rootMargin: "20px",
+      threshold: 0.1,
     };
 
-    fetchCrop();
-  }, [id]);
+    observer.current = new IntersectionObserver(loadMoreCrops, options);
+    if (loadingRef.current) {
+      observer.current.observe(loadingRef.current);
+    }
 
-  if (!crop) {
-    return <Loading />;
-  }
+    return () => {
+      if (observer.current) {
+        observer.current.disconnect();
+      }
+    };
+  }, [loadMoreCrops]);
+
+  useEffect(() => {
+    setLoading(true);
+    fetchCrops().then((fetchedCrops) => {
+      setCrops(fetchedCrops);
+      setLoading(false);
+    });
+  }, []);
+
+  const truncateDescription = (text: string, wordLimit: number) => {
+    const words = text.split(" ");
+    if (words.length > wordLimit) {
+      return words.slice(0, wordLimit).join(" ") + "...";
+    }
+    return text;
+  };
+
+  const displayedCrops = crops.slice(0, page * cropsPerLoad);
+
+  const handleViewDetails = (id: any) => {
+    // Use router to navigate to a details page
+    router.push(`/crops/${id}`);
+  };
 
   return (
-    <>
-      {/* SEO Metadata */}
-      <Head>
-        <title>{crop.name} - Crop Details</title>
-        <meta name="description" content={`Learn about ${crop.name}, its biological name, average growth time, and other important details.`} />
-        <meta property="og:title" content={`${crop.name} - Crop Details`} />
-        <meta property="og:description" content={`Learn about ${crop.name}, its biological name, average growth time, and other important details.`} />
-        <meta property="og:image" content={crop.imageUrl || '/default-crop-image.jpg'} />
-        <meta property="og:type" content="website" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={`${crop.name} - Crop Details`} />
-        <meta name="twitter:description" content={`Learn about ${crop.name}, its biological name, average growth time, and other important details.`} />
-        <meta name="twitter:image" content={crop.imageUrl || '/default-crop-image.jpg'} />
-      </Head>
+    <div className="container rounded-lg mx-auto px-4 py-8 bg-green-500/10">
+      {displayedCrops.map((crop) => (
+        <div
+          key={crop._id}
+          className="flex flex-col md:flex-row items-start font-primary rounded-lg p-4 sm:p-5 mb-4 bg-green-600/10 cursor-pointer hover:shadow-lg transition-shadow"
 
-      <main className="container rounded-lg px-4 py-8 bg-green-500/10">
-        <div className="flex-auto items-center">
-          <h1 className="text-3xl font-bold mb-4">{crop.name}</h1>
+        >
           <img
-            src={crop.imageUrl || '/default-crop-image.jpg'}
+            src={crop.imageUrl || "/default-crop-image.jpg"}
             alt={crop.name}
-            className="w-full h-auto object-cover rounded-lg mr-4"
+            className="md:w-1/2 h-auto object-cover rounded-lg mr-5"
           />
           <div className="flex-1">
-            <p className="text-lg mb-2 font-semibold">Biological Name: {crop.biologicalName}</p>
-            <p className="text-lg mb-2">Average Growth Time: {crop.avgGrowthTime} months</p>
-            <p className="text-lg mb-2">Soil Class: {crop.soilClass}</p>
-            <p className="text-lg mb-2">Crop Coefficient (Kc): {crop.Kc}</p>
+            <h2 className="text-2xl font-bold mb-4">{crop.name}</h2>
+            <div className="mb-4 space-y-2">
+              <p className="font-semibold">Specifications:</p>
+              <p>
+                <span className="font-medium">Biological Name:</span>{" "}
+                {crop.biologicalName}
+              </p>
+              <p>
+                <span className="font-medium">Growth Time:</span>{" "}
+                {crop.avgGrowthTime} months
+              </p>
+              <p>
+                <span className="font-medium">Soil Class:</span>{" "}
+                {crop.soilClass}
+              </p>
+              <p>
+                <span className="font-medium">Crop Coefficient (Kc):</span>{" "}
+                {crop.Kc}
+              </p>
+            </div>
             <div className="mt-4">
-              <h2 className="font-semibold">Description:</h2>
-              <p>{crop.description}</p>
+              <p className="font-semibold">Description:</p>
+              <p className="paragraph">
+                {truncateDescription(crop.description, 50)}
+              </p>
+            </div>
+            <div className="mt-4">
+              <button
+                className="bg-green-600 hover:bg-green-700 font-bold py-2 px-4 rounded-2xl"
+                onClick={() => handleViewDetails(crop._id)}
+              >
+                View Details
+              </button>
             </div>
           </div>
         </div>
-      </main>
-    </>
+      ))}
+      <div ref={loadingRef} className="h-10" />
+    </div>
   );
 }
