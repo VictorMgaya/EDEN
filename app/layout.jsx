@@ -5,11 +5,10 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
-import Footer from "@/components/footer"
-
-//components
+import Footer from "@/components/footer";
 import Header from "@/components/Header";
-import Loader from "@/components/Loader"; // Import your loader component
+import Loading from "@/components/Loader";
+
 
 const Lexend = LexendFont({
   weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
@@ -23,12 +22,11 @@ export const Metadata = {
   description: "{crop.description}",
 };
 
-export default function RootLayout({ children }) {
+export default function RootLayout({ children, session }) {
   const pathname = usePathname();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate a loading delay (e.g., API call)
     const timeout = setTimeout(() => setLoading(false), 1000);
     return () => clearTimeout(timeout);
   }, []);
@@ -40,11 +38,11 @@ export default function RootLayout({ children }) {
         <script async src="https://www.googletagmanager.com/gtag/js?id=G-54BWW075M3"></script>
         <script dangerouslySetInnerHTML={{
           __html: `
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'G-54BWW075M3');
-          `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', 'G-54BWW075M3');
+            `
         }} />
         <meta name="google-adsense-account" content="ca-pub-9431888211578782"></meta>
         <meta name="google-site-verification" content="xhS9AxO9_lnZW5qXS9B3tCziTO-v0E0pAv8OicFMsd4" />
@@ -53,8 +51,8 @@ export default function RootLayout({ children }) {
         className={Lexend.variable}
         style={{
           marginTop: "75px",
-          position: "relative", // Ensures it doesn't adjust based on other elements
-          top: "0", // Prevents any unintentional shifting
+          position: "relative",
+          top: "0",
         }}
       >
         <ThemeProvider
@@ -65,12 +63,14 @@ export default function RootLayout({ children }) {
         >
           {pathname !== "/auth" && <Header />}
           {loading ? (
-            <Loader /> // Display loader when in loading state
+            <Loading />
           ) : (
-            children
+            <>
+              {children}
+            </>
           )}
         </ThemeProvider>
-        <Footer />
+        {pathname !== "/auth" && <Footer />}
       </body>
     </html>
   );
