@@ -8,6 +8,7 @@ import { useState, useEffect } from "react";
 import Footer from "@/components/footer";
 import Header from "@/components/Header";
 import Loading from "@/components/Loader";
+import { NextAuthProvider } from "./providers";
 
 
 const Lexend = LexendFont({
@@ -55,22 +56,24 @@ export default function RootLayout({ children, session }) {
           top: "0",
         }}
       >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          {pathname !== "/auth" && <Header />}
-          {loading ? (
-            <Loading />
-          ) : (
-            <>
-              {children}
-            </>
-          )}
-        </ThemeProvider>
-        {pathname !== "/auth" && <Footer />}
+        <NextAuthProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            {pathname !== "/auth" && <Header />}
+            {loading ? (
+              <Loading />
+            ) : (
+              <>
+                {children}
+              </>
+            )}
+          </ThemeProvider>
+          {pathname !== "/auth" && <Footer />}
+        </NextAuthProvider>
       </body>
     </html>
   );

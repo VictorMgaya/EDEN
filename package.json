@@ -60,6 +60,7 @@
     "react-leaflet": "^5.0.0-rc.2",
     "react-router-dom": "^7.1.1",
     "recharts": "^2.15.0",
+    "session": "^0.1.0",
     "shadcn": "^2.1.8",
     "site": "^2.60.4",
     "sitemap": "^8.0.0",

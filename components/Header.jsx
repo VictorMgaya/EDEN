@@ -5,7 +5,8 @@ import { Button } from "./ui/button";
 import { useTheme } from "next-themes";
 import { Sun, Moon, Menu, User, Settings, Search, BarChart2, ChevronDown, MapPin, Home, ShoppingCart, ShoppingBag, BookOpen } from "react-feather"; // Add MapPin import
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation"; // Use next/navigation for useRouter
+import { useRouter } from "next/navigation";
+import { signIn, signOut, useSession } from "next-auth/react";
 import axios from "axios";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
@@ -21,6 +22,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { User2Icon } from "lucide-react";
 
 const Header = () => {
   const { theme, setTheme, resolvedTheme } = useTheme();
@@ -29,6 +31,7 @@ const Header = () => {
   const [searchCategory, setSearchCategory] = useState("General");
   const [locationSuggestions, setLocationSuggestions] = useState([]);
   const router = useRouter();
+  const { status, data: session } = useSession();
 
   useEffect(() => {
     setMounted(true);
@@ -38,6 +41,8 @@ const Header = () => {
   if (!mounted) return null;
 
   const currentTheme = theme === "system" ? resolvedTheme : theme;
+
+
 
   // Function to fetch location suggestions
   const fetchLocationSuggestions = async (query) => {
@@ -77,7 +82,7 @@ const Header = () => {
         className={` header sm:py-0 sm:px-1 md:py-1 xl:py-1 rounded-b-2xl justify-center flex-auto ${currentTheme === "light"
           ? "text-black bg-gradient-to-r from-blue-500/90 to-green-500/90 p-6 md:p-10"
           : "text-white bg-gradient-to-r from-gray-900/95 to-green-950/95 p-6 md:p-10"
-          } fixed top-0 left-0 right-0 z-10 font-primary animate-accordion-down easy-transition`}
+          } fixed top-0 left-0 right-0 z-10 font-primary animate-accordion-down lazyloaded ease-in-out`}
       >
         {/* Google tag (gtag.js) */}
         <script async src="https://www.googletagmanager.com/gtag/js?id=G-54BWW075M3"></script>
@@ -116,13 +121,15 @@ const Header = () => {
           {/* Desktop Nav */}
           <div className="hidden md:flex items-center gap-8 font-primary">
             <Nav />
-            <Link
-              href="/auth">
-              <Avatar>
-                <AvatarImage src="https://github.com/shadcn.png" />
-                <AvatarFallback>CN</AvatarFallback>
-              </Avatar>
-            </Link>
+
+            <Avatar className="cursor-pointer" onClick={() => router.push("/auth")}>
+              {status === 'authenticated' ? (
+                <AvatarImage src={session?.user.image} />
+              ) : (
+                <AvatarFallback ><User2Icon /></AvatarFallback>
+              )}
+            </Avatar>
+
             <Button
               type="button"
               onClick={() => setTheme(currentTheme === "light" ? "dark" : "light")}
@@ -152,15 +159,26 @@ const Header = () => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className={` ${currentTheme === "light" ? "text-black bg-green-400" : "text-white bg-green-950"} font-primary`}>
-                <DropdownMenuItem >
-                  <Link
-                    href="/auth">
-                    <Avatar>
-                      <AvatarImage src="https://github.com/shadcn.png" />
-                      <AvatarFallback>CN</AvatarFallback>
-                    </Avatar>
-                  </Link>My Account
+                <DropdownMenuItem>
+                  {status === "authenticated" ? (
+                    <Link href="/auth" className="flex items-center gap-2">
+                      <Avatar className="cursor-pointer">
+                        <AvatarImage src={session?.user.image} />
+                      </Avatar>
+                      <span>My Account</span>
+                    </Link>
+                  ) : (
+                    <Link href="/auth" className="flex items-center gap-2">
+                      <Avatar className="cursor-pointer">
+                        <AvatarFallback>
+                          <User2Icon />
+                        </AvatarFallback>
+                      </Avatar>
+                      <span>Login</span>
+                    </Link>
+                  )}
                 </DropdownMenuItem>
+
                 <DropdownMenuItem url="/">
                   <Button type="button" className={` px-3 py-2 rounded-lg ${currentTheme === "light" ? "bg-green-500" : "bg-green-950"}`}><Home /></Button>Home
                 </DropdownMenuItem>
