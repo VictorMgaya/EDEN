@@ -1,23 +1,20 @@
-
-import NextAuth from "next-auth/next";
+import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
+import type { NextAuthOptions } from "next-auth";
 
-const authOptions = {
+const authOptions: NextAuthOptions = {
     providers: [
         GoogleProvider({
-            clientId: process.env.GOOGLE_CLIENT_ID,
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+            clientId: process.env.GOOGLE_CLIENT_ID ?? "",
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
         }),
     ],
     callbacks: {
         async signIn({ user, account }) {
-            console.log("user", user);
-            console.log("account", account);
-
-            if (account.provider === "google") {
+            if (account?.provider === "google") {
                 const { name, email, image } = user;
                 try {
-                    const res = await fetch("https://www.edenapp.site//api/users", {
+                    const res = await fetch(`${process.env.NEXTAUTH_URL}/api/users`, {
                         method: "POST",
                         headers: {
                             "Content-Type": "application/json",
@@ -30,17 +27,18 @@ const authOptions = {
                     });
 
                     if (res.ok) {
-                        return user;
+                        return true;
                     }
+                    return false;
                 } catch (error) {
-                    console.log(error);
+                    console.error("Error during user registration:", error);
+                    return false;
                 }
             }
-            return user;
+            return true;
         },
     },
 };
 
 const handler = NextAuth(authOptions);
-
 export { handler as GET, handler as POST };

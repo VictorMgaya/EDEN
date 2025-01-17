@@ -60,7 +60,7 @@ export default function AuthPage() {
             <div className="flex flex-col items-center justify-center h-screen">
                 <h1 className="text-3xl font-bold mb-4">{isRegistering ? "Register" : "Login"}</h1>
                 {errorMessage && <div className="text-red-500 mb-4">{errorMessage}</div>}
-                <button onClick={() => signIn("google")} className=" bg-gradient-to-r from-red-500/50 to-blue-500 to-green-500 flex items-center mb-4 rounded-2xl">
+                <button onClick={() => signIn("google")} className=" bg-gradient-to-r from-red-500/50  to-green-500 flex items-center mb-4 rounded-2xl">
                     <Image src='/Google.svg' alt="Google Logo" width={40} height={40} />
                     <span className=" px-4 py-2 rounded-r-2xl">
                         Sign in with Google
