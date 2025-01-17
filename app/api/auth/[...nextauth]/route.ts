@@ -13,8 +13,14 @@ const authOptions: NextAuthOptions = {
         async signIn({ user, account }) {
             if (account?.provider === "google") {
                 const { name, email, image } = user;
+
+                // Debugging environment variables
+                console.log("GOOGLE_CLIENT_ID:", process.env.GOOGLE_CLIENT_ID);
+                console.log("GOOGLE_CLIENT_SECRET:", process.env.GOOGLE_CLIENT_SECRET);
+                console.log("NEXTAUTH_URL:", process.env.NEXTAUTH_URL);
+
                 try {
-                    const res = await fetch(`${process.env.NEXTAUTH_URL}/api/users`, {
+                    const res = await fetch(`/api/users`, {
                         method: "POST",
                         headers: {
                             "Content-Type": "application/json",
@@ -27,9 +33,12 @@ const authOptions: NextAuthOptions = {
                     });
 
                     if (res.ok) {
+                        console.log("User registration successful.");
                         return true;
+                    } else {
+                        console.error("User registration failed:", res.statusText);
+                        return false;
                     }
-                    return false;
                 } catch (error) {
                     console.error("Error during user registration:", error);
                     return false;
