@@ -20,7 +20,7 @@ const authOptions: NextAuthOptions = {
                 console.log("NEXTAUTH_URL:", process.env.NEXTAUTH_URL);
 
                 try {
-                    const res = await fetch(`/api/users`, {
+                    const res = await fetch(`https://www.edenapp.site/api/users`, {
                         method: "POST",
                         headers: {
                             "Content-Type": "application/json",
