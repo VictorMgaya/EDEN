@@ -5,7 +5,7 @@ import { Button } from "./ui/button";
 import { useTheme } from "next-themes";
 import { Sun, Moon, Menu, User, Settings, Search, BarChart2, ChevronDown, MapPin, Home, ShoppingCart, ShoppingBag, BookOpen } from "react-feather"; // Add MapPin import
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { signIn, signOut, useSession } from "next-auth/react";
 import axios from "axios";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -30,8 +30,10 @@ const Header = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchCategory, setSearchCategory] = useState("General");
   const [locationSuggestions, setLocationSuggestions] = useState([]);
+  const [searchInput, setSearchInput] = useState("");
   const router = useRouter();
   const { status, data: session } = useSession();
+  const pathname = usePathname();
 
   useEffect(() => {
     setMounted(true);
@@ -41,8 +43,6 @@ const Header = () => {
   if (!mounted) return null;
 
   const currentTheme = theme === "system" ? resolvedTheme : theme;
-
-
 
   // Function to fetch location suggestions
   const fetchLocationSuggestions = async (query) => {
@@ -75,6 +75,26 @@ const Header = () => {
     }
   };
 
+  const handleSuggestionClick = (suggestion) => {
+    if (pathname === '/' || pathname === '/analytics') {
+      const { lat, lng } = suggestion.geometry;
+      setSearchInput(suggestion.formatted);
+      setLocationSuggestions([]);
+
+      const currentPath = window.location.pathname;
+      const searchParams = new URLSearchParams(window.location.search);
+      searchParams.set('lon', lng);
+      searchParams.set('lat', lat);
+
+      const newUrl = `${currentPath}?${searchParams.toString()}`;
+      router.push(newUrl);
+      window.location.href = newUrl;
+    }
+    else if (pathname === '/crops') {
+      // Navigate to crops with search param
+      router.push(`/crops?name=${searchInput}`);
+    }
+  };
 
   return (
     <>
@@ -88,12 +108,12 @@ const Header = () => {
         <script async src="https://www.googletagmanager.com/gtag/js?id=G-54BWW075M3"></script>
         <script>
           {`
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments)}
-  gtag('js', new Date());
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments)}
+      gtag('js', new Date());
 
-  gtag('config', 'G-54BWW075M3');
-  `}
+      gtag('config', 'G-54BWW075M3');
+      `}
         </script>
         <meta name="google-adsense-account" content="ca-pub-9431888211578782" />
         <meta name="google-site-verification" content="xhS9AxO9_lnZW5qXS9B3tCziTO-v0E0pAv8OicFMsd4" />
@@ -107,17 +127,38 @@ const Header = () => {
 
           {/* Search bar */}
           <div className="hidden md:flex items-center gap-4 relative">
-            <input
-              type="text"
-              placeholder={`Search...`}
-              className={`px-4 py-2 rounded-2xl border ${currentTheme === "light" ? "border-black" : "border-white"} bg-${currentTheme === "light" ? "white" : "green-900"} text-${currentTheme === "light" ? "black" : "white"}`}
+            <div className="relative">
+              <input
+                type="text"
+                placeholder={pathname === '/crops' ? 'Search crops...' : 'Search location...'}
+                value={searchInput}
+                onChange={(e) => {
 
-            />
+                  setSearchInput(e.target.value);
+                  if (e.target.value.length > 2) {
+                    fetchLocationSuggestions(e.target.value);
+                  }
+                }}
+                className={`px-4 py-2 rounded-2xl border ${currentTheme === "light" ? "border-black" : "border-white"} bg-${currentTheme === "light" ? "white" : "green-900"} text-${currentTheme === "light" ? "black" : "white"}`}
+              />
+              {locationSuggestions.length > 0 && (
+                <ul className="absolute shadow-lg rounded-lg mt-2 w-80 max-h-48 overflow-y-auto">
+                  {locationSuggestions.map((suggestion) => (
+                    <li
+                      key={suggestion.formatted}
+                      className="p-2 bg-green-500/80 hover:bg-green-700 cursor-pointer"
+                      onClick={() => handleSuggestionClick(suggestion)}
+                    >
+                      {suggestion.formatted}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
             <Button type="button" className={`${currentTheme === "light" ? "bg-green-600/90" : "bg-green-950/90"}`}>
               <Search />
             </Button>
           </div>
-
           {/* Desktop Nav */}
           <div className="hidden md:flex items-center gap-8 font-primary">
             <Nav />
@@ -216,5 +257,46 @@ const Header = () => {
       </header>
     </>
   );
+};
 
-}; export default Header; 
+export default Header;
+// Add this function inside the Header component
+const handleSuggestionClick = (suggestion) => {
+  console.log("Selected location coordinates:", suggestion.geometry);
+  const { lat, lng } = suggestion.geometry;
+  const currentPath = window.location.pathname;
+  const searchParams = new URLSearchParams(window.location.search);
+  searchParams.set('lon', lng);
+  searchParams.set('lat', lat);
+
+  // Log the final URL to verify
+  console.log(`Navigating to: ${currentPath}?${searchParams.toString()}`);
+  router.push(`${currentPath}?${searchParams.toString()}`);
+};
+
+const handleSearch = () => {
+  const currentPath = window.location.pathname;
+
+  if (currentPath === '/analytics' || currentPath === '/') {
+    // Location search behavior
+    if (searchInput.length > 2) {
+      fetchLocationSuggestions(searchInput);
+    }
+  } else if (currentPath === '/crops') {
+    // Crop name search behavior
+    // Add crop search logic here targeting h2 elements
+    const cropHeadings = document.querySelectorAll('.crop-container h2');
+    const searchTerm = searchInput.toLowerCase();
+
+    cropHeadings.forEach(heading => {
+      const cropName = heading.textContent.toLowerCase();
+      const cropContainer = heading.closest('.crop-container');
+
+      if (cropName.includes(searchTerm)) {
+        cropContainer.style.display = 'block';
+      } else {
+        cropContainer.style.display = 'none';
+      }
+    });
+  }
+};

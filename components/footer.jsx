@@ -17,9 +17,9 @@ const Footer = () => {
         <a href="https://www.instagram.com" target="_blank" rel="noopener noreferrer" style={{ margin: '0 10px' }}>Instagram</a>
       </div>
       <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <p style={{ marginRight: '10px' }}>Developed by</p>
-        <img src="/eden.svg" alt="Eden Logo" style={{ width: '150px', height: 'auto' }} />
-        <p style={{ marginLeft: '10px' }}>AgroTechnologies</p>
+        <p style={{ marginRight: '10px', textAlign: 'end' }}>Powered By</p>
+        <img src="/eden.svg" alt="Eden Logo" style={{ width: '150px', height: 'auto' }} loading='lazy' />
+        <p style={{ marginLeft: '10px' }}>RAE</p>
       </div>
     </footer>
   );

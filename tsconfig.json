@@ -37,6 +37,6 @@
     "components/footer.jsx",
     "app/layout.jsx",
     "components/Header.jsx"
-, "app/api/crops/[biologicalName/route.js", "components/crops.jsx", "components/weather/daily.jsx", "app/crops/[id]/page.jsx", "app/api/auth/[...nextauth]/route.js", "app/api/users/route.js", "app/lib/dbConnect.js", "next.config.js"  ],
+, "app/api/crops/[biologicalName/route.js", "components/crops.jsx", "components/weather/daily.jsx", "app/crops/[id]/page.jsx", "app/api/auth/[...nextauth]/route.js", "app/api/users/route.js", "app/lib/dbConnect.js", "next.config.js", "components/soil/top5classes.jsx"  ],
   "exclude": ["node_modules"]
 }
