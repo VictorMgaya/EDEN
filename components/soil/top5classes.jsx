@@ -60,7 +60,7 @@ export function TopSoilClassesChart() {
     if (error) return <p>Error: {error}</p>;
 
     return (
-        <Card className="bg-green-500/10 shadow-md rounded-xl p-4">
+        <Card className="bg-yellow-500/10 shadow-md rounded-xl p-4">
             <CardHeader>
                 <CardTitle className="text-xl font-bold ">
                     Top 5 Soil Classes

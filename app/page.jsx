@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import dynamic from 'next/dynamic';
 import Page from '@/components/crops';
 import AdsContainer from '@/components/monetization/containerBannerads';
 import DailyWeather from '@/components/weather/daily';
@@ -11,10 +10,6 @@ import TommorowWeather from '../components/weather/tommorow';
 import TopSoilClassComponent from '../components/soil/dominatingclass';
 import TopSoilClassesChart from '../components/soil/top5classes';
 
-// Dynamic imports for charts with SSR disabled
-const AreaChart = dynamic(() => import('@/components/charts/AreaChartGradient'), { ssr: false });
-const LineChart = dynamic(() => import('@/components/charts/LineChart'), { ssr: false });
-const PieChart = dynamic(() => import('@/components/charts/PieChart'), { ssr: false });
 
 export default function Home() {
   const [isMounted, setIsMounted] = useState(false); // Track whether the component is mounted
@@ -70,15 +65,17 @@ export default function Home() {
         <WeeklyWeather />
       </div>
       <h1 className=" flex grid-cols-2 gap-6 p-6 w-full bg-gradient-to-r from-yellow-500/20 to-green-500/20 rounded-t-2xl"> Soil Analysis</h1>
-      <div className="grid grid-cols-2 gap-6 p-6 w-full bg-gradient-to-r from-yellow-500/20 to-green-500/20 rounded-b-2xl">
+      <div className="grid md:grid-cols-2 gap-6 p-6 w-full bg-gradient-to-r from-yellow-500/20 to-green-500/20 rounded-b-2xl">
         <TopSoilClassComponent />
         <TopSoilClassesChart />
       </div>
-      <Page />
-      <Page />
-      <Page />
-      <Page />
-      <Page />
+      <div className="grid gap-6 p-6 md:grid-cols-2 lg:grid-cols-2">
+        <Page />
+        <Page />
+        <Page />
+        <Page />
+        <Page />
+      </div>
     </div>
   );
 }

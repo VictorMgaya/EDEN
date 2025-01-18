@@ -1,27 +1,13 @@
 'use client';
 
+// AnalyticsPage.js
 import React, { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap,  } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import './ResponsiveStyles.css';  // Import the CSS file
-
-// Custom component for resetting the map's center view
-function ResetCenterView({ selectPosition }) {
-  const map = useMap();
-
-  useEffect(() => {
-    if (selectPosition) {
-      map.setView(
-        L.latLng(selectPosition.lat, selectPosition.lng),
-        map.getZoom(),
-        { animate: true }
-      );
-    }
-  }, [selectPosition, map]);
-
-  return null;
-}
+import MapContainerComponent from '@/components/maps/container'; // Import the new map container component
+import TopSoilClassChart from '@/components/soil/allclasses';
+import TopSoilClassComponent from '@/components/soil/dominatingclass';
+import WeeklyWeather from '@/components/weather/weekly'
+import DailyWeather from '@/components/weather/daily';
 
 function AnalyticsPage() {
   const [center, setCenter] = useState({ lat: 51.9, lng: -0.09 });
@@ -57,32 +43,31 @@ function AnalyticsPage() {
   };
 
   return (
-    <div className="responsive-container rounded-lg">
-      {/* Map Section */}
-      <div
-        className="container mx-auto px-4 py-8      bg-green-500/10"
-        style={{
-          flex: 3,
-          zIndex: 0,
-          height: '100%',
-          width: '100%',
-          
-        }}
-      >
-        <MapContainer center={center} zoom={20} scrollWheelZoom={true} style={{ height: '75%', width: '100%' }}>
-          <TileLayer
-            attribution='© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="http://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}"
+    <div className='mx-auto mb-10'>
+      <div className='container grid  md:grid-cols-2 sm:grid-cols-1 gap-4'>
+        {/* Map Section */}
+        <div className='justify-center items-stretch content-center rounded-2xl bg-blue-500/20 z-0 relative'>
+          <MapContainerComponent
+            center={center}
+            zoom={zoom}
+            scannedLocation={scannedLocation}
+            icon={icon}
           />
-          {scannedLocation && (
-            <Marker position={scannedLocation} icon={icon}>
-              <Popup>Scanned Location</Popup>
-            </Marker>
-          )}
-          <ResetCenterView selectPosition={scannedLocation} />
-        </MapContainer>
+        </div>
+        <DailyWeather />
+
       </div>
+      <div className='mt-7'>
+
+
+        <WeeklyWeather />
+      </div>
+      <div className='mt-7' >
+        <TopSoilClassChart />
+      </div>
+
     </div>
   );
 }
+
 export default AnalyticsPage;
