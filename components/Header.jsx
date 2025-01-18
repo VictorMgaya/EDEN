@@ -56,24 +56,53 @@ const Header = () => {
     }
   };
 
-  // Function to request user location
-  const requestUserLocation = async () => {
-    if ("geolocation" in navigator) {
+  const handleLocationRequest = async () => {
+    if (!("geolocation" in navigator)) {
+      alert("Geolocation is not supported by your browser");
+      return;
+    }
+
+    try {
+      const permissionStatus = await navigator.permissions.query({ name: 'geolocation' });
+
+      if (permissionStatus.state === 'denied') {
+        alert("Please enable location access in your browser settings");
+        return;
+      }
+
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
-
-          router.push(`/analytics?lon=${longitude}&lat=${latitude}`);
-          // Force a reload
+          // Using window.location.href for direct navigation and automatic page reload
+          window.location.href = `/analytics?lon=${longitude}&lat=${latitude}`;
         },
         (error) => {
           console.error("Error retrieving user location:", error);
+          switch (error.code) {
+            case error.PERMISSION_DENIED:
+              alert("Location permission was denied");
+              break;
+            case error.POSITION_UNAVAILABLE:
+              alert("Location information is unavailable");
+              break;
+            case error.TIMEOUT:
+              alert("Location request timed out");
+              break;
+            default:
+              alert("An unknown error occurred");
+          }
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 5000,
+          maximumAge: 0
         }
       );
-    } else {
-      alert("Geolocation is not available in your browser.");
+    } catch (error) {
+      console.error("Error checking location permission:", error);
     }
   };
+
 
   const handleSuggestionClick = (suggestion) => {
     if (pathname === '/' || pathname === '/analytics') {
@@ -99,10 +128,10 @@ const Header = () => {
   return (
     <>
       <header
-        className={` header sm:py-0 sm:px-1 md:py-1 xl:py-1 rounded-b-2xl justify-center flex-auto ${currentTheme === "light"
+        className={` header items-center sm:p-0.5 xsm:p-0.5 md:p-0.5 xl:p-1 rounded-b-2xl justify-center flex-auto ${currentTheme === "light"
           ? "text-black bg-gradient-to-r from-blue-500/90 to-green-500/90 p-6 md:p-10"
           : "text-white bg-gradient-to-r from-gray-900/95 to-green-950/95 p-6 md:p-10"
-          } fixed top-0 left-0 right-0 z-10 font-primary animate-accordion-down lazyloaded ease-in-out`}
+          } fixed top-0 left-0 right-0 z-50 font-primary animate-accordion-down lazyloaded ease-in-out`}
       >
         {/* Google tag (gtag.js) */}
         <script async src="https://www.googletagmanager.com/gtag/js?id=G-54BWW075M3"></script>
@@ -139,10 +168,10 @@ const Header = () => {
                     fetchLocationSuggestions(e.target.value);
                   }
                 }}
-                className={`px-4 py-2 rounded-2xl border ${currentTheme === "light" ? "border-black" : "border-white"} bg-${currentTheme === "light" ? "white" : "green-900"} text-${currentTheme === "light" ? "black" : "white"}`}
+                className={`px-4 py-2 rounded-l-2xl border ${currentTheme === "light" ? "border-black" : "border-white"} bg-${currentTheme === "light" ? "white" : "green-900"} text-${currentTheme === "light" ? "black" : "white"}`}
               />
               {locationSuggestions.length > 0 && (
-                <ul className="absolute shadow-lg rounded-lg mt-2 w-80 max-h-48 overflow-y-auto">
+                <ul className="absolute shadow-lg rounded-b-xl mt-1 w-80 max-h-48 overflow-y-auto">
                   {locationSuggestions.map((suggestion) => (
                     <li
                       key={suggestion.formatted}
@@ -154,9 +183,11 @@ const Header = () => {
                   ))}
                 </ul>
               )}
+
             </div>
-            <Button type="button" className={`${currentTheme === "light" ? "bg-green-600/90" : "bg-green-950/90"}`}>
-              <Search />
+            <Button
+              onClick={handleLocationRequest} >
+              <MapPin />
             </Button>
           </div>
           {/* Desktop Nav */}
@@ -182,16 +213,38 @@ const Header = () => {
 
           {/* Mobile Nav */}
           <div className="md:hidden flex items-center gap-4  font-primary">
-            <input
-              type="text"
-              placeholder={`Search. . . .`}
-              className={`py-2 px-2 w-28 rounded-2xl sm:flex-auto border ${currentTheme === "light" ? "border-black" : "border-white"} bg-${currentTheme === "light" ? "white" : "green-900"} text-${currentTheme === "light" ? "black" : "white"} `}
+            <div className="relative">
+              <input
+                type="text"
+                placeholder={pathname === '/crops' ? 'Search crops...' : 'Search location...'}
+                value={searchInput}
+                onChange={(e) => {
 
-            />
+                  setSearchInput(e.target.value);
+                  if (e.target.value.length > 2) {
+                    fetchLocationSuggestions(e.target.value);
+                  }
+                }}
+                className={`px-4 py-2 w-28 rounded-2xl border ${currentTheme === "light" ? "border-black" : "border-white"} bg-${currentTheme === "light" ? "white" : "green-900"} text-${currentTheme === "light" ? "black" : "white"}`}
+              />
+              {locationSuggestions.length > 0 && (
+                <ul className="absolute shadow-lg rounded-lg mt-2 w-80 max-h-48 overflow-y-auto">
+                  {locationSuggestions.map((suggestion) => (
+                    <li
+                      key={suggestion.formatted}
+                      className="p-2 bg-green-500/80 hover:bg-green-700 cursor-pointer"
+                      onClick={() => handleSuggestionClick(suggestion)}
+                    >
+                      {suggestion.formatted}
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+            </div>
             <Button
-              type="button"
-              className={`${currentTheme === "light" ? "bg-green-500" : "bg-green-900"} py-2 px-2`}>
-              <Search />
+              onClick={handleLocationRequest} >
+              <MapPin />
             </Button>
             <DropdownMenu className="font-primary align-start">
               <DropdownMenuTrigger asChild>

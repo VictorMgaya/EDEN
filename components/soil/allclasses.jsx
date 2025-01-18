@@ -1,131 +1,147 @@
-"use client"
+import React, { useState, useEffect } from 'react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
+import { useMediaQuery } from 'react-responsive';
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation" // Import useRouter
-import { Bar, BarChart, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from "recharts"
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-    CardFooter
-} from "@/components/ui/card"
-import {
-    ChartContainer,
-    ChartTooltip,
-    ChartTooltipContent,
-} from "@/components/ui/chart"
-import Loading from "../Loader"
-
-const TopSoilClassChart = () => {
-    const [soilClasses, setSoilClasses] = useState([])
-    const [loading, setLoading] = useState(true)
-    const [error, setError] = useState(null)
+const SoilClassificationChart = () => {
+    const [soilClasses, setSoilClasses] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const isMobile = useMediaQuery({ query: '(max-width: 768px)' });
 
     useEffect(() => {
-        // Extract latitude and longitude from URL query parameters
-        const urlParams = new URLSearchParams(window.location.search)
-        const lat = parseFloat(urlParams.get("lat"))
-        const lon = parseFloat(urlParams.get("lon"))
-
-        // If latitude or longitude is missing, exit early
-        if (!lat || !lon) {
-            setError("Latitude or longitude is missing in the URL.")
-            setLoading(false)
-            return
-        }
-
-        // Fetch all soil class data from SoilGrids API
-        const fetchSoilClasses = async () => {
+        const fetchSoilData = async () => {
             try {
-                const response = await fetch(
-                    `https://rest.isric.org/soilgrids/v2.0/classification/query?lon=${lon}&lat=${lat}&number_classes=10`
-                )
-                if (!response.ok) {
-                    throw new Error("Failed to fetch soil classes.")
+                const params = new URLSearchParams(window.location.search);
+                const lat = parseFloat(params.get('lat'));
+                const lon = parseFloat(params.get('lon'));
+
+                if (!lat || !lon) {
+                    throw new Error('Location coordinates are required');
                 }
-                const data = await response.json()
 
-                // Format data for the chart (soil classes and their probabilities)
-                const formattedData = data.wrb_class_probability.map(([className, value], index) => ({
+                // Number of classes based on device type
+                const numberOfClasses = isMobile ? 10 : 30;
+
+                const response = await fetch(
+                    `https://rest.isric.org/soilgrids/v2.0/classification/query?lon=${lon}&lat=${lat}&number_classes=${numberOfClasses}`
+                );
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch soil data');
+                }
+
+                const data = await response.json();
+
+                // Transform data for the chart
+                const formattedData = data.wrb_class_probability.map(([className, probability], index) => ({
                     soilClass: className,
-                    probability: value,
-                    fill: `hsl(var(--chart-${index + 1}))`,
-                }))
+                    probability: Math.round(probability * 100) / 100,
+                    fill: `hsl(${index * (360 / numberOfClasses)}, 70%, 50%)`
+                }));
 
-                setSoilClasses(formattedData)
+                setSoilClasses(formattedData);
             } catch (err) {
-                setError(err.message)
+                setError(err.message);
             } finally {
-                setLoading(false)
+                setIsLoading(false);
             }
-        }
+        };
 
-        fetchSoilClasses()
-    }, [])
+        fetchSoilData();
+    }, [isMobile]);
 
-    if (loading) return <Loading />
-    if (error) return <p>Error: {error}</p>
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center h-64">
+                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+            </div>
+        );
+    }
 
-    const chartConfig = {
-        probability: {
-            label: "Probability (%)",
-        },
-        soilClass: {
-            label: "Soil Class",
-        },
+    if (error) {
+        return (
+            <div className="p-4 text-red-500 bg-red-100 rounded-lg">
+                Error: {error}
+            </div>
+        );
     }
 
     return (
-        <Card className="bg-green-500/20 backdrop-blur-md font-primary">
+        <Card className="w-full">
             <CardHeader>
-                <CardTitle>Top 10 Soil Classes</CardTitle>
-                <CardDescription>Based on probability ranking</CardDescription>
+                <CardTitle className="text-xl font-semibold">
+                    Soil Classification Distribution
+                </CardTitle>
             </CardHeader>
             <CardContent>
-                <ChartContainer config={chartConfig}>
-                    <ResponsiveContainer width="100%" height={400}>
-                        <BarChart
-                            data={soilClasses}
-                            layout="vertical"
-                            margin={{
-                                top: 20,
-                                right: 30,
-                                left: 20,
-                                bottom: 20,
-                            }}
-                        >
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis type="number" hide />
-                            <YAxis
-                                dataKey="soilClass"
-                                type="category"
-                                tickLine={false}
-                                tickMargin={10}
-                                axisLine={false}
-                                tick={({ x, y, payload }) => (
-                                    <text x={x - 10} y={y} textAnchor="end" fill="var(--text-color)">
-                                        {payload.value}
-                                    </text>
-                                )}
-                            />
-                            <Tooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
-                            <Bar dataKey="probability" layout="vertical" radius={5} />
-                        </BarChart>
+                <div className="w-full h-96 md:h-[600px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                        {isMobile ? (
+                            // Mobile layout - horizontal bars
+                            <BarChart
+                                data={soilClasses}
+                                layout="vertical"
+                                margin={{ top: 20, right: 30, left: 100, bottom: 20 }}
+                            >
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis
+                                    type="number"
+                                    domain={[0, 100]}
+                                    tickFormatter={(value) => `${value}%`}
+                                />
+                                <YAxis
+                                    dataKey="soilClass"
+                                    type="category"
+                                    tick={{ fontSize: 12 }}
+                                />
+                                <Tooltip
+                                    formatter={(value) => [`${value}%`, 'Probability']}
+                                    cursor={{ fill: 'rgba(0, 0, 0, 0.1)' }}
+                                />
+                                <Bar
+                                    dataKey="probability"
+                                    fill="#4f46e5"
+                                    radius={[0, 4, 4, 0]}
+                                />
+                            </BarChart>
+                        ) : (
+                            // Desktop layout - vertical bars
+                            <BarChart
+                                data={soilClasses}
+                                margin={{ top: 20, right: 30, left: 20, bottom: 100 }}
+                            >
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis
+                                    dataKey="soilClass"
+                                    angle={-45}
+                                    textAnchor="end"
+                                    height={100}
+                                    tick={{ fontSize: 12 }}
+                                />
+                                <YAxis
+                                    domain={[0, 100]}
+                                    tickFormatter={(value) => `${value}%`}
+                                />
+                                <Tooltip
+                                    formatter={(value) => [`${value}%`, 'Probability']}
+                                    cursor={{ fill: 'rgba(0, 0, 0, 0.1)' }}
+                                />
+                                <Bar
+                                    dataKey="probability"
+                                    fill="#4f46e5"
+                                    radius={[4, 4, 0, 0]}
+                                />
+                            </BarChart>
+                        )}
                     </ResponsiveContainer>
-                </ChartContainer>
+                </div>
             </CardContent>
-            <CardFooter className="flex-col items-start gap-2 text-sm">
-                <div className="flex gap-2 font-medium leading-none">
-                    Insights based on SoilGrids data
-                </div>
-                <div className="leading-none text-muted-foreground">
-                    top 10 soil classes at the location ranked by probability.
-                </div>
+            <CardFooter className="text-sm text-gray-500">
+                Data source: SoilGrids - Displaying {isMobile ? '10' : '30'} soil classes by probability
             </CardFooter>
         </Card>
-    )
-}
+    );
+};
 
-export default TopSoilClassChart
+export default SoilClassificationChart;
