@@ -53,6 +53,7 @@ function AnalyticsPage() {
             scannedLocation={scannedLocation}
             icon={icon}
           />
+          <TopSoilClassComponent />
         </div>
         <DailyWeather />
 

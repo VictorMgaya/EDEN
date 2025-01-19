@@ -128,9 +128,9 @@ const Header = () => {
   return (
     <>
       <header
-        className={` header items-center sm:p-0.5 xsm:p-0.5 md:p-0.5 xl:p-1 rounded-b-2xl justify-center flex-auto ${currentTheme === "light"
-          ? "text-black bg-gradient-to-r from-blue-500/90 to-green-500/90 p-6 md:p-10"
-          : "text-white bg-gradient-to-r from-gray-900/95 to-green-950/95 p-6 md:p-10"
+        className={`header py-4 flex items-center justify-between flex-auto rounded-b-2xl ${currentTheme === "light"
+          ? "text-black bg-gradient-to-r from-blue-500/90 to-green-500/90 sm:h-16 md:h-20 lg:h-24 xl:h-28"
+          : "text-white bg-gradient-to-r from-gray-900/95 to-green-950/95 sm:h-16 md:h-20 lg:h-24 xl:h-28"
           } fixed top-0 left-0 right-0 z-50 font-primary animate-accordion-down lazyloaded ease-in-out`}
       >
         {/* Google tag (gtag.js) */}
@@ -148,8 +148,8 @@ const Header = () => {
         <meta name="google-site-verification" content="xhS9AxO9_lnZW5qXS9B3tCziTO-v0E0pAv8OicFMsd4" />
         <div className="container mx-auto flex justify-between items-center">
           {/* Logo */}
-          <Link href="/" className="flex items-left gap-2">
-            <h1 className="text-xl md:text-3xl font-bold-200 ">
+          <Link href="/" className="flex items-center">
+            <h1 className="text-xl md:text-3xl font-bold-italic">
               Eden
             </h1>
           </Link>
@@ -168,14 +168,17 @@ const Header = () => {
                     fetchLocationSuggestions(e.target.value);
                   }
                 }}
-                className={`px-4 py-2 rounded-l-2xl border ${currentTheme === "light" ? "border-black" : "border-white"} bg-${currentTheme === "light" ? "white" : "green-900"} text-${currentTheme === "light" ? "black" : "white"}`}
+                className={`px-4 py-2 rounded-2xl border ${currentTheme === "light" ? "border-black" : "border-white"} bg-${currentTheme === "light" ? "white" : "green-900"} text-${currentTheme === "light" ? "black" : "white"}`}
               />
               {locationSuggestions.length > 0 && (
-                <ul className="absolute shadow-lg rounded-b-xl mt-1 w-80 max-h-48 overflow-y-auto">
+                <ul className={`absolute shadow-lg rounded-b-2xl mt-1 w-80 max-h-48 ${currentTheme === " light"
+                  ? "text-black bg-gradient-to-r from-blue-500/90 to-green-500/90 sm:h-16 md:h-20 lg:h-24 xl:h-28"
+                  : "text-white bg-gradient-to-r from-gray-900/95 to-green-950/95 sm:h-16 md:h-20 lg:h-24 xl:h-28"
+                  } overflow-y-auto`}>
                   {locationSuggestions.map((suggestion) => (
                     <li
                       key={suggestion.formatted}
-                      className="p-2 bg-green-500/80 hover:bg-green-700 cursor-pointer"
+                      className="p-2  hover:bg-green-700 cursor-pointer"
                       onClick={() => handleSuggestionClick(suggestion)}
                     >
                       {suggestion.formatted}
@@ -225,14 +228,17 @@ const Header = () => {
                     fetchLocationSuggestions(e.target.value);
                   }
                 }}
-                className={`px-4 py-2 w-28 rounded-2xl border ${currentTheme === "light" ? "border-black" : "border-white"} bg-${currentTheme === "light" ? "white" : "green-900"} text-${currentTheme === "light" ? "black" : "white"}`}
+                className={`px-4 py-2 w-36 rounded-2xl border ${currentTheme === "light" ? "border-black" : "border-white"} bg-${currentTheme === "light" ? "white" : "green-900"} text-${currentTheme === "light" ? "black" : "white"}`}
               />
               {locationSuggestions.length > 0 && (
-                <ul className="absolute shadow-lg rounded-lg mt-2 w-80 max-h-48 overflow-y-auto">
+                <ul className={`absolute shadow-lg rounded-2xl ${currentTheme === " light"
+                  ? "text-black bg-gradient-to-r from-blue-500/90 to-green-500/90 sm:h-16 md:h-20 lg:h-24 xl:h-28"
+                  : "text-white bg-gradient-to-r from-gray-900/95 to-green-950/95 sm:h-16 md:h-20 lg:h-24 xl:h-28"
+                  } mt-2 w-36 max-h-48 overflow-y-auto `}>
                   {locationSuggestions.map((suggestion) => (
                     <li
                       key={suggestion.formatted}
-                      className="p-2 bg-green-500/80 hover:bg-green-700 cursor-pointer"
+                      className="p-2 w-36   cursor-pointer"
                       onClick={() => handleSuggestionClick(suggestion)}
                     >
                       {suggestion.formatted}
@@ -246,7 +252,7 @@ const Header = () => {
               onClick={handleLocationRequest} >
               <MapPin />
             </Button>
-            <DropdownMenu className="font-primary align-start">
+            <DropdownMenu className="font-primary align-start z-50">
               <DropdownMenuTrigger asChild>
                 <Button className={`${currentTheme === "light" ? "bg-green-500" : "bg-green-900"} px-3 py-3`}>
                   <Menu />

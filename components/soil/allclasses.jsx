@@ -82,12 +82,12 @@ const SoilClassificationChart = () => {
                             <BarChart
                                 data={soilClasses}
                                 layout="vertical"
-                                margin={{ top: 20, right: 30, left: 100, bottom: 20 }}
+                                margin={{ top: 20, right: 10, left: 10, bottom: 20 }}
                             >
                                 <CartesianGrid strokeDasharray="3 3" />
                                 <XAxis
                                     type="number"
-                                    domain={[0, 100]}
+                                    domain={[0, 50]}
                                     tickFormatter={(value) => `${value}%`}
                                 />
                                 <YAxis

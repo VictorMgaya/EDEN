@@ -6,7 +6,7 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 
-export default function Page() {
+export default function CropsLibrary() {
   const [crops, setCrops] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);

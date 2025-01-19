@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import mongoose, { Document, Schema } from "mongoose";
 
 export interface ICrops extends Document {

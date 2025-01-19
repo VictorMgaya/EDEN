@@ -60,7 +60,7 @@ export function TopSoilClassesChart() {
     if (error) return <p>Error: {error}</p>;
 
     return (
-        <Card className="bg-yellow-500/10 shadow-md rounded-xl p-4">
+        <Card className="hidden md:block bg-yellow-500/10 shadow-md rounded-xl p-4 mx-auto">
             <CardHeader>
                 <CardTitle className="text-xl font-bold ">
                     Top 5 Soil Classes
@@ -80,25 +80,24 @@ export function TopSoilClassesChart() {
                     <YAxis
                         dataKey="soilClass"
                         type="category"
-                        tick={{ fontSize: 14, fill: "#333" }}
+                        tick={{ fontSize: 14 }}
                         tickLine={false}
                         axisLine={false}
                     />
                     <XAxis
                         dataKey="probability"
                         type="number"
-                        tick={{ fontSize: 12, fill: "#666" }}
+                        tick={{ fontSize: 12 }}
                         tickLine={false}
                         axisLine={false}
                     />
                     <Tooltip
                         contentStyle={{
-                            backgroundColor: "rgba(255, 255, 255, 0.9)",
                             border: "1px solid #ddd",
                             borderRadius: "8px",
                             padding: "10px",
                         }}
-                        cursor={{ fill: "rgba(0, 0, 0, 0.1)" }}
+                        cursor={{ fill: "rgba(0, 0, 0, 0)" }}
                     />
                     <Bar dataKey="probability" barSize={30} radius={[5, 5, 0, 0]} />
                 </BarChart>

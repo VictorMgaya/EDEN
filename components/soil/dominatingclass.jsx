@@ -104,7 +104,7 @@ const TopSoilClassComponent = () => {
     const soilImage = soilClassImages[soilClass] || "https://cdn.britannica.com/70/24270-004-5D749430/soil-profile-Fluvisol-sediments-South-Africa-rivers.jpg"; // Fallback image
 
     return (
-        <div className="top-soil-class-container bg-yellow-500/20 p-4 rounded-2xl shadow-lg"
+        <div className=" mx-auto top-soil-class-container bg-yellow-500/20 p-4 rounded-2xl shadow-lg"
             onClick={handleSoilClassClick}
         >
             <h2 className="text-xl font-semibold mb-4">Top Soil Class</h2>

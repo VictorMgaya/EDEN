@@ -1,35 +1,30 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import mongoose, { Document, Schema } from "mongoose";
+import mongoose from "mongoose";
 
-
-export interface IUser extends Document {
-    name: string;
-    email: string;
-    image: string;
-}
-
-const userSchema: Schema = new mongoose.Schema(
-    {
-        name: {
-            type: String,
-            required: true
-        },
-        email: {
-            type: String,
-            required: true,
-            unique: true
-        },
-        image: {
-            type: String,
-            required: true
-        },
+const userSchema = new mongoose.Schema({
+    name: {
+        type: String,
+        required: [true, 'Name is required'],
     },
-    {
-        timestamps: true
+    email: {
+        type: String,
+        required: [true, 'Email is required'],
+        unique: true,
+    },
+    password: {
+        type: String,
+    },
+    image: {
+        type: String,
+        required: [true, 'Image is required'],
+    },
+    provider: {
+        type: String,
+        required: true,
+        enum: ['credentials', 'google'],
     }
+}, {
+    timestamps: true,
+});
 
-);
-
-const User = mongoose.models.User || mongoose.model<IUser>("User", userSchema);
-
+const User = mongoose.models.User || mongoose.model('User', userSchema);
 export default User;

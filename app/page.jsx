@@ -2,13 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Page from '@/components/crops';
-import AdsContainer from '@/components/monetization/containerBannerads';
 import DailyWeather from '@/components/weather/daily';
 import WeeklyWeather from '../components/weather/weekly';
 import TommorowWeather from '../components/weather/tommorow';
 import TopSoilClassComponent from '../components/soil/dominatingclass';
 import TopSoilClassesChart from '../components/soil/top5classes';
+import CropsLibrary from './crops/page';
 
 
 export default function Home() {
@@ -64,17 +63,14 @@ export default function Home() {
       <div className="grid gap-6 p-6 w-full">
         <WeeklyWeather />
       </div>
-      <h1 className=" flex grid-cols-2 gap-6 p-6 w-full bg-gradient-to-r from-yellow-500/20 to-green-500/20 rounded-t-2xl"> Soil Analysis</h1>
+      <h1 className=" flex text-2xl justify-center font-bold bg-gradient-to-r from-yellow-500/20 to-green-500/20 rounded-t-2xl"> Soil Analysis</h1>
       <div className="grid md:grid-cols-2 gap-6 p-6 w-full bg-gradient-to-r from-yellow-500/20 to-green-500/20 rounded-b-2xl">
         <TopSoilClassComponent />
         <TopSoilClassesChart />
       </div>
-      <div className="grid gap-6 p-6 md:grid-cols-2 lg:grid-cols-2">
-        <Page />
-        <Page />
-        <Page />
-        <Page />
-        <Page />
+      <div className="grid gap-6 p-6 md:grid-cols-2 lg:grid-cols-2 bg-gradient-to-r from-green-500/50 to-green-900/50 rounded-2xl mt-4">
+        <h1 className='text-2xl font-bold justify-center flex '>CROPS LIBRARY</h1>
+        <CropsLibrary />
       </div>
     </div>
   );
