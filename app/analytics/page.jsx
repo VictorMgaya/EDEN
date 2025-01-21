@@ -16,7 +16,7 @@ function AnalyticsPage() {
 
   const icon = L.icon({
     iconUrl: './locationtag.png',
-    iconSize: [32, 32],
+    iconSize: [30, 32],
   });
 
   useEffect(() => {
