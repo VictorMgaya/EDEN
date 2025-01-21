@@ -35,16 +35,6 @@ export default function RootLayout({ children, session }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        {/* Google tag (gtag.js) */}
-        <script async src="https://www.googletagmanager.com/gtag/js?id=G-54BWW075M3"></script>
-        <script dangerouslySetInnerHTML={{
-          __html: `
-              window.dataLayer = window.dataLayer || [];
-              function gtag(){dataLayer.push(arguments);}
-              gtag('js', new Date());
-              gtag('config', 'G-54BWW075M3');
-            `
-        }} />
         <meta name="google-adsense-account" content="ca-pub-9431888211578782"></meta>
         <meta name="google-site-verification" content="xhS9AxO9_lnZW5qXS9B3tCziTO-v0E0pAv8OicFMsd4" />
       </head>

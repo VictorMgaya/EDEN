@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
@@ -75,7 +77,7 @@ const SoilClassificationChart = () => {
                 </CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="w-full h-96 md:h-[600px]">
+                <div className="w-full h-96 md:h-[600px] bg-gradient-to-r from-yellow-500/10 to-yellow-900/10 rounded-lg overflow-hidden">
                     <ResponsiveContainer width="100%" height="100%">
                         {isMobile ? (
                             // Mobile layout - horizontal bars

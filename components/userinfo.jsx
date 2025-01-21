@@ -16,12 +16,12 @@ export default function UserInfo() {
             } rounded-2xl p-8 place-self-center`}>
             <div className="mb-4">
                 <Avatar className="h-24 w-24">
-                    <AvatarImage src={session?.user.image} />
+                    <AvatarImage src={session?.user.image || 'defaultImage.png'} />
                     <AvatarFallback>{session?.user.name}</AvatarFallback>
                 </Avatar>
             </div>
             <div className="text-center">
-                <h1 className="text-bold text-xl">{session?.user.name}</h1>
+                <h1 className="text-bold text-xl">{session?.user.name || 'eden.svg'}</h1>
                 <h2>Email : <span className="text-bold">{session?.user.email}</span></h2>
                 <div className="mt-10 items-center">
                     <Button onClick={() => window.location.href = '/'} className="mr-10">

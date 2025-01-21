@@ -128,22 +128,11 @@ const Header = () => {
   return (
     <>
       <header
-        className={`header py-4 flex items-center justify-between flex-auto rounded-b-2xl ${currentTheme === "light"
+        className={`header py-4 flex items-center justify-between rounded-b-2xl ${currentTheme === "light"
           ? "text-black bg-gradient-to-r from-blue-500/90 to-green-500/90 sm:h-16 md:h-20 lg:h-24 xl:h-28"
           : "text-white bg-gradient-to-r from-gray-900/95 to-green-950/95 sm:h-16 md:h-20 lg:h-24 xl:h-28"
           } fixed top-0 left-0 right-0 z-50 font-primary animate-accordion-down lazyloaded ease-in-out`}
       >
-        {/* Google tag (gtag.js) */}
-        <script async src="https://www.googletagmanager.com/gtag/js?id=G-54BWW075M3"></script>
-        <script>
-          {`
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments)}
-      gtag('js', new Date());
-
-      gtag('config', 'G-54BWW075M3');
-      `}
-        </script>
         <meta name="google-adsense-account" content="ca-pub-9431888211578782" />
         <meta name="google-site-verification" content="xhS9AxO9_lnZW5qXS9B3tCziTO-v0E0pAv8OicFMsd4" />
         <div className="container mx-auto flex justify-between items-center">
@@ -172,8 +161,8 @@ const Header = () => {
               />
               {locationSuggestions.length > 0 && (
                 <ul className={`absolute shadow-lg rounded-b-2xl mt-1 w-80 max-h-48 ${currentTheme === " light"
-                  ? "text-black bg-gradient-to-r from-blue-500/90 to-green-500/90 sm:h-16 md:h-20 lg:h-24 xl:h-28"
-                  : "text-white bg-gradient-to-r from-gray-900/95 to-green-950/95 sm:h-16 md:h-20 lg:h-24 xl:h-28"
+                  ? "text-black bg-gradient-to-r from-blue-500/90 to-green-500/90"
+                  : "text-white bg-gradient-to-r from-gray-900/95 to-green-950/95"
                   } overflow-y-auto`}>
                   {locationSuggestions.map((suggestion) => (
                     <li
@@ -263,7 +252,7 @@ const Header = () => {
                   {status === "authenticated" ? (
                     <Link href="/auth" className="flex items-center gap-2">
                       <Avatar className="cursor-pointer">
-                        <AvatarImage src={session?.user.image} />
+                        <AvatarImage src={session?.user.image || 'edenlogo.svg'} />
                       </Avatar>
                       <span>My Account</span>
                     </Link>

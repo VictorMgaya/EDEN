@@ -38,6 +38,25 @@ export async function GET() {
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
+
+   <url>
+    <loc>${hostname}/analytics/</loc>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+   <url>
+    <loc>${hostname}/auth</loc>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+   <url>
+    <loc>${hostname}/crops</loc>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+
   <url>
     <loc>${hostname}/about</loc>
     <changefreq>monthly</changefreq>

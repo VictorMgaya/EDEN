@@ -29,18 +29,20 @@ function AnalyticsPage() {
       setScannedLocation({ lat, lng: lon });
       setZoom(13);
     }
+
+    const handleSearchLocation = () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const lat = parseFloat(urlParams.get('lat'));
+      const lon = parseFloat(urlParams.get('lon'));
+
+      if (!isNaN(lat) && !isNaN(lon)) {
+        setScannedLocation({ lat, lng: lon });
+        window.location.reload();
+      }
+    };
+
   }, []);
 
-  const handleSearchLocation = () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const lat = parseFloat(urlParams.get('lat'));
-    const lon = parseFloat(urlParams.get('lon'));
-
-    if (!isNaN(lat) && !isNaN(lon)) {
-      setScannedLocation({ lat, lng: lon });
-      window.location.reload();
-    }
-  };
 
   return (
     <div className='mx-auto mb-10'>
@@ -53,7 +55,6 @@ function AnalyticsPage() {
             scannedLocation={scannedLocation}
             icon={icon}
           />
-          <TopSoilClassComponent />
         </div>
         <DailyWeather />
 
