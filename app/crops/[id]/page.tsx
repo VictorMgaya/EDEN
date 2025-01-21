@@ -81,7 +81,7 @@ export default function CropDetailsPage() {
                         <p className="text-lg mb-2">Crop Coefficient (Kc): {crop.Kc}</p>
                         <div className="mt-4">
                             <h2 className="font-semibold">Description:</h2>
-                            <p>{crop.description}</p>
+                            <div>{crop.description}</div>
                         </div>
                     </div>
                 </div>
