@@ -18,10 +18,10 @@ export default function CropsLibrary() {
 
   // Metadata setup for Crops Library
   const metadata = {
-    title: "Crops Library - Eden App",
+    title: "Crops Library - Eden",
     description: "Explore our comprehensive library of crops with detailed growing information and specifications",
     image: "https://www.sare.org/wp-content/uploads/Cover-Crop-Images-Library-screenshot.jpg",
-    type: "website"
+    type: "App"
   };
 
   useEffect(() => {
@@ -33,7 +33,7 @@ export default function CropsLibrary() {
       { property: "og:description", content: metadata.description },
       { property: "og:image", content: metadata.image },
       { property: "og:type", content: metadata.type },
-      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:card", content: "Crops Library" },
       { name: "twitter:title", content: metadata.title },
       { name: "twitter:description", content: metadata.description },
       { name: "twitter:image", content: metadata.image }
