@@ -3,12 +3,13 @@
 import Link from "next/link";
 import { Button } from "./ui/button";
 import { useTheme } from "next-themes";
-import { Sun, Moon, Menu, User, Settings, Search, BarChart2, ChevronDown, MapPin, Home, ShoppingCart, ShoppingBag, BookOpen } from "react-feather"; // Add MapPin import
+import { Sun, Moon, Menu, User, Settings, Search, BarChart2, ChevronDown, MapPin, Home, ShoppingCart, ShoppingBag, BookOpen, LogOut } from "react-feather"; // Add MapPin import
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { signIn, signOut, useSession } from "next-auth/react";
 import axios from "axios";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import BottomNav from "./BottomNav";
 
 
 
@@ -22,7 +23,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { User2Icon } from "lucide-react";
+import { LogIn, User2Icon } from "lucide-react";
 
 const Header = () => {
   const { theme, setTheme, resolvedTheme } = useTheme();
@@ -241,69 +242,67 @@ const Header = () => {
               onClick={handleLocationRequest} >
               <MapPin />
             </Button>
-            <DropdownMenu className="font-primary align-start z-50">
+            <DropdownMenu className="font-primary align-start z-100">
               <DropdownMenuTrigger asChild>
-                <Button className={`${currentTheme === "light" ? "bg-green-500" : "bg-green-900"} px-3 py-3`}>
-                  <Menu />
-                </Button>
+                {status === "authenticated" ? (
+
+                  <Avatar className="cursor-pointer">
+                    <AvatarImage src={session?.user.image || 'edenlogo.svg'} />
+                  </Avatar>
+                ) : (
+                  <Avatar className="cursor-pointer">
+                    <AvatarFallback>
+                      <User2Icon />
+                    </AvatarFallback>
+                  </Avatar>
+                )}
+
               </DropdownMenuTrigger>
-              <DropdownMenuContent className={` ${currentTheme === "light" ? "text-black bg-green-400" : "text-white bg-green-950"} font-primary`}>
-                <DropdownMenuItem>
+              <DropdownMenuContent className={`${currentTheme === "light" ? "bg-gradient-to-r from-blue-200 to-green-500" : "bg-gradient-to-r from-gray-950 to-green-900"} px-3 py-3`}>
+                <DropdownMenuItem >
                   {status === "authenticated" ? (
                     <Link href="/auth" className="flex items-center gap-2">
-                      <Avatar className="cursor-pointer">
-                        <AvatarImage src={session?.user.image || 'edenlogo.svg'} />
-                      </Avatar>
-                      <span>My Account</span>
+                      <span>{session?.user.name || "My Acccount"}</span>
                     </Link>
                   ) : (
                     <Link href="/auth" className="flex items-center gap-2">
-                      <Avatar className="cursor-pointer">
-                        <AvatarFallback>
-                          <User2Icon />
-                        </AvatarFallback>
-                      </Avatar>
+                      <Button><LogIn /></Button>
                       <span>Login</span>
                     </Link>
                   )}
                 </DropdownMenuItem>
-
-                <DropdownMenuItem url="/">
-                  <Button type="button" className={` px-3 py-2 rounded-lg ${currentTheme === "light" ? "bg-green-500" : "bg-green-950"}`}><Home /></Button>Home
-                </DropdownMenuItem>
-                <DropdownMenuItem url="/analytics">
-                  <Button type="button" className={` px-3 py-2 rounded-lg ${currentTheme === "light" ? "bg-green-500" : "bg-green-950"}`}><BarChart2 /></Button>Analytics
-                </DropdownMenuItem>
-                <DropdownMenuItem url="/market">
-                  <Button type="button" className={` px-3 py-2 rounded-lg ${currentTheme === "light" ? "bg-green-500" : "bg-green-950"}`}><ShoppingCart /></Button>Market
-                </DropdownMenuItem>
                 <DropdownMenuItem onClick={(e) => {
                   e.preventDefault();
                   setTheme(currentTheme === "light" ? "dark" : "light");
-                }}
-                  className={`${currentTheme === "light" ? "bg-green-950/10" : "bg-green-500/10"}`}>
+                }}>
                   <Button
                     type="button"
                     onClick={(e) => {
                       e.preventDefault();
                       setTheme(currentTheme === "light" ? "dark" : "light");
                     }}
-                    className={`${currentTheme === "light" ? "bg-green-950/10" : "bg-green-500/10"}`}
                   >
                     {currentTheme === "light" ? <Moon /> : <Sun />}
                   </Button>Change Theme
                 </DropdownMenuItem>
-                <DropdownMenuItem url="/settings">
-                  <button type="button" className={` px-3 py-2 rounded-lg ${currentTheme === "light" ? "bg-green-500" : "bg-green-950"}`}>
-                    <Settings />
-                  </button>Settings
-                </DropdownMenuItem>
+                {status === "authenticated" && (
+                  <DropdownMenuItem onClick={() => signOut()}>
+                    <button type="button" className={` px-3 py-2 rounded-lg ${currentTheme === "light" ? "bg-green-500" : "bg-green-950"}`}
+                      onClick={() => signOut()}
+                    >
+                      <LogOut />
+                    </button>LogOut
+                  </DropdownMenuItem>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
         </div>
       </header>
+      {/* Existing header code */}
+      <BottomNav />
     </>
+
   );
 };
 
