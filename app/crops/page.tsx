@@ -153,12 +153,6 @@ export default function CropsLibrary() {
                 </p>
               </div>
               <div className="mt-4">
-                <p className="font-semibold">Description:</p>
-                <p className="paragraph">
-                  {truncateDescription(crop.description, 50)}
-                </p>
-              </div>
-              <div className="mt-4">
                 <button
                   className="bg-green-600 hover:bg-green-700 font-bold py-2 px-4 rounded-2xl"
                   onClick={() => handleViewDetails(crop._id)}
