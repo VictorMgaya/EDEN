@@ -46,9 +46,9 @@ function AnalyticsPage() {
 
   return (
     <div className='mx-auto mb-10'>
-      <div className='container grid  md:grid-cols-2 sm:grid-cols-1 gap-4'>
+      <div className='grid  md:grid-cols-2 sm:grid-cols-1 justify-center gap-4'>
         {/* Map Section */}
-        <div className='justify-center items-stretch content-center rounded-2xl bg-blue-500/20 z-0 relative'>
+        <div className='justify-center content-center rounded-2xl bg-blue-500/20 z-0 relative'>
           <MapContainerComponent
             center={center}
             zoom={zoom}
