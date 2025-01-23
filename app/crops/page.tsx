@@ -118,15 +118,16 @@ export default function CropsLibrary() {
         <title>{metadata.title}</title>
         <meta name="description" content={metadata.description} />
       </Head>
-      <div className="container rounded-lg mx-auto px-4 py-8 bg-green-500/10">
-        <h1 className="text-3xl font-bold mb-6">Crops Library</h1>
+      <div className=" rounded-lg mx-auto bg-green-500/10">
+        <h1 className="text-3xl font-semibold py-6 mt-6 text-center">Crops Library</h1>
+
         {displayedCrops.map((crop) => (
           <div
             key={crop._id}
-            className="flex flex-col md:flex-row items-start font-primary rounded-lg p-4 sm:p-5 mb-4 bg-green-600/10 cursor-pointer hover:shadow-lg transition-shadow"
+            className="flex flex-col md:flex-row items-start font-primary rounded-lg p-4 sm:p-5 mb-4 bg-green-600/10 cursor-pointer hover:shadow-2xl transition-shadow"
           >
             <img
-              src={crop.imageUrl || "/default-crop-image.jpg"}
+              src={crop.imageUrl || "/eden.jpg"}
               alt={crop.name}
               className="md:w-1/2 h-auto object-cover rounded-lg mr-5"
             />
@@ -168,7 +169,7 @@ export default function CropsLibrary() {
             </div>
           </div>
         ))}
-        <div ref={loadingRef} className="h-10" />
+        <div ref={loadingRef} className="h-10"></div>
       </div>
     </>
   );

@@ -68,8 +68,8 @@ export default function Home() {
         <TopSoilClassComponent />
         <TopSoilClassesChart />
       </div>
-      <div className="grid gap-6 p-6 bg-gradient-to-r from-green-500/20 to-green-900/20 rounded-2xl mt-4">
-        <h1 className='text-2xl font-bold justify-center flex '>CROPS LIBRARY</h1>
+      <div>
+
         <CropsLibrary />
       </div>
     </div>

@@ -6,6 +6,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Loading from '@/components/Loader';
+import DOMPurify from 'dompurify';
 
 type Crop = {
     _id: string;
@@ -18,6 +19,7 @@ type Crop = {
     infosources: string;
     imageUrl: string;
 };
+
 
 export default function CropDetailsPage() {
     const [crop, setCrop] = useState<Crop | null>(null);
@@ -130,8 +132,23 @@ export default function CropDetailsPage() {
         return <Loading />;
     }
 
+    const sanitizedDescription = DOMPurify.sanitize(crop.description);
+
+    const styles = {
+        link: {
+            color: '#3498db',
+            textDecoration: 'none',
+            fontWeight: 'bold',
+            transition: 'color 0.3s ease',
+        },
+        linkHover: {
+            color: '#e74c3c',
+            textDecoration: 'underline',
+        },
+    };
+
     return (
-        <main className="container rounded-lg px-4 py-8 bg-green-500/10">
+        <main className='bg-green-600/20'>
             <article itemScope itemType="https://schema.org/Article">
                 <div className="flex-auto items-center">
                     <h1 itemProp="name" className="text-3xl font-bold mb-4">{crop.name}</h1>
@@ -156,13 +173,22 @@ export default function CropDetailsPage() {
                         </p>
                         <div className="mt-4">
                             <h2 className="font-semibold">Description:</h2>
-                            <div itemProp="description">{crop.description}</div>
+                            <div
+                                itemProp="description"
+                                dangerouslySetInnerHTML={{
+                                    __html: crop.description.replace(
+                                        /<a /g,
+                                        `<a style="color:${styles.link.color}; text-decoration:${styles.link.textDecoration}; font-weight:${styles.link.fontWeight}; transition:${styles.link.transition}"`
+                                    ),
+                                }}
+                            ></div>
                         </div>
                     </div>
                 </div>
             </article>
         </main>
     );
+
 }
 
 function useMetadata(arg0: { title: string; description: string; image: string | undefined; type: string; }) {
