@@ -122,7 +122,7 @@ const SoilClassificationChart = () => {
                                     tick={{ fontSize: 12 }}
                                 />
                                 <YAxis
-                                    domain={[0, 100]}
+                                    domain={[0, 50]}
                                     tickFormatter={(value) => `${value}%`}
                                 />
                                 <Tooltip

@@ -1,10 +1,20 @@
 // MapContainerComponent.js
 import React from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
-// Custom component for resetting the map's center view
+// Location selector component
+function LocationSelector({ onLocationSelect }) {
+    useMapEvents({
+        click: (e) => {
+            const { lat, lng } = e.latlng;
+            onLocationSelect({ lat, lng });
+        },
+    });
+    return null;
+}
+
 function ResetCenterView({ selectPosition }) {
     const map = useMap();
 
@@ -21,9 +31,9 @@ function ResetCenterView({ selectPosition }) {
     return null;
 }
 
-const MapContainerComponent = ({ center, zoom, scannedLocation, icon }) => {
+const MapContainerComponent = ({ center, zoom, scannedLocation, icon, onLocationSelect }) => {
     return (
-        <div style={{ position: 'relative', width: '100%', height: '75vh' }}>
+        <div style={{ position: 'center', width: '100%', height: '75vh' }}>
             <MapContainer
                 center={center}
                 zoom={zoom}
@@ -34,9 +44,10 @@ const MapContainerComponent = ({ center, zoom, scannedLocation, icon }) => {
                     attribution='© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                     url="http://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}"
                 />
+                <LocationSelector onLocationSelect={onLocationSelect} />
                 {scannedLocation && (
                     <Marker position={scannedLocation} icon={icon}>
-                        <Popup>Scanned Location</Popup>
+                        <Popup>Selected Location</Popup>
                     </Marker>
                 )}
                 <ResetCenterView selectPosition={scannedLocation} />

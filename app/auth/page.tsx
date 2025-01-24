@@ -109,7 +109,7 @@ export default function AuthPage() {
                 className="bg-gradient-to-r from-red-500/50 to-green-500 flex items-center mb-4 rounded-2xl"
             >
                 <Image src="/Google.svg" alt="Google Logo" width={40} height={40} />
-                <span className="px-4 py-2 rounded-r-2xl">Sign in with Google</span>
+                <span className="px-4 py-2 rounded-r-2xl">Continue with Google</span>
             </button>
 
             <div className="w-full max-w-md">

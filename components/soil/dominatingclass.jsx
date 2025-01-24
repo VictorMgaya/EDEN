@@ -3,15 +3,6 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-const soilClassImages = {
-    Lixisols: "https://example.com/images/lixisols.jpg", // Replace with actual URL
-    Ferralsols: "https://example.com/images/ferralsols.jpg",
-    Acrisols: "https://example.com/images/acrisols.jpg",
-    Cambisols: "https://example.com/images/cambisols.jpg",
-    Arenosols: "https://example.com/images/arenosols.jpg",
-    // Add other soil classes as needed
-};
-
 const TopSoilClassComponent = () => {
     const [soilClass, setSoilClass] = useState(null);
     const [classValue, setClassValue] = useState(null);

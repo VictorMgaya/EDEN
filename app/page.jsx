@@ -13,10 +13,12 @@ import CropsLibrary from './crops/page';
 export default function Home() {
   const [isMounted, setIsMounted] = useState(false); // Track whether the component is mounted
   const [location, setLocation] = useState(null); // Store geolocation data
+  const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
     setIsMounted(true);
+    setIsLoading(false);
 
     let watchId; // Initialize variable for watchId
 
@@ -52,6 +54,10 @@ export default function Home() {
 
   // Prevent rendering charts and geolocation updates before the component is mounted
   if (!isMounted) return null;
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div>
