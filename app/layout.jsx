@@ -62,7 +62,7 @@ export default function RootLayout({ children, session }) {
       <body
         className={`${Lexend.variable} min-h-screen`}
         style={{
-          marginTop: "75px",
+          marginTop: "60px",
           position: "relative",
           top: "0",
         }}

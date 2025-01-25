@@ -43,7 +43,7 @@ function AnalyticsPage() {
 
   return (
     <div className='mx-auto mb-10 gap-10'>
-      <div className='container p-1 content-center rounded-2xl bg-blue-500/20 z-0 relative'>
+      <div className='container:w-full mb-4 p-1 content-center rounded-2xl bg-blue-500/20 z-0 relative'>
         <MapContainerComponent
           center={center}
           zoom={zoom}
