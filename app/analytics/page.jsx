@@ -9,6 +9,7 @@ import WeeklyWeather from '@/components/weather/weekly';
 import SoilMineralRanking from '@/components/soil/soilMineralRanking';
 import { Button } from '@/components/ui/button';
 import { BarChart2 } from 'react-feather';
+import { useRouter } from 'next/navigation';
 
 function AnalyticsPage() {
   const [center, setCenter] = useState({ lat: 51.9, lng: -0.09 });
@@ -17,7 +18,13 @@ function AnalyticsPage() {
 
   const icon = L.icon({
     iconUrl: './locationtag.png',
-    iconSize: [30, 32],
+    iconSize: [25, 40],
+  });
+
+  const router = useRouter();
+  const [location, setLocation] = useState({
+    lat: -9.308504812575954,
+    lon: 32.76276909918686
   });
 
   const handleLocationSelect = (location) => {
@@ -33,6 +40,18 @@ function AnalyticsPage() {
     const urlParams = new URLSearchParams(window.location.search);
     const lat = parseFloat(urlParams.get('lat'));
     const lon = parseFloat(urlParams.get('lon'));
+
+    const currentParams = new URLSearchParams(window.location.search);
+    const currentLat = parseFloat(currentParams.get('lat'));
+    const currentLon = parseFloat(currentParams.get('lon'));
+
+    // Set default location for Eden only if no params exist
+    if (!currentLat && !currentLon) {
+      router.push(`?lon=32.76276909918686&lat=-9.308504812575954`);
+      setTimeout(() => window.location.reload(), 5000);
+      setLocation({ lat: -9.308504812575954, lon: 32.76276909918686 });
+    }
+
 
     if (!isNaN(lat) && !isNaN(lon)) {
       setCenter({ lat, lng: lon });

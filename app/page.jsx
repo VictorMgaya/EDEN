@@ -12,28 +12,45 @@ import CropsLibrary from './crops/page';
 
 export default function Home() {
   const [isMounted, setIsMounted] = useState(false); // Track whether the component is mounted
-  const [location, setLocation] = useState(null); // Store geolocation data
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
+  const [location, setLocation] = useState({
+    lat: -9.308504812575954,
+    lon: 32.76276909918686
+  }); // Initialize with default coordinates
 
   useEffect(() => {
     setIsMounted(true);
     setIsLoading(false);
 
-    let watchId; // Initialize variable for watchId
+    const currentParams = new URLSearchParams(window.location.search);
+    const currentLat = parseFloat(currentParams.get('lat'));
+    const currentLon = parseFloat(currentParams.get('lon'));
+
+    // Set default location for Eden only if no params exist
+    if (!currentLat && !currentLon) {
+      router.push(`?lon=32.76276909918686&lat=-9.308504812575954`);
+      setTimeout(() => window.location.reload(), 5000);
+      setLocation({ lat: -9.308504812575954, lon: 32.76276909918686 });
+    }
+
+    let watchId;
 
     const requestUserLocation = () => {
-      if ("geolocation" in navigator) {
+      if ("geolocation" in navigator && !currentLat && !currentLon) {
         watchId = navigator.geolocation.watchPosition(
           (position) => {
             const { latitude, longitude } = position.coords;
-            setLocation({ lat: latitude, lon: longitude });
-
-            // Update the URL with the user's location
-            router.push(`?lon=${longitude}&lat=${latitude}`, undefined, { shallow: true });
+            // Check if location has changed significantly (more than 0.0001 degrees)
+            if (Math.abs(latitude - currentLat) > 0.0001 || Math.abs(longitude - currentLon) > 0.0001) {
+              setLocation({ lat: latitude, lon: longitude });
+              router.push(`?lon=${longitude}&lat=${latitude}`);
+              setTimeout(() => window.location.reload(), 5000);
+              // Clear the watch after successful location update
+              navigator.geolocation.clearWatch(watchId);
+            }
           },
           (error) => {
-            // Log the error properly with a fallback message
             console.error("Error getting location:", error?.message || "Unknown error");
           }
         );
@@ -44,7 +61,6 @@ export default function Home() {
 
     requestUserLocation();
 
-    // Cleanup on unmount
     return () => {
       if (watchId !== undefined) {
         navigator.geolocation.clearWatch(watchId);
@@ -52,7 +68,7 @@ export default function Home() {
     };
   }, [router]);
 
-  // Prevent rendering charts and geolocation updates before the component is mounted
+
   if (!isMounted) return null;
 
   if (isLoading) {
