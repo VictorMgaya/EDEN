@@ -7,6 +7,9 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Loading from '@/components/Loader';
 import DOMPurify from 'dompurify';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
+
 
 type Crop = {
     _id: string;
@@ -26,6 +29,41 @@ export default function CropDetailsPage() {
     const [error, setError] = useState<string | null>(null);
     const params = useParams();
     const id = params?.id;
+    const [navigation, setNavigation] = useState<{ prev: string | null, next: string | null }>({
+        prev: null,
+        next: null
+    });
+
+    // Add this to your existing useEffect that fetches crop data
+    useEffect(() => {
+        const fetchCropNavigation = async () => {
+            if (!crop) return;
+
+            try {
+                const response = await fetch('/api/crops');
+                const data = await response.json();
+                const allCrops = Array.isArray(data) ? data : [];
+
+                // Sort crops by name
+                const sortedCrops = allCrops.sort((a: Crop, b: Crop) =>
+                    a.name.localeCompare(b.name)
+                );
+
+                const currentIndex = sortedCrops.findIndex((c: Crop) => c._id === crop._id);
+
+                setNavigation({
+                    prev: currentIndex > 0 ? sortedCrops[currentIndex - 1]._id : null,
+                    next: currentIndex < sortedCrops.length - 1 ? sortedCrops[currentIndex + 1]._id : null
+                });
+            } catch (err) {
+                console.error('Failed to fetch navigation:', err);
+            }
+        };
+
+        fetchCropNavigation();
+    }, [crop]);
+
+
 
     // Add this custom hook at the top of your file, before the CropDetailsPage component
     function useMetadata({ title, description, image, type }: {
@@ -185,6 +223,23 @@ export default function CropDetailsPage() {
                         </div>
                     </div>
                 </div>
+                <div className="flex justify-between mt-8 mb-4 px-4">
+                    {navigation.prev && (
+                        <Link href={`/crops/${navigation.prev}`}>
+                            <Button variant="outline" className="flex items-center gap-2">
+                                ← Previous Crop
+                            </Button>
+                        </Link>
+                    )}
+                    {navigation.next && (
+                        <Link href={`/crops/${navigation.next}`}>
+                            <Button variant="outline" className="flex items-center gap-2">
+                                Next Crop →
+                            </Button>
+                        </Link>
+                    )}
+                </div>
+
             </article>
         </main>
     );

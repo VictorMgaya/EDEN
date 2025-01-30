@@ -46,6 +46,7 @@
     "jsonwebtoken": "^9.0.2",
     "leaflet": "^1.9.4",
     "lib": "^5.1.0",
+    "lodash": "^4.17.21",
     "lucide-react": "^0.468.0",
     "map": "^1.0.1",
     "metadata": "^0.1.0",

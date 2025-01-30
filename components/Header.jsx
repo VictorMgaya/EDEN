@@ -218,7 +218,7 @@ const Header = () => {
                     fetchLocationSuggestions(e.target.value);
                   }
                 }}
-                className={`px-4 py-2 w-36 rounded-2xl border ${currentTheme === "light" ? "border-black" : "border-white"} bg-${currentTheme === "light" ? "white" : "green-900"} text-${currentTheme === "light" ? "black" : "white"}`}
+                className={`px-4 py-2 w-36 text-sm rounded-2xl border ${currentTheme === "light" ? "border-black" : "border-white"} bg-${currentTheme === "light" ? "white" : "green-900"} text-${currentTheme === "light" ? "black" : "white"}`}
               />
               {locationSuggestions.length > 0 && (
                 <ul className={`absolute shadow-lg rounded-2xl ${currentTheme === " light"
