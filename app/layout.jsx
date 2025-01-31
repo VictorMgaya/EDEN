@@ -58,6 +58,7 @@ export default function RootLayout({ children, session }) {
         `}} />
         <meta name="google-adsense-account" content="ca-pub-9431888211578782" />
         <meta name="google-site-verification" content="xhS9AxO9_lnZW5qXS9B3tCziTO-v0E0pAv8OicFMsd4" />
+<meta name="msvalidate.01" content="3D027736EF5CFEE53D03C112F845FE16" />
       </head>
       <body
         className={`${Lexend.variable} min-h-screen`}
