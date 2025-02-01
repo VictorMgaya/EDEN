@@ -130,8 +130,8 @@ const Header = () => {
     <>
       <header
         className={`header flex items-center justify-between rounded-b-2xl ${currentTheme === "light"
-          ? "text-black bg-gradient-to-r from-blue-500/90 to-green-500/90 xsm:h-16 sm:h-16 md:h-16 lg:h-16 xl:h-16"
-          : "text-white bg-gradient-to-r from-gray-900/95 to-green-950/95 xsm:h-16 sm:h-16 md:h-16 lg:h-16 xl:h-16"
+          ? "text-black bg-gradient-to-r from-blue-500/90 to-green-500/90 xsm:h-20 sm:h-20 md:h-16 lg:h-16 xl:h-16"
+          : "text-white bg-gradient-to-r from-gray-900/95 to-green-950/95 xsm:h-20 sm:h-20 md:h-16 lg:h-16 xl:h-16"
           } fixed top-0 left-0 right-0 z-50 font-primary animate-accordion-down lazyloaded ease-in-out`}
       >
         <meta name="google-adsense-account" content="ca-pub-9431888211578782" />
