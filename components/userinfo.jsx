@@ -15,7 +15,7 @@ export default function UserInfo() {
 
     return (
         <div className={`
-            flex flex-col items-center justify-center
+            flex flex-col items-center justify-self-center
             ${containerThemeClass}
             min-h-[400px] w-full max-w-2xl
             rounded-3xl p-12
@@ -23,7 +23,7 @@ export default function UserInfo() {
             transform transition-all duration-300
         `}>
             <div className="relative mb-8 group">
-                <div className="absolute -inset-1 bg-gradient-to-r from-green-400 to-blue-500 rounded-full blur opacity-50 group-hover:opacity-75 transition duration-300"></div>
+                <div className="absolute -inset-1 bg-gradient-to-r from-green-400/20 to-blue-500/20 rounded-full blur opacity-50 group-hover:opacity-75 transition duration-300"></div>
                 <Avatar className="relative h-32 w-32 ring-4 ring-offset-4 ring-green-500/50">
                     <AvatarImage
                         src={session?.user.image || 'eden.svg'}
