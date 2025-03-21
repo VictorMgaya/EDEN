@@ -1,27 +1,15 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap,  } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import './ResponsiveStyles.css';  // Import the CSS file
-
-// Custom component for resetting the map's center view
-function ResetCenterView({ selectPosition }) {
-  const map = useMap();
-
-  useEffect(() => {
-    if (selectPosition) {
-      map.setView(
-        L.latLng(selectPosition.lat, selectPosition.lng),
-        map.getZoom(),
-        { animate: true }
-      );
-    }
-  }, [selectPosition, map]);
-
-  return null;
-}
+import MapContainerComponent from '@/components/maps/container';
+import TopSoilClassChart from '@/components/soil/allclasses';
+import TopSoilClassComponent from '@/components/soil/dominatingclass';
+import WeeklyWeather from '@/components/weather/weekly';
+import SoilMineralRanking from '@/components/soil/soilMineralRanking';
+import { Button } from '@/components/ui/button';
+import { BarChart2 } from 'react-feather';
+import { useRouter } from 'next/navigation';
 
 function AnalyticsPage() {
   const [center, setCenter] = useState({ lat: 51.9, lng: -0.09 });
@@ -30,13 +18,40 @@ function AnalyticsPage() {
 
   const icon = L.icon({
     iconUrl: './locationtag.png',
-    iconSize: [32, 32],
+    iconSize: [25, 40],
   });
+
+  const router = useRouter();
+  const [location, setLocation] = useState({
+    lat: -9.308504812575954,
+    lon: 32.76276909918686
+  });
+
+  const handleLocationSelect = (location) => {
+    setScannedLocation(location);
+    // Optional: Update URL with new coordinates
+    const searchParams = new URLSearchParams(window.location.search);
+    searchParams.set('lat', location.lat);
+    searchParams.set('lon', location.lng);
+    window.history.pushState({}, '', `?${searchParams.toString()}`);
+  };
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const lat = parseFloat(urlParams.get('lat'));
     const lon = parseFloat(urlParams.get('lon'));
+
+    const currentParams = new URLSearchParams(window.location.search);
+    const currentLat = parseFloat(currentParams.get('lat'));
+    const currentLon = parseFloat(currentParams.get('lon'));
+
+    // Set default location for Eden only if no params exist
+    if (!currentLat && !currentLon) {
+      router.push(`?lon=32.76276909918686&lat=-9.308504812575954`);
+      setTimeout(() => window.location.reload(), 5000);
+      setLocation({ lat: -9.308504812575954, lon: 32.76276909918686 });
+    }
+
 
     if (!isNaN(lat) && !isNaN(lon)) {
       setCenter({ lat, lng: lon });
@@ -45,44 +60,32 @@ function AnalyticsPage() {
     }
   }, []);
 
-  const handleSearchLocation = () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const lat = parseFloat(urlParams.get('lat'));
-    const lon = parseFloat(urlParams.get('lon'));
-
-    if (!isNaN(lat) && !isNaN(lon)) {
-      setScannedLocation({ lat, lng: lon });
-      window.location.reload();
-    }
-  };
-
   return (
-    <div className="responsive-container rounded-lg">
-      {/* Map Section */}
-      <div
-        className="container mx-auto px-4 py-8      bg-green-500/10"
-        style={{
-          flex: 3,
-          zIndex: 0,
-          height: '100%',
-          width: '100%',
-          
-        }}
-      >
-        <MapContainer center={center} zoom={20} scrollWheelZoom={true} style={{ height: '75%', width: '100%' }}>
-          <TileLayer
-            attribution='© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="http://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}"
-          />
-          {scannedLocation && (
-            <Marker position={scannedLocation} icon={icon}>
-              <Popup>Scanned Location</Popup>
-            </Marker>
-          )}
-          <ResetCenterView selectPosition={scannedLocation} />
-        </MapContainer>
+    <div className='mx-auto mb-10 gap-10'>
+      <div className='container:w-full mb-4 p-1 content-center rounded-2xl bg-blue-500/20 z-0 relative'>
+        <MapContainerComponent
+          center={center}
+          zoom={zoom}
+          scannedLocation={scannedLocation}
+          icon={icon}
+          onLocationSelect={handleLocationSelect}
+        />
+        <Button className='mt-4'
+          onClick={() => (
+            window.location.reload()
+          )}>
+          <BarChart2 />Analyse
+        </Button>
       </div>
-    </div>
+      <SoilMineralRanking />
+      <div className='mt-7'>
+        <WeeklyWeather />
+      </div>
+      <div className='mt-7'>
+        <TopSoilClassChart />
+      </div>
+    </div >
   );
 }
+
 export default AnalyticsPage;

@@ -13,8 +13,8 @@ const links = [
     path: "/analytics",
   },
   {
-    title: "market",
-    path: "/market",
+    title: "Library",
+    path: "/crops",
   }
 ];
 const Nav = () => {
@@ -27,9 +27,8 @@ const Nav = () => {
             <li key={index}>
               <Link
                 href={link.path}
-                className={`${
-                  pathname === link.path ? "text-green-100 border-b-2 border-green-100" : ""
-                } capitalize font-medium hover:text-blue-600 translation-all`}
+                className={`${pathname === link.path ? "text-green-100 border-b-2 border-green-100" : ""
+                  } capitalize font-medium hover:text-blue-600 translation-all`}
               >
                 {link.title}
               </Link>

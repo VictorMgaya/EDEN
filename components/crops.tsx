@@ -15,7 +15,6 @@ export default function Page() {
   const router = useRouter();
 
   const [, setCrops] = useState([]);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [randomCrop, setRandomCrop] = useState<any>(null);
   // New state to track the details view
 
@@ -42,7 +41,7 @@ export default function Page() {
 
 
   return (
-    <div style={{ padding: "20px" }}>
+    <div style={{ padding: "1px" }}>
       {randomCrop && (
         <div
           onClick={() => handleViewDetails(randomCrop._id)}
@@ -50,8 +49,8 @@ export default function Page() {
             display: "flex",
             flexDirection: "column",
             border: "1px solid rgba(0, 128, 0, 0.2)", // Green border with 20% opacity
-            borderRadius: "12px",
-            padding: "20px",
+            borderRadius: "1px",
+            padding: "1px",
             backgroundColor: "rgba(0, 255, 0, 0.05)", // Light green background with blur effect
             backdropFilter: "blur(5px)",
             boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)", // Subtle shadow
