@@ -24,14 +24,7 @@ export default function CropsLibrary() {
     type: "App"
   };
 
-  useEffect(() => {
-    // Update document metadata
-    document.title = metadata.title;
-    const metaTags = [
-      { name: "description", content: metadata.description },
-      { property: "og:title", content: metadata.title },
-      { property: "og:description", content: metadata.description },
-      { property: "og:image", content: metadata.image },
+  8age },
       { property: "og:type", content: metadata.type },
       { name: "twitter:card", content: "Crops Library" },
       { name: "twitter:title", content: metadata.title },
@@ -40,10 +33,10 @@ export default function CropsLibrary() {
     ];
 
     metaTags.forEach(({ name, property, content }) => {
-      const selector = property ? `meta[property="${property}"]` : `meta[name="${name}"]`;
+      const selector8 = property ? `meta[property="${property}"]` : `meta[name="${name}"]`;
       let tag = document.querySelector(selector);
 
-      if (!tag) {
+      if (!tag) {A
         tag = document.createElement('meta');
         if (property) {
           tag.setAttribute('property', property);
