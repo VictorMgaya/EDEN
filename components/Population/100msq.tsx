@@ -1,13 +1,20 @@
 'use client';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Key } from "react";
 
 const PopulationDetailsComponent = () => {
-    const [populationHistory, setPopulationHistory] = useState([]);
-    const [ageGenderData, setAgeGenderData] = useState(null);
+    interface PopulationHistoryItem {
+        year: number;
+        population: number;
+        density: number;
+        raw: unknown;
+        growthRate: number;
+    }
+    const [populationHistory, setPopulationHistory] = useState<PopulationHistoryItem[]>([]);
+    const [ageGenderData, setAgeGenderData] = useState<AgeGenderDataResult | null>(null);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const [coordinates, setCoordinates] = useState({ lat: null, lon: null });
+    const [error, setError] = useState<string | null>(null);
+    const [coordinates, setCoordinates] = useState<{ lat: number | null; lon: number | null }>({ lat: null, lon: null });
     const [locationName, setLocationName] = useState("Loading...");
     const [darkMode, setDarkMode] = useState(false);
 
@@ -50,7 +57,7 @@ const PopulationDetailsComponent = () => {
         };
     }, []);
 
-    const buildGeoJsonFeatureCollection = (lat, lon, sizeKm = 1.0) => {
+    const buildGeoJsonFeatureCollection = (lat: number, lon: number, sizeKm = 1.0) => {
         const d = sizeKm / 111;
         return {
             "type": "FeatureCollection",
@@ -71,20 +78,67 @@ const PopulationDetailsComponent = () => {
         };
     };
 
-    const getPopulationData = async (lat, lon, year, dataset = 'wpgppop', sizeKm = 1.0) => {
+    interface PopulationDataResult {
+        year: number;
+        population: number;
+        density: number;
+        raw: unknown;
+    }
+
+    interface AgeGroup {
+        class: string;
+        age: string;
+        male: number;
+        female: number;
+    }
+
+    interface AgeGenderDataResult {
+        ageData: AgeGroup[];
+        year: number;
+        raw: unknown;
+    }
+
+    interface StatsApiResponse {
+        status: string;
+        data?: {
+            total_population?: number;
+            agesexpyramid?: AgeGroup[];
+        };
+        taskid?: string;
+        error?: boolean;
+        error_message?: string;
+    }
+
+    interface TaskApiResponse {
+        status: string;
+        data?: {
+            total_population?: number;
+            agesexpyramid?: AgeGroup[];
+        };
+        error?: boolean;
+        error_message?: string;
+    }
+
+    const getPopulationData = async (
+        lat: number,
+        lon: number,
+        year: number,
+        dataset: 'wpgppop' | 'wpgpas' = 'wpgppop',
+        sizeKm: number = 1.0
+    ): Promise<PopulationDataResult | AgeGenderDataResult | null> => {
         const geojson = buildGeoJsonFeatureCollection(lat, lon, sizeKm);
-        
+
         try {
             const syncUrl = `${API_BASE}/services/stats?dataset=${dataset}&year=${year}&geojson=${encodeURIComponent(JSON.stringify(geojson))}&runasync=false`;
             const response = await fetch(syncUrl);
-            
+
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            
-            const result = await response.json();
-            
+
+            const result: StatsApiResponse = await response.json();
+
             if (result.status === "finished" && result.data) {
                 const area = sizeKm * sizeKm;
-                
+
                 if (dataset === 'wpgppop' && result.data.total_population !== undefined) {
                     return {
                         year,
@@ -93,7 +147,7 @@ const PopulationDetailsComponent = () => {
                         raw: result
                     };
                 }
-                
+
                 if (dataset === 'wpgpas' && result.data.agesexpyramid) {
                     return {
                         ageData: result.data.agesexpyramid,
@@ -102,20 +156,20 @@ const PopulationDetailsComponent = () => {
                     };
                 }
             }
-            
+
             // Handle async tasks
             if (result.taskid) {
                 const taskUrl = `${API_BASE}/tasks/${result.taskid}`;
                 for (let i = 0; i < 30; i++) {
                     await new Promise(r => setTimeout(r, 2000));
-                    
+
                     const taskResponse = await fetch(taskUrl);
-                    const taskResult = await taskResponse.json();
-                    
+                    const taskResult: TaskApiResponse = await taskResponse.json();
+
                     if (taskResult.status === "finished" && !taskResult.error) {
                         const area = sizeKm * sizeKm;
-                        
-                        if (dataset === 'wpgppop' && taskResult.data.total_population !== undefined) {
+
+                        if (dataset === 'wpgppop' && taskResult.data?.total_population !== undefined) {
                             return {
                                 year,
                                 population: taskResult.data.total_population,
@@ -123,8 +177,8 @@ const PopulationDetailsComponent = () => {
                                 raw: taskResult
                             };
                         }
-                        
-                        if (dataset === 'wpgpas' && taskResult.data.agesexpyramid) {
+
+                        if (dataset === 'wpgpas' && taskResult.data?.agesexpyramid) {
                             return {
                                 ageData: taskResult.data.agesexpyramid,
                                 year,
@@ -132,23 +186,35 @@ const PopulationDetailsComponent = () => {
                             };
                         }
                     }
-                    
+
                     if (taskResult.status === "failed" || taskResult.error) {
                         throw new Error(taskResult.error_message || "Task failed");
                     }
                 }
                 throw new Error("Task timed out");
             }
-        } catch (err) {
-            console.warn(`Failed to fetch data for year ${year}:`, err.message);
+        } catch (err: unknown) {
+            console.warn(
+                `Failed to fetch data for year ${year}:`,
+                err instanceof Error ? err.message : err
+            );
             return null;
         }
+        // Ensure a return value for all code paths
+        return null;
     };
 
-    const getLocationName = async (lat, lon) => {
+    interface ReverseGeocodeResponse {
+        city?: string;
+        locality?: string;
+        principalSubdivision?: string;
+        [key: string]: unknown;
+    }
+
+    const getLocationName = async (lat: number, lon: number): Promise<string> => {
         try {
             const response = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`);
-            const data = await response.json();
+            const data: ReverseGeocodeResponse = await response.json();
             return data.city || data.locality || data.principalSubdivision || "Unknown Location";
         } catch {
             return "Unknown Location";
@@ -157,8 +223,8 @@ const PopulationDetailsComponent = () => {
 
     useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search);
-        const lat = parseFloat(urlParams.get("lat"));
-        const lon = parseFloat(urlParams.get("lon"));
+        const lat = parseFloat(urlParams.get("lat") ?? "");
+        const lon = parseFloat(urlParams.get("lon") ?? "");
 
         if (!lat || !lon || isNaN(lat) || isNaN(lon)) {
             setError("Valid latitude and longitude parameters are required");
@@ -180,7 +246,9 @@ const PopulationDetailsComponent = () => {
                 );
                 
                 const populationResults = await Promise.all(populationPromises);
-                const validPopulationData = populationResults.filter(result => result !== null);
+                const validPopulationData = populationResults.filter(
+                    (result): result is PopulationDataResult => result !== null && 'population' in result
+                );
                 
                 if (validPopulationData.length === 0) {
                     throw new Error("No population data available for any year");
@@ -205,10 +273,10 @@ const PopulationDetailsComponent = () => {
                 // Fetch age/gender data for the latest available year
                 const latestYear = Math.max(...validPopulationData.map(d => d.year));
                 const ageData = await getPopulationData(lat, lon, latestYear, 'wpgpas', 1.0);
-                if (ageData) setAgeGenderData(ageData);
+                if (ageData && 'ageData' in ageData) setAgeGenderData(ageData);
                 
             } catch (err) {
-                setError(err.message);
+                setError(err instanceof Error ? err.message : String(err));
             } finally {
                 setLoading(false);
             }
@@ -217,8 +285,8 @@ const PopulationDetailsComponent = () => {
         fetchAllData();
     }, []);
 
-    const formatNumber = (num) => new Intl.NumberFormat('en-US').format(Math.round(num || 0));
-    const formatDecimal = (num) => parseFloat(num || 0).toFixed(2);
+    const formatNumber = (num: number) => new Intl.NumberFormat('en-US').format(Math.round(num || 0));
+    const formatDecimal = (num: number) => Number(num || 0).toFixed(2);
 
     const themeClasses = darkMode ? {
         bg: 'bg-gray-900',
@@ -272,8 +340,8 @@ const PopulationDetailsComponent = () => {
     );
 
     const latestData = populationHistory[populationHistory.length - 1];
-    const totalMale = ageGenderData?.ageData?.reduce((sum, group) => sum + (group.male || 0), 0) || 0;
-    const totalFemale = ageGenderData?.ageData?.reduce((sum, group) => sum + (group.female || 0), 0) || 0;
+    const totalMale = ageGenderData?.ageData?.reduce((sum: number, group: { male: number }) => sum + (group.male || 0), 0) || 0;
+    const totalFemale = ageGenderData?.ageData?.reduce((sum: number, group: { female: number }) => sum + (group.female || 0), 0) || 0;
     const totalAgePopulation = totalMale + totalFemale;
 
     const maxPopulation = Math.max(...populationHistory.map(d => d.population));
@@ -368,7 +436,7 @@ const PopulationDetailsComponent = () => {
                         <h4 className={`text-lg font-semibold ${themeClasses.text} mb-4`}>Population Over Time</h4>
                         <div className="relative h-48 sm:h-64">
                             <div className="absolute inset-0 flex items-end justify-between space-x-2">
-                                {populationHistory.map((data, index) => (
+                                {populationHistory.map((data) => (
                                     <div key={data.year} className="flex-1 flex flex-col items-center">
                                         <div className="w-full relative group">
                                             <div 
@@ -403,7 +471,7 @@ const PopulationDetailsComponent = () => {
                                 <div className={`w-full h-px ${themeClasses.border} border-t`}></div>
                             </div>
                             <div className="absolute inset-0 flex items-center justify-between space-x-2">
-                                {populationHistory.slice(1).map((data, index) => (
+                                {populationHistory.slice(1).map((data) => (
                                     <div key={data.year} className="flex-1 flex flex-col items-center justify-center">
                                         <div className="w-full relative group">
                                             <div 
@@ -454,8 +522,8 @@ const PopulationDetailsComponent = () => {
                                     { label: "Seniors (60+)", ages: [60, 65, 70, 75, 80], icon: "👴", color: "orange" }
                                 ].map((group, idx) => {
                                     const groupTotal = ageGenderData.ageData
-                                        .filter(item => group.ages.includes(parseInt(item.class)))
-                                        .reduce((sum, item) => sum + item.male + item.female, 0);
+                                        .filter((item: { class: string; }) => group.ages.includes(parseInt(item.class)))
+                                        .reduce((sum: number, item: { male: unknown; female: unknown; }) => sum + (item.male as number) + (item.female as number), 0);
                                     const percentage = (groupTotal / totalAgePopulation) * 100;
                                     
                                     return (
@@ -490,7 +558,7 @@ const PopulationDetailsComponent = () => {
                                 <span className="mr-3">⚧️</span> Gender & Age Details
                             </h3>
                             <div className="space-y-3 max-h-96 overflow-y-auto">
-                                {ageGenderData.ageData.slice(0, 12).map((group, idx) => (
+                                {ageGenderData.ageData.slice(0, 12).map((group: AgeGroup, idx: Key | null | undefined) => (
                                     <div key={idx} className={`flex items-center justify-between p-3 rounded-lg ${themeClasses.border} border`}>
                                         <div className="flex items-center space-x-3">
                                             <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center font-bold text-blue-600 text-sm">
