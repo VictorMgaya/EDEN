@@ -31,12 +31,12 @@
     "components/charts/BarChart.tsx",
     "app/page.tsx",
     "components/charts/BarChart.tsx",
-    "app/crops/page.jsx",
+    "app/Experts/page.jsx",
     "components/footer.jsx",
     "components/footer.jsx",
     "components/footer.jsx",
     "app/layout.jsx",
     "components/Header.jsx"
-, "app/api/crops/[biologicalName/route.js", "components/crops.jsx", "components/weather/daily.jsx", "app/crops/[id]/page.jsx", "app/api/auth/[...nextauth]/route.js", "app/api/users/route.js", "app/lib/dbConnect.js", "next.config.js", "components/soil/top5classes.jsx", "components/ui/dialog.jsx", "components/Loader.jsx"  ],
+, "app/api/Experts/[biologicalName/route.js", "components/Experts.jsx", "components/weather/daily.jsx", "app/Experts/[id]/page.jsx", "app/api/auth/[...nextauth]/route.js", "app/api/users/route.js", "app/lib/dbConnect.js", "next.config.js", "components/soil/top5classes.jsx", "components/ui/dialog.jsx", "components/Loader.jsx"  ],
   "exclude": ["node_modules"]
 }

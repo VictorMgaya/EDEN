@@ -13,8 +13,8 @@ const links = [
     path: "/analytics",
   },
   {
-    title: "Library",
-    path: "/crops",
+    title: "Experts",
+    path: "/Experts",
   }
 ];
 const Nav = () => {

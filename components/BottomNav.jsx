@@ -27,10 +27,10 @@ const BottomNav = () => {
                 <span className="text-xs mt-1">Analytics</span>
             </Link>
 
-            <Link href="/crops" className={`flex flex-col items-center ${pathname === "/crops" ? "text-green-500 border-b-2 border-green-500" : ""
+            <Link href="/Experts" className={`flex flex-col items-center ${pathname === "/Experts" ? "text-green-500 border-b-2 border-green-500" : ""
                 } capitalize font-medium hover:text-green-600 translation-all `}>
                 <BookOpen size={24} />
-                <span className="text-xs mt-1">Library</span>
+                <span className="text-xs mt-1">Experts</span>
             </Link>
         </nav>
     );

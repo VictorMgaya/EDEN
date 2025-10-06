@@ -1,6 +1,6 @@
 import mongoose, { Document, Schema } from "mongoose";
 
-export interface ICrops extends Document {
+export interface IExperts extends Document {
     id: string;
     name: string;
     biologicalName: string;
@@ -12,7 +12,7 @@ export interface ICrops extends Document {
     imageUrl: string;
 }
 
-const cropSchema: Schema = new mongoose.Schema(
+const Expertschema: Schema = new mongoose.Schema(
     {
         name: {
             type: String,
@@ -49,7 +49,7 @@ const cropSchema: Schema = new mongoose.Schema(
 
     });
 
-const Crop = mongoose.models.Crop || mongoose.model<ICrops>("Crop", cropSchema);
+const Crop = mongoose.models.Crop || mongoose.model<IExperts>("Crop", Expertschema);
 
 
 export default Crop;

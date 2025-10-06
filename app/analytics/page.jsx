@@ -4,11 +4,11 @@ import React, { useEffect, useState } from 'react';
 import L from 'leaflet';
 import MapContainerComponent from '@/components/maps/container';
 import TopSoilClassChart from '@/components/soil/allclasses';
-import TopSoilClassComponent from '@/components/soil/dominatingclass';
 import WeeklyWeather from '@/components/weather/weekly';
 import PopulationDetailsComponent from '@/components/Population/100msq'
 import { Button } from '@/components/ui/button';
 import { BarChart2, MapPin } from 'react-feather';
+import { saveAnalyticsCache } from '@/utils/analyticsCache';
 
 function AnalyticsPage() {
   const [center, setCenter] = useState({ lat: 51.9, lng: -0.09 });
@@ -22,6 +22,56 @@ function AnalyticsPage() {
     iconSize: [25, 40],
   });
 
+  // Track loading state of each component
+  const [populationLoaded, setPopulationLoaded] = useState(false);
+  const [weatherLoaded, setWeatherLoaded] = useState(false);
+  const [soilLoaded, setSoilLoaded] = useState(false);
+
+  // Callback props for child components to signal when loaded
+  const handlePopulationLoaded = () => setPopulationLoaded(true);
+  const handleWeatherLoaded = () => setWeatherLoaded(true);
+  const handleSoilLoaded = () => setSoilLoaded(true);
+
+  // Cache only when all components are loaded
+  // Track if cache has already been saved for this session
+  const [cacheSaved, setCacheSaved] = useState(false);
+
+  // Cache only when all analysis components are fully rendered
+  useEffect(() => {
+    if (!cacheSaved && populationLoaded && weatherLoaded && soilLoaded) {
+      setTimeout(() => {
+        const container = document.querySelector('.p-4');
+        if (container) {
+          const children = Array.from(container.children).slice(1);
+          let populationText = '';
+          let weatherText = '';
+          let soilText = '';
+          if (children[0]) populationText = children[0].innerText;
+          if (children[1]) weatherText = children[1].innerText;
+          if (children[2]) soilText = children[2].innerText;
+          saveAnalyticsCache({
+            scannedLocation,
+            zoom,
+            timestamp: new Date().toISOString(),
+            populationText,
+            weatherText,
+            soilText
+          });
+          setCacheSaved(true);
+        }
+      }, 0);
+    }
+  }, [populationLoaded, weatherLoaded, soilLoaded, cacheSaved, scannedLocation, zoom]);
+
+    const handleLocationSelect = (location) => {
+    setScannedLocation(location);
+    setShowLocationPrompt(false);
+    // Update URL with new coordinates
+    const searchParams = new URLSearchParams(window.location.search);
+    searchParams.set('lat', location.lat);
+    searchParams.set('lon', location.lng);
+    window.history.pushState({}, '', `?${searchParams.toString()}`);
+  };
 
   const requestLocationPermission = async () => {
     try {
@@ -42,13 +92,7 @@ function AnalyticsPage() {
         lng: position.coords.longitude
       };
 
-      setScannedLocation(location);
-      setShowLocationPrompt(false);
-      // Update URL with new coordinates
-      const searchParams = new URLSearchParams(window.location.search);
-      searchParams.set('lat', location.lat);
-      searchParams.set('lon', location.lng);
-      window.history.pushState({}, '', `?${searchParams.toString()}`);
+      handleLocationSelect(location);
     } catch (error) {
       console.warn('Location access denied or failed:', error);
       setLocationPermissionDenied(true);
@@ -58,7 +102,7 @@ function AnalyticsPage() {
     }
   };
 
-  useEffect(() => {
+   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const lat = parseFloat(urlParams.get('lat'));
     const lon = parseFloat(urlParams.get('lon'));
@@ -74,21 +118,31 @@ function AnalyticsPage() {
       requestLocationPermission();
     }
 
-      // Listen for location updates from header search
-      // Removed handleLocationSelect and event listener for locationSelected
-      return () => {};
+    // Listen for location updates from header search
+    const handleLocationUpdate = (event) => {
+      if (event.detail && event.detail.location) {
+        handleLocationSelect(event.detail.location);
+      }
+    };
+
+    window.addEventListener('locationSelected', handleLocationUpdate);
+    
+    return () => {
+      window.removeEventListener('locationSelected', handleLocationUpdate);
+    };
   }, []);
+
 
   return (
     <div className='p-4'>
-
       <div className='container:w-full mb-4 p-1 content-center rounded-2xl bg-blue-500/20 z-0 relative'>
-          <MapContainerComponent
-            center={center}
-            zoom={zoom}
-            scannedLocation={scannedLocation}
-            icon={icon}
-          />
+        <MapContainerComponent
+          center={center}
+          zoom={zoom}
+          scannedLocation={scannedLocation}
+          icon={icon}
+          onLocationSelect={handleLocationSelect}
+        />
         <Button className='mt-4'
           onClick={() => (
             window.location.reload()
@@ -96,17 +150,27 @@ function AnalyticsPage() {
           <BarChart2 />Analyse
         </Button>
       </div>
-      
       {scannedLocation && (
         <>
-          <PopulationDetailsComponent />
+          <PopulationDetailsComponent onLoaded={handlePopulationLoaded} />
           <div className='mt-7'>
-            <WeeklyWeather />
+            <WeeklyWeather onLoaded={handleWeatherLoaded} />
           </div>
           <div className='mt-7'>
-            <TopSoilClassChart />
+            <TopSoilClassChart onLoaded={handleSoilLoaded} />
           </div>
         </>
+      )}
+      {!cacheSaved && (
+        (!populationLoaded || !weatherLoaded || !soilLoaded) ? (
+          <div className='mt-8 text-center text-yellow-700 font-semibold'>
+            {`Waiting for: `}
+            {(!populationLoaded ? 'Population ' : '')}
+            {(!weatherLoaded ? 'Weather ' : '')}
+            {(!soilLoaded ? 'Soil ' : '')}
+            {`component(s) to finish loading. Cache will be saved when all are ready.`}
+          </div>
+        ) : null
       )}
     </div>
   );

@@ -120,9 +120,9 @@ const Header = () => {
       router.push(newUrl);
       window.location.href = newUrl;
     }
-    else if (pathname === '/crops') {
-      // Navigate to crops with search param
-      router.push(`/crops?name=${searchInput}`);
+    else if (pathname === '/Experts') {
+      // Navigate to Experts with search param
+      router.push(`/Experts?name=${searchInput}`);
     }
   };
 
@@ -149,7 +149,7 @@ const Header = () => {
             <div className="relative">
               <input
                 type="text"
-                placeholder={pathname === '/crops' ? 'Search crops...' : 'Search location...'}
+                placeholder={pathname === '/Experts' ? 'Search Experts...' : 'Search location...'}
                 value={searchInput}
                 onChange={(e) => {
 
@@ -209,7 +209,7 @@ const Header = () => {
             <div className="relative">
               <input
                 type="text"
-                placeholder={pathname === '/crops' ? 'Search crops...' : 'Search location...'}
+                placeholder={pathname === '/Experts' ? 'Search Experts...' : 'Search location...'}
                 value={searchInput}
                 onChange={(e) => {
 
@@ -329,7 +329,7 @@ const handleSearch = () => {
     if (searchInput.length > 2) {
       fetchLocationSuggestions(searchInput);
     }
-  } else if (currentPath === '/crops') {
+  } else if (currentPath === '/Experts') {
     // Crop name search behavior
     // Add crop search logic here targeting h2 elements
     const cropHeadings = document.querySelectorAll('.crop-container h2');

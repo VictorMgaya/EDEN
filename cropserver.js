@@ -15,7 +15,7 @@ mongoose.connect("mongodb+srv://Vema:Vema21324354@edenappcluster.6rf1w.mongodb.n
   .catch(err => console.log(err));
 
 // Crop Schema with additional fields
-const CropSchema = new mongoose.Schema({
+const Expertschema = new mongoose.Schema({
     name: String,
     biologicalName: String,
     soilClass: String,
@@ -26,16 +26,16 @@ const CropSchema = new mongoose.Schema({
     imageUrl: String
 }); 
 
-const Crop = mongoose.model('Crop', CropSchema);
+const Crop = mongoose.model('Crop', Expertschema);
 
-// Function to add crops
-async function addCrops(crops) {
-    return await Crop.insertMany(crops);
+// Function to add Experts
+async function addExperts(Experts) {
+    return await Crop.insertMany(Experts);
 }
 
-// Function to group crops (example implementation)
-function groupCrops(crops) {
-    return crops.reduce((groups, crop) => {
+// Function to group Experts (example implementation)
+function groupExperts(Experts) {
+    return Experts.reduce((groups, crop) => {
         const group = crop.name[0].toUpperCase();
         if (!groups[group]) {
             groups[group] = [];
@@ -46,45 +46,45 @@ function groupCrops(crops) {
 }
 
 // API endpoints
-app.get('/crops', async (req, res) => {
-    const crops = await Crop.find();
-    res.json(crops);
+app.get('/Experts', async (req, res) => {
+    const Experts = await Crop.find();
+    res.json(Experts);
 });
 
 // New endpoint for personalized crop recommendations
-app.get('/recommended-crops', async (req, res) => {
+app.get('/recommended-Experts', async (req, res) => {
     try {
-        // Get all crops
-        const allCrops = await Crop.find();
+        // Get all Experts
+        const allExperts = await Crop.find();
 
         // Simulate user interests (replace this with actual user interests later)
         const userInterests = ['Vegetable', 'Fruit']; // Example interests
 
-        // Filter crops based on user interests
-        const interestedCrops = allCrops.filter(crop => 
+        // Filter Experts based on user interests
+        const interestedExperts = allExperts.filter(crop => 
             userInterests.some(interest => 
                 crop.name.toLowerCase().includes(interest.toLowerCase()) || 
                 crop.soilClass.toLowerCase().includes(interest.toLowerCase())
             )
         );
 
-        // Get random crops
-        const randomCrops = allCrops
-            .filter(crop => !interestedCrops.includes(crop))
+        // Get random Experts
+        const randomExperts = allExperts
+            .filter(crop => !interestedExperts.includes(crop))
             .sort(() => 0.5 - Math.random())
-            .slice(0, 5); // Get 5 random crops
+            .slice(0, 5); // Get 5 random Experts
 
         // Combine and shuffle the results
-        const recommendedCrops = [...interestedCrops, ...randomCrops]
+        const recommendedExperts = [...interestedExperts, ...randomExperts]
             .sort(() => 0.5 - Math.random());
 
-        res.json(recommendedCrops);
+        res.json(recommendedExperts);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 });
 
-// New endpoint to add crops (admin only)
+// New endpoint to add Experts (admin only)
 app.post('/admin/add-crop', async (req, res) => {
     try {
         const newCrop = new Crop(req.body);
@@ -96,7 +96,7 @@ app.post('/admin/add-crop', async (req, res) => {
 });
 
 // Add this new route to handle individual crop requests
-app.get('/crops/:name', async (req, res) => {
+app.get('/Experts/:name', async (req, res) => {
     try {
         const cropName = req.params.name.replace(/-/g, ' ');
         const crop = await Crop.findOne({ name: new RegExp(cropName, 'i') });
@@ -126,4 +126,4 @@ app.get('/admin/crop-by-name/:name', async (req, res) => {
 const PORT = 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
-export { addCrops, groupCrops };
+export { addExperts, groupExperts };

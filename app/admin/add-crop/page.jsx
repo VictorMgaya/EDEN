@@ -25,7 +25,7 @@ const AddCropPage = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await axios.post('/api/admin/crops', cropData);
+            const response = await axios.post('/api/admin/Experts', cropData);
             if (response.data) {
                 setMessage('Crop added successfully!');
                 // Reset form

@@ -16,16 +16,16 @@ async function dbConnect() {
 }
 
 // Define the Crop schema
-const CropSchema = new mongoose.Schema({
+const Expertschema = new mongoose.Schema({
   slug: { type: String, required: true, unique: true },
 });
-const Crop = mongoose.models.Crop || mongoose.model('Crop', CropSchema);
+const Crop = mongoose.models.Crop || mongoose.model('Crop', Expertschema);
 
 export async function GET() {
   await dbConnect();
 
   const hostname = 'https://edenapp.site'; // Replace with your domain
-  const crops = await Crop.find({}, { slug: 1 }).lean();
+  const Experts = await Crop.find({}, { slug: 1 }).lean();
 
   // Construct sitemap XML
   let sitemap = `<?xml version="1.0" encoding="UTF-8"?>
@@ -52,7 +52,7 @@ export async function GET() {
   </url>
 
    <url>
-    <loc>${hostname}/crops</loc>
+    <loc>${hostname}/Experts</loc>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
@@ -64,10 +64,10 @@ export async function GET() {
   </url>`;
 
   // Add dynamic crop pages
-  crops.forEach((crop) => {
+  Experts.forEach((crop) => {
     sitemap += `
   <url>
-    <loc>${hostname}/crops/${crop._id}</loc>
+    <loc>${hostname}/Experts/${crop._id}</loc>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>`;

@@ -5,11 +5,18 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 import { useMediaQuery } from 'react-responsive';
 
-const SoilClassificationChart = () => {
+const SoilClassificationChart = (props) => {
     const [soilClasses, setSoilClasses] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
     const isMobile = useMediaQuery({ query: '(max-width: 768px)' });
+
+    // Notify parent when loaded
+    useEffect(() => {
+        if (!isLoading && !error && typeof props.onLoaded === 'function') {
+            props.onLoaded();
+        }
+    }, [isLoading, error, props.onLoaded]);
 
     useEffect(() => {
         const fetchSoilData = async () => {

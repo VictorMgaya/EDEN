@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import dbConnect from "@/app/lib/dbConnect";
-import Crop from "@/app/model/crops";
+import Crop from "@/app/model/Experts";
 import { NextRequest, NextResponse } from "next/server";
 import mongoose from "mongoose";
 

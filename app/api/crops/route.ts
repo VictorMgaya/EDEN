@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import dbConnect from "@/app/lib/dbConnect";
-import Crop from "@/app/model/crops";
+import Crop from "@/app/model/Experts";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
@@ -10,17 +10,17 @@ export async function GET(request: Request) {
     const name = searchParams.get('name');
 
     try {
-        const crops = id
+        const Experts = id
             ? await Crop.findById(id)
             : name
                 ? await Crop.find({ name: { $regex: `^${name}`, $options: 'i' } })
                 : await Crop.find({});
 
-        if (!crops || (Array.isArray(crops) && !crops.length)) {
-            return NextResponse.json({ message: 'No crops found' }, { status: 404 });
+        if (!Experts || (Array.isArray(Experts) && !Experts.length)) {
+            return NextResponse.json({ message: 'No Experts found' }, { status: 404 });
         }
 
-        return NextResponse.json(crops);
+        return NextResponse.json(Experts);
     } catch (err: any) {
         return NextResponse.json({ error: err.message }, { status: 500 });
     }

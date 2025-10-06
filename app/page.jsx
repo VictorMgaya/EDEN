@@ -7,7 +7,7 @@ import WeeklyWeather from '../components/weather/weekly';
 import TommorowWeather from '../components/weather/tommorow';
 import TopSoilClassComponent from '../components/soil/dominatingclass';
 import TopSoilClassesChart from '../components/soil/top5classes';
-import CropsLibrary from './crops/page';
+import ExpertsExperts from './Experts/page';
 
 
 export default function Home() {
@@ -92,7 +92,7 @@ export default function Home() {
       </div>
       <div>
 
-        <CropsLibrary />
+        <ExpertsExperts />
       </div>
     </div>
   );

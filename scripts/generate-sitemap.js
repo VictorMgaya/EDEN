@@ -25,19 +25,19 @@ async function dbConnect() {
 }
 
 // Define the Crop Schema and Model
-const CropSchema = new mongoose.Schema({
+const Expertschema = new mongoose.Schema({
     name: { type: String, required: true },
     id: { type: String, required: true, unique: true },
     createdAt: { type: Date, default: Date.now },
 });
-const Crop = mongoose.models.Crop || mongoose.model('Crop', CropSchema);
+const Crop = mongoose.models.Crop || mongoose.model('Crop', Expertschema);
 
 // Sitemap Generation Function
 async function generateSitemap() {
     await dbConnect();
 
     const hostname = 'https://yourdomain.com'; // Replace with your domain
-    const crops = await Crop.find({}, { slug: 1 }).lean();
+    const Experts = await Crop.find({}, { slug: 1 }).lean();
 
     const sitemapStream = new SitemapStream({ hostname });
 
@@ -46,9 +46,9 @@ async function generateSitemap() {
     sitemapStream.write({ url: '/about', changefreq: 'monthly', priority: 0.8 });
 
     // Add dynamic crop pages
-    crops.forEach((crop) => {
+    Experts.forEach((crop) => {
         sitemapStream.write({
-            url: `/crops/${crop.slug}`,
+            url: `/Experts/${crop.slug}`,
             changefreq: 'weekly',
             priority: 0.9,
         });

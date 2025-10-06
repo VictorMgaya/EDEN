@@ -7,14 +7,14 @@ import { useEffect, useState } from "react";
 
 
 export default function Page() {
-  const fetchCrops = async () => {
-    const res = await fetch("/api/crops");
-    const crops = await res.json();
-    return crops;
+  const fetchExperts = async () => {
+    const res = await fetch("/api/Experts");
+    const Experts = await res.json();
+    return Experts;
   };
   const router = useRouter();
 
-  const [, setCrops] = useState([]);
+  const [, setExperts] = useState([]);
   const [randomCrop, setRandomCrop] = useState<any>(null);
   // New state to track the details view
 
@@ -28,15 +28,15 @@ export default function Page() {
   };
 
   useEffect(() => {
-    fetchCrops().then((fetchedCrops) => {
-      setCrops(fetchedCrops);
-      setRandomCrop(fetchedCrops[Math.floor(Math.random() * fetchedCrops.length)]);
+    fetchExperts().then((fetchedExperts) => {
+      setExperts(fetchedExperts);
+      setRandomCrop(fetchedExperts[Math.floor(Math.random() * fetchedExperts.length)]);
     });
   }, []);
 
   const handleViewDetails = (id: any) => {
     // Use router to navigate to a details page
-    router.push(`/crops/${id}`);
+    router.push(`/Experts/${id}`);
   };
 
 

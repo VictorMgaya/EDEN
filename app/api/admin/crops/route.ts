@@ -1,5 +1,5 @@
 import dbConnect from "@/app/lib/dbConnect";
-import Crop from "@/app/model/crops";
+import Crop from "@/app/model/Experts";
 import { NextResponse } from "next/server";
 
 export async function PUT(request: Request) {

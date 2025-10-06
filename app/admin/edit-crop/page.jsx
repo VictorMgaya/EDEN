@@ -22,7 +22,7 @@ const EditCropPage = () => {
     const [message, setMessage] = useState('');
       const handleSearch = async () => {
           try {
-              const response = await axios.get(`/api/crops?name=${searchTerm}`);
+              const response = await axios.get(`/api/Experts?name=${searchTerm}`);
               if (response.data && response.data.length > 0) {
                   setCropData(response.data[0]); // Take the first matching crop
                   setMessage('Crop found successfully');
@@ -55,7 +55,7 @@ const EditCropPage = () => {
       const handleSubmit = async (e) => {
           e.preventDefault();
           try {
-              const response = await axios.put(`/api/admin/crops`, cropData);
+              const response = await axios.put(`/api/admin/Experts`, cropData);
               if (response.data) {
                   setMessage('Crop updated successfully!');
                   setCropData(response.data);

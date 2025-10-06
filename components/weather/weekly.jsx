@@ -3,10 +3,17 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
-const WeatherForecast = () => {
+const WeatherForecast = (props) => {
     const [forecastData, setForecastData] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
+
+    // Notify parent when loaded
+    useEffect(() => {
+        if (!isLoading && !error && typeof props.onLoaded === 'function') {
+            props.onLoaded();
+        }
+    }, [isLoading, error, props.onLoaded]);
 
     useEffect(() => {
         const fetchWeatherData = async () => {
@@ -38,7 +45,7 @@ const WeatherForecast = () => {
                     return acc;
                 }, {});
 
-                setForecastData(Object.values(dailyForecasts).slice(0, 7));
+                setForecastData(Object.values(dailyForecasts).slice(0, 8));
             } catch (err) {
                 setError(err.message);
             } finally {

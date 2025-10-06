@@ -78,7 +78,7 @@ interface ReverseGeocodeResponse {
 const API_BASE = "https://api.worldpop.org/v1";
 const AVAILABLE_YEARS = [2000, 2005, 2010, 2015, 2020];
 
-const PopulationDetailsComponent = () => {
+const PopulationDetailsComponent = (props: { onLoaded: unknown; }) => {
   // State
   const [populationHistory, setPopulationHistory] = useState<PopulationHistoryItem[]>([]);
   const [ageGenderData, setAgeGenderData] = useState<AgeGenderDataResult | null>(null);
@@ -86,6 +86,13 @@ const PopulationDetailsComponent = () => {
   const [error, setError] = useState<string | null>(null);
   const [coordinates, setCoordinates] = useState<{ lat: number | null; lon: number | null }>({ lat: null, lon: null });
   const [locationName, setLocationName] = useState("Loading...");
+        
+  // Notify parent when loaded
+  useEffect(() => {
+    if (!loading && !error && typeof props.onLoaded === 'function') {
+      props.onLoaded();
+    }
+  }, [loading, error, props.onLoaded]);
 
   // Helper functions
   const buildGeoJsonFeatureCollection = (lat: number, lon: number, sizeKm = 1.0) => {
