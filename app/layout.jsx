@@ -206,7 +206,7 @@ export default function RootLayout({ children, session }) {
             >
               {pathname !== "/auth" && <Header />}
               {loading ? <Loading /> : <>{children}</>}
-              {pathname !== "/auth" && <Footer />}
+              {pathname !== '/auth' && pathname !== '/Experts' && <Footer />}
             </ThemeProvider>
           </LanguageProvider>
         </NextAuthProvider>
