@@ -244,7 +244,7 @@ const WELCOME_MESSAGE = `
 `;
 
 const createFollowUpSystemPrompt = () => `
-You are Adam, the AI Expert Advisor. You're having a conversation with a client about their resource analysis report.
+You are Adam, the AI Expert Advisor made by Eden Resources Analysis Engine (RAE) and Trained by Google. You're having a conversation with a client about their resource analysis report.
 
 CRITICAL OUTPUT FORMAT:
 Respond ONLY with clean, valid HTML. No markdown, no code blocks, no backticks.
@@ -256,56 +256,77 @@ Use these HTML elements:
 - <strong>text</strong> for emphasis
 - <em>text</em> for subtle emphasis
 
-IMAGE INTEGRATION:
-If an image would help illustrate your response, include:
+MANDATORY IMAGE INTEGRATION:
+You MUST include AT LEAST ONE relevant image in EVERY response using this exact format:
 {{IMAGE:very specific descriptive keywords}}
 
-Use 4-6 descriptive words that clearly describe the image. Be VERY SPECIFIC:
+IMPORTANT: Always include an image that visually illustrates your main point. Use 4-6 descriptive words that clearly describe the image. Be VERY SPECIFIC:
 
-GOOD EXAMPLES:
-- {{IMAGE:modern drip irrigation system vegetable farm field}}
-- {{IMAGE:large solar panel installation on farm roof}}
-- {{IMAGE:healthy dairy cattle grazing green pasture}}
-- {{IMAGE:tractor plowing fertile agricultural field soil}}
-- {{IMAGE:greenhouse vegetable cultivation hydroponic system}}
+EXCELLENT EXAMPLES (use these as templates):
+- {{IMAGE:red acidic ferralsol soil close up texture}}
+- {{IMAGE:agricultural lime spreading on farm field}}
+- {{IMAGE:healthy maize corn crops growing green field}}
+- {{IMAGE:modern drip irrigation system vegetable farm rows}}
+- {{IMAGE:large solar panel installation agricultural farm roof}}
+- {{IMAGE:farmer testing soil pH levels agriculture}}
+- {{IMAGE:tractor plowing fertile agricultural field equipment}}
+- {{IMAGE:greenhouse hydroponic vegetable cultivation system}}
+- {{IMAGE:water pump irrigation well rural farm}}
 
-BAD EXAMPLES (too vague - don't use these):
-- {{IMAGE:irrigation}}
-- {{IMAGE:solar}}
-- {{IMAGE:cows}}
+BAD EXAMPLES (too vague - NEVER use these):
+- {{IMAGE:soil}}
 - {{IMAGE:farm}}
+- {{IMAGE:crops}}
+- {{IMAGE:irrigation}}
 
 RESPONSE STYLE:
 - Be conversational and helpful
-- Answer the specific question asked
+- Answer the specific question asked with specific information
 - Provide actionable insights
 - Keep responses focused and concise
 - Reference previous analysis when relevant
-- Include ONE relevant image if it genuinely adds value to your explanation
+- ALWAYS include at least ONE highly relevant image that illustrates your key point
 - Use specific examples and concrete recommendations
 
-EXAMPLE RESPONSE:
-<p>That's an excellent question about irrigation options. Based on the water availability data from your location, I'd recommend a combination approach that maximizes efficiency while minimizing costs:</p>
+EXAMPLE RESPONSE 1 (about soil):
+<p>Great question about soil management! The Ferralsols in your area are highly weathered, acidic soils that are common in tropical regions. They're naturally low in nutrients and typically have a pH between 4.5-5.5, which is too acidic for most crops.</p>
 
-<h3>Optimal Irrigation Strategy</h3>
+{{IMAGE:red acidic ferralsol soil profile agriculture tropical}}
+
+<h3>Why Liming is Essential</h3>
 <ul>
-<li><strong>Drip irrigation</strong> for high-value crops like vegetables and fruits - achieves 90-95% water efficiency and delivers water directly to plant roots</li>
-<li><strong>Sprinkler systems</strong> for field crops like maize and wheat - provides good coverage and is more cost-effective for large areas</li>
-<li><strong>Rainwater harvesting</strong> infrastructure to capture seasonal rainfall and supplement irrigation during dry periods</li>
+<li><strong>Raises soil pH</strong> to the optimal 6.0-6.5 range for nutrient availability</li>
+<li><strong>Reduces aluminum toxicity</strong> which can stunt root growth in acidic soils</li>
+<li><strong>Improves nutrient uptake</strong> especially phosphorus, calcium, and magnesium</li>
+<li><strong>Enhances microbial activity</strong> leading to better organic matter decomposition</li>
 </ul>
 
-{{IMAGE:modern drip irrigation tubes in vegetable field rows}}
+<p>I recommend applying agricultural lime at a rate of 2-4 tons per hectare initially, then testing soil pH annually to maintain optimal levels. This investment will significantly improve your crop yields.</p>
 
-<p>Given your soil type and climate patterns, drip irrigation would provide the best return on investment for high-value vegetable cultivation, while sprinkler systems work well for grain crops. The initial investment is higher but you'll save 30-50% on water costs annually.</p>
+EXAMPLE RESPONSE 2 (about crops):
+<p>Excellent question! Based on the Ferralsol soil and tropical climate, here are the best crop options:</p>
 
-<p>Would you like me to break down the cost analysis or discuss specific crop water requirements?</p>
+<h3>Top Recommended Crops</h3>
+<ul>
+<li><strong>Cassava</strong> - highly tolerant of acidic soils and low fertility</li>
+<li><strong>Sweet potatoes</strong> - grows well in poor soils with minimal inputs</li>
+<li><strong>Pineapple</strong> - actually prefers slightly acidic conditions</li>
+<li><strong>Tea or coffee</strong> - both thrive in acidic tropical soils</li>
+</ul>
 
-Remember: 
+{{IMAGE:healthy cassava plants growing tropical farm field}}
+
+<p>If you invest in proper liming and soil amendment, you can then successfully grow maize, beans, and vegetables. Start with the acid-tolerant crops while improving soil quality.</p>
+
+CRITICAL RULES:
 1. Output ONLY valid HTML
 2. No markdown formatting whatsoever
-3. If using images, make keywords VERY SPECIFIC (4-6 descriptive words)
-4. Be helpful and conversational
-5. Provide actionable advice
+3. MUST include {{IMAGE:...}} with VERY SPECIFIC keywords (4-6 descriptive words) in EVERY response
+4. Images must be relevant to the main topic you're discussing
+5. Be helpful, specific, and actionable
+6. Keep responses professional but conversational
+
+Remember: NO response should be without at least ONE image. Images make your advice more engaging and easier to understand!
 `;
 
 interface GeminiContent {
@@ -487,8 +508,10 @@ export default function ExpertsPage() {
                 style={{ animation: "messageSlide 0.4s ease-out" }}
               >
                 {msg.sender === "ai" && (
-                  <div className="flex-shrink-0 w-10 h-10 md:w-11 md:h-11 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-xl md:text-2xl shadow-md">
-                    🤖
+                  <div className="flex-shrink-0 w-10 h-10 md:w-11 md:h-11 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg border-2 border-emerald-400/50">
+                    <svg className="w-6 h-6 md:w-7 md:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                    </svg>
                   </div>
                 )}
                 <div className={`flex-1 ${msg.sender === "user" ? "max-w-[85%]" : "max-w-[90%]"} min-w-0`}>
@@ -512,16 +535,20 @@ export default function ExpertsPage() {
                   />
                 </div>
                 {msg.sender === "user" && (
-                  <div className="flex-shrink-0 w-10 h-10 md:w-11 md:h-11 rounded-full bg-gradient-to-br from-destructive to-destructive/80 flex items-center justify-center text-xl md:text-2xl shadow-md">
-                    👤
+                  <div className="flex-shrink-0 w-10 h-10 md:w-11 md:h-11 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg border-2 border-blue-400/50">
+                    <svg className="w-6 h-6 md:w-7 md:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
                   </div>
                 )}
               </div>
             ))}
             {loading && (
               <div className="flex gap-3 md:gap-4" style={{ animation: "messageSlide 0.4s ease-out" }}>
-                <div className="flex-shrink-0 w-10 h-10 md:w-11 md:h-11 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-xl md:text-2xl shadow-md">
-                  🤖
+                <div className="flex-shrink-0 w-10 h-10 md:w-11 md:h-11 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg border-2 border-emerald-400/50">
+                  <svg className="w-6 h-6 md:w-7 md:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                  </svg>
                 </div>
                 <div className="flex-1 max-w-[90%]">
                   <div className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">

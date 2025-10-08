@@ -14,60 +14,10 @@ export default function Home() {
   const [isMounted, setIsMounted] = useState(false); // Track whether the component is mounted
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
-  const [location, setLocation] = useState({
-    lat: -9.308504812575954,
-    lon: 32.76276909918686
-  }); // Initialize with default coordinates
-
   useEffect(() => {
     setIsMounted(true);
     setIsLoading(false);
-
-    const currentParams = new URLSearchParams(window.location.search);
-    const currentLat = parseFloat(currentParams.get('lat'));
-    const currentLon = parseFloat(currentParams.get('lon'));
-
-    // Set default location for Eden only if no params exist
-    if (!currentLat && !currentLon) {
-      router.push(`?lon=32.76276909918686&lat=-9.308504812575954`);
-      setTimeout(() => window.location.reload(), 5000);
-      setLocation({ lat: -9.308504812575954, lon: 32.76276909918686 });
-    }
-
-    let watchId;
-
-    const requestUserLocation = () => {
-      if ("geolocation" in navigator && !currentLat && !currentLon) {
-        watchId = navigator.geolocation.watchPosition(
-          (position) => {
-            const { latitude, longitude } = position.coords;
-            // Check if location has changed significantly (more than 0.0001 degrees)
-            if (Math.abs(latitude - currentLat) > 0.0001 || Math.abs(longitude - currentLon) > 0.0001) {
-              setLocation({ lat: latitude, lon: longitude });
-              router.push(`?lon=${longitude}&lat=${latitude}`);
-              setTimeout(() => window.location.reload(), 5000);
-              // Clear the watch after successful location update
-              navigator.geolocation.clearWatch(watchId);
-            }
-          },
-          (error) => {
-            console.error("Error getting location:", error?.message || "Unknown error");
-          }
-        );
-      } else {
-        console.error("Geolocation is not available in your browser.");
-      }
-    };
-
-    requestUserLocation();
-
-    return () => {
-      if (watchId !== undefined) {
-        navigator.geolocation.clearWatch(watchId);
-      }
-    };
-  }, [router]);
-
+  }, []);
 
   if (!isMounted) return null;
 
@@ -76,19 +26,27 @@ export default function Home() {
   }
 
   return (
-    <div>
-      <div className="grid gap-6 p-6 md:grid-cols-2 lg:grid-cols-2">
-        {/* Pass location to each chart if necessary */}
-        <DailyWeather />
-        <TommorowWeather />
-      </div>
-      <div className="grid gap-6 p-6 w-full">
-        <WeeklyWeather />
-      </div>
-      <h1 className=" flex text-2xl justify-center font-bold bg-gradient-to-r from-yellow-500/20 to-green-500/20 rounded-t-2xl"> Soil Analysis</h1>
-      <div className="grid md:grid-cols-2 gap-6 p-6 w-full bg-gradient-to-r from-yellow-500/20 to-green-500/20 rounded-b-2xl">
-        <TopSoilClassComponent />
-        <TopSoilClassesChart />
+    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-60px)] p-4 text-center">
+      <h1 className="text-5xl font-bold text-green-600 mb-6">Welcome to EDEN</h1>
+      <p className="text-xl text-gray-700 mb-8 max-w-2xl">
+        Your sophisticated Resources Analysis Engine. EDEN helps you analyze various environmental resources based on geolocation data.
+      </p>
+      <p className="text-lg text-gray-600 mb-10 max-w-2xl">
+        To start your analysis, please navigate to the <a href="/analytics" className="text-blue-500 hover:underline font-semibold">Analytics Page</a> to collect geolocation-based data.
+      </p>
+      <div className="flex space-x-4">
+        <button
+          onClick={() => router.push('/analytics')}
+          className="px-6 py-3 bg-green-500 text-white rounded-lg shadow-md hover:bg-green-600 transition duration-300"
+        >
+          Go to Analytics
+        </button>
+        <button
+          onClick={() => alert('Learn more about EDEN!')} // Placeholder for a "Learn More" action
+          className="px-6 py-3 border border-green-500 text-green-700 rounded-lg shadow-md hover:bg-green-50 transition duration-300"
+        >
+          Learn More
+        </button>
       </div>
     </div>
   );

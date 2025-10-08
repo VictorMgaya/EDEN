@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { Button } from "./ui/button";
 import { useTheme } from "next-themes";
-import { Sun, Moon, Menu, User, Settings, Search, BarChart2, ChevronDown, MapPin, Home, ShoppingCart, ShoppingBag, BookOpen, LogOut } from "react-feather"; // Add MapPin import
-import { useEffect, useState } from "react";
+import { Sun, Moon, Menu, User, Settings, Search, BarChart2, ChevronDown, MapPin, Home, ShoppingCart, ShoppingBag, BookOpen, LogOut } from "react-feather";
+import React, { useEffect, useState, useRef } from "react"; // Import useRef
 import { useRouter, usePathname } from "next/navigation";
 import { signIn, signOut, useSession } from "next-auth/react";
 import axios from "axios";
@@ -32,6 +32,7 @@ const Header = () => {
   const [searchCategory, setSearchCategory] = useState("General");
   const [locationSuggestions, setLocationSuggestions] = useState([]);
   const [searchInput, setSearchInput] = useState("");
+  const searchInputRef = useRef(null); // Create a ref for the search input
   const router = useRouter();
   const { status, data: session } = useSession();
   const pathname = usePathname();
@@ -39,6 +40,20 @@ const Header = () => {
   useEffect(() => {
     setMounted(true);
     document.body.className = theme === "system" ? resolvedTheme : theme;
+
+    const handleOpenLocationSearch = () => {
+      setIsSearchOpen(true);
+      // Focus the search input when the event is triggered
+      if (searchInputRef.current) {
+        searchInputRef.current.focus();
+      }
+    };
+
+    window.addEventListener('openLocationSearch', handleOpenLocationSearch);
+
+    return () => {
+      window.removeEventListener('openLocationSearch', handleOpenLocationSearch);
+    };
   }, [theme, resolvedTheme]);
 
   if (!mounted) return null;
@@ -116,7 +131,7 @@ const Header = () => {
       searchParams.set('lon', lng);
       searchParams.set('lat', lat);
 
-      const newUrl = `${currentPath}?${searchParams.toString()}`;
+      const newUrl = `/analytics?${searchParams.toString()}`;
       router.push(newUrl);
       window.location.href = newUrl;
     }
@@ -148,6 +163,7 @@ const Header = () => {
           <div className="hidden md:flex items-center gap-4 relative">
             <div className="relative">
               <input
+                ref={searchInputRef} // Attach the ref to the input
                 type="text"
                 placeholder={pathname === '/Experts' ? 'Search Experts...' : 'Search location...'}
                 value={searchInput}
@@ -208,6 +224,7 @@ const Header = () => {
           <div className="md:hidden flex items-center gap-4  font-primary">
             <div className="relative">
               <input
+                ref={searchInputRef} // Attach the ref to the input
                 type="text"
                 placeholder={pathname === '/Experts' ? 'Search Experts...' : 'Search location...'}
                 value={searchInput}
