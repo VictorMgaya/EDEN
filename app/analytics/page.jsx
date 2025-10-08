@@ -43,19 +43,12 @@ function AnalyticsPage() {
         const container = document.querySelector('.p-4');
         if (container) {
           const children = Array.from(container.children).slice(1);
-          let populationText = '';
-          let weatherText = '';
-          let soilText = '';
-          if (children[0]) populationText = children[0].innerText;
-          if (children[1]) weatherText = children[1].innerText;
-          if (children[2]) soilText = children[2].innerText;
+          const pageHtml = container.outerHTML;
           saveAnalyticsCache({
             scannedLocation,
             zoom,
             timestamp: new Date().toISOString(),
-            populationText,
-            weatherText,
-            soilText
+            pageHtml
           });
           setCacheSaved(true);
         }
@@ -168,9 +161,17 @@ function AnalyticsPage() {
             {(!populationLoaded ? 'Population ' : '')}
             {(!weatherLoaded ? 'Weather ' : '')}
             {(!soilLoaded ? 'Soil ' : '')}
-            {`component(s) to finish loading. Cache will be saved when all are ready.`}
+            {`Data to finish collected and loaded...`}
           </div>
         ) : null
+      )}
+
+      {cacheSaved && (
+        <div className='mt-8 text-center'>
+          <Button onClick={() => window.location.href = '/Experts'}>
+            Get Expert Advice
+          </Button>
+        </div>
       )}
     </div>
   );

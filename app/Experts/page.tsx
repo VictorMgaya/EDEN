@@ -5,174 +5,307 @@ import Link from "next/link";
 import { getRawXMLCache } from "@/utils/analyticsCache";
 import DOMPurify from "dompurify";
 
+const GOOGLE_CSE_KEYS = [
+  process.env.NEXT_PUBLIC_GOOGLE_CUSTOM_SEARCH_API_KEY,
+  process.env.NEXT_PUBLIC_GOOGLE_CUSTOM_SEARCH_API_KEY1,
+  process.env.NEXT_PUBLIC_GOOGLE_CUSTOM_SEARCH_API_KEY2,
+];
+
+const GOOGLE_CSE_ID = process.env.NEXT_PUBLIC_GOOGLE_CSE_ID;
+
+// Helper function to validate image URLs
+function isImageUrl(url: string): boolean {
+  return /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(url);
+}
+
+// Fetch image URL using Google Custom Search API with fallback keys
+async function fetchImageURL(query: string, fallbackImage: string = ""): Promise<string> {
+  if (!GOOGLE_CSE_ID) {
+    console.error('Google CSE ID is not defined');
+    return fallbackImage;
+  }
+
+  // Clean and optimize the search query
+  const searchQuery = query.trim().replace(/\s+/g, ' ');
+  
+  console.log(`🔍 Searching for image: "${searchQuery}"`);
+
+  for (const apiKey of GOOGLE_CSE_KEYS) {
+    if (!apiKey) continue;
+    
+    const url = `https://www.googleapis.com/customsearch/v1?q=${encodeURIComponent(searchQuery)}&cx=${GOOGLE_CSE_ID}&key=${apiKey}&searchType=image&num=5&imgSize=large&safe=active`;
+    
+    try {
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        const errorDetails = await response.text();
+        console.error(`Google CSE Error (Key: ${apiKey.slice(0, 8)}...): ${response.status} - ${errorDetails}`);
+        continue;
+      }
+      
+      const data = await response.json();
+      const items = data.items || [];
+      
+      console.log(`✅ Found ${items.length} images for: "${searchQuery}"`);
+      
+      // Prioritize valid image extensions
+      const validImages = items.filter((item: { link: string }) => isImageUrl(item.link));
+      
+      if (validImages.length > 0) {
+        console.log(`🖼️ Using image: ${validImages[0].link}`);
+        return validImages[0].link;
+      }
+      if (items.length > 0) {
+        console.log(`🖼️ Using fallback image: ${items[0].link}`);
+        return items[0].link;
+      }
+      
+      console.warn(`⚠️ No images found for: "${searchQuery}"`);
+      return fallbackImage;
+    } catch (error) {
+      console.error(`Error with API Key ${apiKey.slice(0, 8)}...:`, error);
+    }
+  }
+  
+  console.error('❌ All Google CSE API keys failed');
+  return fallbackImage;
+}
+
 const createInitialPrompt = (data: string) => `
 You are Adam, the AI Expert Advisor for Eden Resource Analysis Engine.
 
 ROLE & EXPERTISE:
 You are a senior resource analyst with expertise in geography, agriculture, environmental science, economics, and sustainable development. You provide actionable, data-driven insights based on rigorous analysis.
 
-ANALYSIS TASK:
-Analyze the following XML analytics data and produce a comprehensive professional report with relevant visual imagery.
+CRITICAL - READ THE DATA CAREFULLY:
+Below is the FULL HTML PAGE containing all the analytics data. This HTML includes detailed information about the location including:
+- Geographic coordinates and location details
+- Elevation and terrain information
+- Climate data (temperature, rainfall, humidity)
+- Soil composition and quality
+- Water resources and accessibility
+- Agricultural suitability and crop recommendations
+- Infrastructure and development potential
+- Economic indicators and market access
 
-DATA:
+CAREFULLY EXAMINE the entire HTML structure below. Look at ALL sections, data points, measurements, and recommendations. Extract specific numbers, percentages, and concrete data points.
+
+ANALYTICS DATA (Full HTML Page):
 ${data}
 
-OUTPUT FORMAT:
-Deliver your response as clean HTML (no <html>, <head>, or <body> tags). Use semantic HTML5 elements.
+ANALYSIS TASK:
+Based on the COMPLETE HTML data above, provide a comprehensive, natural professional analysis. Reference SPECIFIC data points you find in the HTML (coordinates, elevation numbers, soil pH levels, rainfall amounts, temperature ranges, etc.).
 
-IMAGE REQUIREMENTS - ABSOLUTELY CRITICAL:
-For EACH major section, you MUST include a highly relevant image. Use actual image URLs from Unsplash:
-- Format: <img src="https://source.unsplash.com/800x600/?[keywords]" style="width:100%; max-width:600px; border-radius:8px; margin:15px auto; display:block; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" alt="descriptive alt text">
-- Replace [keywords] with specific search terms (e.g., "agriculture,farming", "water,irrigation", "solar,energy", etc.)
-- Use comma-separated keywords for better results
-- EVERY section MUST have at least one relevant image
-- Images should visually represent the content being discussed
+CRITICAL OUTPUT FORMAT REQUIREMENTS:
+You MUST respond ONLY with clean, valid HTML. No markdown, no code blocks, no formatting symbols.
 
-EXAMPLE IMAGE USAGE:
-<img src="https://source.unsplash.com/800x600/?sustainable,agriculture,farm" style="width:100%; max-width:600px; border-radius:8px; margin:15px auto; display:block; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" alt="Sustainable Agriculture">
+Structure your response using these HTML elements ONLY:
+- <h2>Main Section Title</h2> for major sections
+- <h3>Subsection Title</h3> for subsections
+- <p>Paragraph text here</p> for all regular text
+- <ul><li>List item</li></ul> for unordered lists
+- <ol><li>Numbered item</li></ol> for ordered lists
+- <strong>bold text</strong> for emphasis
+- <em>italic text</em> for subtle emphasis
+- <br> for line breaks if needed
 
-REPORT STRUCTURE:
+IMAGE INTEGRATION:
+When you want to include a relevant image, use EXACTLY this format:
+{{IMAGE:very specific descriptive keywords}}
 
-<div style="padding: 20px;">
+Be EXTREMELY specific with image keywords. Use 4-6 descriptive words that clearly describe what the image should show:
 
-<h1 style="color: hsl(142.1 76.2% 36.3%); border-bottom: 3px solid hsl(142.1 76.2% 36.3%); padding-bottom: 10px; margin-bottom: 20px;">Eden Resource Analysis Report</h1>
+GOOD EXAMPLES:
+- {{IMAGE:lush green agricultural farmland with crops}}
+- {{IMAGE:modern drip irrigation system in vegetable field}}
+- {{IMAGE:solar panel array on agricultural land}}
+- {{IMAGE:rural road infrastructure development construction}}
+- {{IMAGE:farmer harvesting wheat grain crop}}
 
-<div style="background: hsl(240 4.8% 95.9%); padding: 15px; border-radius: 8px; margin-bottom: 30px;">
-  <p style="margin: 5px 0;"><strong>Analyst:</strong> Adam AI Expert Advisor</p>
-  <p style="margin: 5px 0;"><strong>Generated:</strong> ${new Date().toUTCString()}</p>
-  <p style="margin: 5px 0;"><strong>Classification:</strong> Professional Analysis</p>
-</div>
+BAD EXAMPLES (too vague):
+- {{IMAGE:farm}}
+- {{IMAGE:water}}
+- {{IMAGE:land}}
 
-<h2 style="color: hsl(240 10% 3.9%); margin-top: 30px;">📋 Executive Summary</h2>
-<img src="https://source.unsplash.com/800x600/?geography,landscape,satellite" style="width:100%; max-width:600px; border-radius:8px; margin:15px auto; display:block; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" alt="Geographic Analysis">
-<p>Provide a concise 3-4 sentence overview of the location's most significant characteristics, opportunities, and constraints. Be specific and actionable.</p>
+EXAMPLE OUTPUT STRUCTURE:
+<h2>Location Analysis Overview</h2>
+<p>This comprehensive analysis examines the resource potential at coordinates [SPECIFIC LAT/LONG from data]. Located at an elevation of [SPECIFIC NUMBER] meters, this site presents significant opportunities for sustainable development.</p>
 
-<hr style="margin: 40px 0; border: none; border-top: 2px solid hsl(240 5.9% 90%);">
+{{IMAGE:aerial view fertile agricultural land with green fields}}
 
-<h2 style="color: hsl(240 10% 3.9%); margin-top: 30px;">🌍 Resource Potential Assessment</h2>
+<h2>Climate and Environmental Conditions</h2>
+<p>The location experiences [SPECIFIC climate type from data] with average annual temperatures of [SPECIFIC TEMP RANGE]. Rainfall patterns show [SPECIFIC rainfall data], distributed across [SPECIFIC NUMBER] months of the growing season.</p>
 
-<h3 style="color: hsl(240 5.9% 10%); margin-top: 25px;">🌾 Agricultural Viability</h3>
-<img src="https://source.unsplash.com/800x600/?agriculture,farming,crops" style="width:100%; max-width:600px; border-radius:8px; margin:15px auto; display:block; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" alt="Agricultural Potential">
-<p>Assess soil quality, climate suitability, water availability, and crop potential. Be specific about crops and yields.</p>
+<h3>Key Climate Metrics</h3>
+<ul>
+<li><strong>Temperature Range:</strong> [SPECIFIC DATA] - optimal for [SPECIFIC crops]</li>
+<li><strong>Annual Precipitation:</strong> [SPECIFIC MM] - [assessment based on data]</li>
+<li><strong>Humidity Levels:</strong> [SPECIFIC %] - [implications from data]</li>
+</ul>
 
-<h3 style="color: hsl(240 5.9% 10%); margin-top: 25px;">💧 Water Resources</h3>
-<img src="https://source.unsplash.com/800x600/?water,irrigation,reservoir" style="width:100%; max-width:600px; border-radius:8px; margin:15px auto; display:block; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" alt="Water Resources">
-<p>Evaluate groundwater, surface water, precipitation patterns, and irrigation potential.</p>
+{{IMAGE:weather station measuring rainfall temperature climate}}
 
-<h3 style="color: hsl(240 5.9% 10%); margin-top: 25px;">⚡ Energy Potential</h3>
-<img src="https://source.unsplash.com/800x600/?solar,energy,renewable" style="width:100%; max-width:600px; border-radius:8px; margin:15px auto; display:block; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" alt="Energy Potential">
-<p>Analyze solar, wind, hydro, or biomass energy opportunities based on geographic data.</p>
+<h2>Soil and Agricultural Potential</h2>
+<p>Soil analysis reveals [SPECIFIC soil type and pH from data]. This composition indicates:</p>
+<ul>
+<li>Fertility level: [SPECIFIC rating from data]</li>
+<li>Water retention capacity: [SPECIFIC info from data]</li>
+<li>Suitability for: [SPECIFIC crops listed in data]</li>
+</ul>
 
-<h3 style="color: hsl(240 5.9% 10%); margin-top: 25px;">🏗️ Development Suitability</h3>
-<img src="https://source.unsplash.com/800x600/?construction,infrastructure,development" style="width:100%; max-width:600px; border-radius:8px; margin:15px auto; display:block; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" alt="Development Infrastructure">
-<p>Assess terrain, accessibility, infrastructure potential, and construction feasibility.</p>
+{{IMAGE:healthy dark soil agricultural field fertile}}
 
-<hr style="margin: 40px 0; border: none; border-top: 2px solid hsl(240 5.9% 90%);">
-
-<h2 style="color: hsl(240 10% 3.9%); margin-top: 30px;">⚖️ Strategic Opportunities & Risk Factors</h2>
-<img src="https://source.unsplash.com/800x600/?business,strategy,opportunity" style="width:100%; max-width:600px; border-radius:8px; margin:15px auto; display:block; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" alt="Strategic Analysis">
-
-<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0;">
-  <div style="background: hsl(142.1 76.2% 96%); padding: 20px; border-radius: 8px; border-left: 4px solid hsl(142.1 76.2% 36.3%);">
-    <h3 style="color: hsl(142.1 76.2% 36.3%); margin-top: 0;">✅ Key Opportunities</h3>
-    <ul style="line-height: 1.8;">
-      <li>List 3-5 concrete, actionable opportunities with specific details</li>
-    </ul>
-  </div>
-  <div style="background: hsl(0 84.2% 97%); padding: 20px; border-radius: 8px; border-left: 4px solid hsl(0 84.2% 60.2%);">
-    <h3 style="color: hsl(0 84.2% 60.2%); margin-top: 0;">⚠️ Critical Risks</h3>
-    <ul style="line-height: 1.8;">
-      <li>List 3-5 specific risks with mitigation strategies</li>
-    </ul>
-  </div>
-</div>
-
-<hr style="margin: 40px 0; border: none; border-top: 2px solid hsl(240 5.9% 90%);">
-
-<h2 style="color: hsl(240 10% 3.9%); margin-top: 30px;">💼 Professional Recommendations by Stakeholder</h2>
-<img src="https://source.unsplash.com/800x600/?business,meeting,consultation" style="width:100%; max-width:600px; border-radius:8px; margin:15px auto; display:block; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" alt="Professional Consultation">
-
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin: 20px 0;">
-  
-  <div style="background: hsl(217 91.2% 95%); padding: 20px; border-radius: 8px; border-top: 3px solid hsl(217 91.2% 59.8%);">
-    <h3 style="color: hsl(217 91.2% 59.8%); margin-top: 0;">📊 For Investors</h3>
-    <p>ROI potential, risk assessment, capital requirements, expected timeline, and market conditions.</p>
-  </div>
-
-  <div style="background: hsl(48 96% 89%); padding: 20px; border-radius: 8px; border-top: 3px solid hsl(48 96% 53%);">
-    <h3 style="color: hsl(28 96% 45%); margin-top: 0;">🏗️ For Developers</h3>
-    <p>Site preparation needs, infrastructure requirements, regulatory considerations, and project phases.</p>
-  </div>
-
-  <div style="background: hsl(142.1 76.2% 95%); padding: 20px; border-radius: 8px; border-top: 3px solid hsl(142.1 76.2% 36.3%);">
-    <h3 style="color: hsl(142.1 76.2% 36.3%); margin-top: 0;">🔬 For Scientists/Researchers</h3>
-    <p>Research opportunities, data gaps, environmental monitoring needs, and collaboration potential.</p>
-  </div>
-
-  <div style="background: hsl(173 58% 89%); padding: 20px; border-radius: 8px; border-top: 3px solid hsl(173 58% 39%);">
-    <h3 style="color: hsl(173 58% 29%); margin-top: 0;">🌱 For Agricultural Operators</h3>
-    <p>Crop selection, farming practices, irrigation systems, market access, and yield optimization.</p>
-  </div>
-
-  <div style="background: hsl(280 65% 95%); padding: 20px; border-radius: 8px; border-top: 3px solid hsl(280 65% 60%);">
-    <h3 style="color: hsl(280 65% 50%); margin-top: 0;">💼 For Entrepreneurs</h3>
-    <p>Business opportunities, market gaps, value chain analysis, partnerships, and scalability.</p>
-  </div>
-
-  <div style="background: hsl(0 84.2% 95%); padding: 20px; border-radius: 8px; border-top: 3px solid hsl(0 84.2% 60.2%);">
-    <h3 style="color: hsl(0 84.2% 50%); margin-top: 0;">⚙️ For Engineers</h3>
-    <p>Technical challenges, design considerations, material requirements, and system integration.</p>
-  </div>
-
-</div>
-
-<hr style="margin: 40px 0; border: none; border-top: 2px solid hsl(240 5.9% 90%);">
-
-<h2 style="color: hsl(240 10% 3.9%); margin-top: 30px;">🎯 Recommended Next Steps</h2>
-<ol style="line-height: 2; font-size: 1.05em;">
-  <li><strong>On-site Verification:</strong> Conduct field surveys and soil testing</li>
-  <li><strong>Stakeholder Engagement:</strong> Meet with local authorities and communities</li>
-  <li><strong>Feasibility Studies:</strong> Commission detailed technical and financial analyses</li>
-  <li><strong>Implementation Planning:</strong> Develop phased timeline with milestones</li>
-  <li><strong>Risk Management:</strong> Establish monitoring and mitigation protocols</li>
+<h3>Recommended Crop Selection</h3>
+<p>Based on the soil and climate data, the following crops demonstrate highest viability:</p>
+<ol>
+<li><strong>Priority crops:</strong> [SPECIFIC crops from data]</li>
+<li><strong>Secondary options:</strong> [SPECIFIC crops from data]</li>
+<li><strong>High-value alternatives:</strong> [SPECIFIC crops from data]</li>
 </ol>
 
-<div style="background: hsl(48 96% 89%); padding: 20px; border-radius: 8px; margin-top: 30px; border-left: 4px solid hsl(48 96% 53%);">
-  <p style="margin: 0; font-style: italic; color: hsl(240 10% 3.9%);"><strong>⚠️ Disclaimer:</strong> This analysis is based on available geographic and environmental data. Ground-truthing and professional verification are essential before making investment or development decisions. Always consult with local experts and authorities.</p>
-</div>
+{{IMAGE:diverse crop harvest vegetables grains produce}}
 
-</div>
+<h2>Water Resources Assessment</h2>
+<p>Water availability analysis shows [SPECIFIC data about water sources]. Key findings include:</p>
+<ul>
+<li>Groundwater depth: [SPECIFIC meters if available]</li>
+<li>Surface water access: [SPECIFIC info from data]</li>
+<li>Irrigation requirements: [SPECIFIC calculations from data]</li>
+</ul>
 
-CRITICAL INSTRUCTIONS:
-- Be highly specific and quantitative where possible
-- Base ALL conclusions directly on the provided XML data
-- Use professional, confident, and assertive language
-- Avoid vague or generic statements
-- Prioritize actionable, implementable insights
-- MUST include Unsplash images in EVERY major section as shown above
-- Customize image keywords to precisely match each section's content
-- If data is insufficient for any section, explicitly state what additional data is needed
-- Keep the HTML styling inline as shown for consistent rendering
-- Use HSL color values from the design system provided
+{{IMAGE:water well irrigation agriculture rural area}}
+
+<h2>Strategic Recommendations</h2>
+<p>To optimize resource development at this location, stakeholders should prioritize:</p>
+<ol>
+<li><strong>Immediate actions:</strong> [SPECIFIC recommendations based on data]</li>
+<li><strong>Short-term development:</strong> [SPECIFIC plans based on data]</li>
+<li><strong>Long-term sustainability:</strong> [SPECIFIC strategies based on data]</li>
+</ol>
+
+<h3>Investment Priorities</h3>
+<ul>
+<li>[SPECIFIC infrastructure needs from data]</li>
+<li>[SPECIFIC technology requirements from data]</li>
+<li>[SPECIFIC resource management needs from data]</li>
+</ul>
+
+{{IMAGE:rural development infrastructure investment construction}}
+
+<h2>Next Steps and Implementation</h2>
+<p>Based on this comprehensive analysis, I recommend the following action plan:</p>
+<ol>
+<li>[SPECIFIC first step based on data]</li>
+<li>[SPECIFIC second step based on data]</li>
+<li>[SPECIFIC third step based on data]</li>
+</ol>
+
+WRITING GUIDELINES:
+- CAREFULLY READ the entire HTML data and extract SPECIFIC information
+- Reference ACTUAL numbers, measurements, and data points from the HTML
+- Quote specific coordinates, elevations, temperatures, rainfall amounts, soil characteristics
+- Be concrete and data-driven - use the actual information provided
+- Include 4-6 relevant images throughout using {{IMAGE:...}} with VERY SPECIFIC descriptive keywords
+- Write professionally but conversationally
+- Start with location overview using actual coordinates and data
+- Organize logically by resource type
+- End with clear, actionable recommendations based on the data
+- Use proper HTML structure - every section needs proper tags
+- NO markdown syntax (no ##, **, -, etc.)
+- NO code blocks or backticks
+- Just clean, valid HTML
+
+Remember: 
+1. READ THE ENTIRE HTML DATA CAREFULLY before writing
+2. Use SPECIFIC data points and numbers from the HTML
+3. Output ONLY HTML
+4. Make image keywords VERY SPECIFIC and descriptive (4-6 words minimum)
+5. The HTML will be directly inserted into the page, so it must be valid and complete
 `;
 
 const WELCOME_MESSAGE = `
-<div style="padding: 20px; line-height: 1.6;">
-  <h2 style="color: hsl(142.1 76.2% 36.3%); margin-bottom: 15px;">👋 Hello! I'm Adam, your AI Expert Advisor</h2>
+<div>
+  <h2>👋 Hello! I'm Adam, your AI Expert Advisor</h2>
   
-  <p style="margin-bottom: 15px;">I'm analyzing the resource data you've collected and preparing a comprehensive professional report. This will include:</p>
+  <p>I'm analyzing the resource data you've collected and preparing a comprehensive professional report. This will include:</p>
   
-  <ul style="margin-bottom: 15px; line-height: 1.8;">
+  <ul>
     <li>🌍 <strong>Resource Potential Assessment</strong> - Agriculture, water, energy, and development suitability</li>
     <li>⚖️ <strong>Strategic Analysis</strong> - Key opportunities and risk factors</li>
     <li>💼 <strong>Stakeholder Recommendations</strong> - Tailored advice for investors, developers, entrepreneurs, and more</li>
     <li>🎯 <strong>Action Plan</strong> - Concrete next steps for implementation</li>
   </ul>
   
-  <p style="margin-bottom: 10px;">My analysis is data-driven and based on the geographic and environmental information from your location. Give me a moment to generate your detailed report...</p>
+  <p>My analysis is data-driven and based on the geographic and environmental information from your location. Give me a moment to generate your detailed report...</p>
   
-  <p style="color: hsl(240 3.8% 46.1%); font-size: 0.9em; font-style: italic;">Feel free to ask follow-up questions once the report is ready!</p>
+  <p><em>Feel free to ask follow-up questions once the report is ready!</em></p>
 </div>
+`;
+
+const createFollowUpSystemPrompt = () => `
+You are Adam, the AI Expert Advisor. You're having a conversation with a client about their resource analysis report.
+
+CRITICAL OUTPUT FORMAT:
+Respond ONLY with clean, valid HTML. No markdown, no code blocks, no backticks.
+
+Use these HTML elements:
+- <h3>Section Title</h3> for any section headers
+- <p>Your response text</p> for paragraphs
+- <ul><li>Item</li></ul> for lists
+- <strong>text</strong> for emphasis
+- <em>text</em> for subtle emphasis
+
+IMAGE INTEGRATION:
+If an image would help illustrate your response, include:
+{{IMAGE:very specific descriptive keywords}}
+
+Use 4-6 descriptive words that clearly describe the image. Be VERY SPECIFIC:
+
+GOOD EXAMPLES:
+- {{IMAGE:modern drip irrigation system vegetable farm field}}
+- {{IMAGE:large solar panel installation on farm roof}}
+- {{IMAGE:healthy dairy cattle grazing green pasture}}
+- {{IMAGE:tractor plowing fertile agricultural field soil}}
+- {{IMAGE:greenhouse vegetable cultivation hydroponic system}}
+
+BAD EXAMPLES (too vague - don't use these):
+- {{IMAGE:irrigation}}
+- {{IMAGE:solar}}
+- {{IMAGE:cows}}
+- {{IMAGE:farm}}
+
+RESPONSE STYLE:
+- Be conversational and helpful
+- Answer the specific question asked
+- Provide actionable insights
+- Keep responses focused and concise
+- Reference previous analysis when relevant
+- Include ONE relevant image if it genuinely adds value to your explanation
+- Use specific examples and concrete recommendations
+
+EXAMPLE RESPONSE:
+<p>That's an excellent question about irrigation options. Based on the water availability data from your location, I'd recommend a combination approach that maximizes efficiency while minimizing costs:</p>
+
+<h3>Optimal Irrigation Strategy</h3>
+<ul>
+<li><strong>Drip irrigation</strong> for high-value crops like vegetables and fruits - achieves 90-95% water efficiency and delivers water directly to plant roots</li>
+<li><strong>Sprinkler systems</strong> for field crops like maize and wheat - provides good coverage and is more cost-effective for large areas</li>
+<li><strong>Rainwater harvesting</strong> infrastructure to capture seasonal rainfall and supplement irrigation during dry periods</li>
+</ul>
+
+{{IMAGE:modern drip irrigation tubes in vegetable field rows}}
+
+<p>Given your soil type and climate patterns, drip irrigation would provide the best return on investment for high-value vegetable cultivation, while sprinkler systems work well for grain crops. The initial investment is higher but you'll save 30-50% on water costs annually.</p>
+
+<p>Would you like me to break down the cost analysis or discuss specific crop water requirements?</p>
+
+Remember: 
+1. Output ONLY valid HTML
+2. No markdown formatting whatsoever
+3. If using images, make keywords VERY SPECIFIC (4-6 descriptive words)
+4. Be helpful and conversational
+5. Provide actionable advice
 `;
 
 interface GeminiContent {
@@ -208,6 +341,27 @@ export default function ExpertsPage() {
     }
   }, [messages, loading]);
 
+  async function processImagesInText(text: string): Promise<string> {
+    const imagePlaceholderRegex = /\{\{IMAGE:([^}]+)\}\}/g;
+    const matches = Array.from(text.matchAll(imagePlaceholderRegex));
+    
+    let processedText = text;
+    
+    for (const match of matches) {
+      const [fullMatch, keywords] = match;
+      const imageUrl = await fetchImageURL(keywords.trim());
+      
+      if (imageUrl) {
+        const imgTag = `<img src="${imageUrl}" alt="${keywords}" style="width:100%; max-width:700px; border-radius:12px; margin:20px auto; display:block; box-shadow: 0 4px 12px rgba(0,0,0,0.1);" />`;
+        processedText = processedText.replace(fullMatch, imgTag);
+      } else {
+        processedText = processedText.replace(fullMatch, '');
+      }
+    }
+    
+    return processedText;
+  }
+
   async function fetchGeminiAPI(content: GeminiContent[]) {
     const geminiApiKey = "AIzaSyDxARPUj9xVbhOGGOOS9EXirSQET6w5C7I";
 
@@ -233,15 +387,22 @@ export default function ExpertsPage() {
     setError("");
     try {
       const prompt = createInitialPrompt(data);
-      const text = await fetchGeminiAPI([{ parts: [{ text: prompt }] }]);
+      let text = await fetchGeminiAPI([{ parts: [{ text: prompt }] }]);
+      
       if (text) {
+        // Clean up any markdown artifacts that might slip through
+        text = text.replace(/```html\n?/g, '').replace(/```\n?/g, '');
+        text = text.trim();
+        
+        // Process image placeholders
+        text = await processImagesInText(text);
         setMessages(prev => [...prev, { sender: "ai", text }]);
       } else {
         throw new Error("No expert insights returned by Gemini.");
       }
     } catch (err) {
       console.error("Gemini fetch error:", err);
-      const errorMessage = "⚠️ Error retrieving expert analysis. Please try again.";
+      const errorMessage = "<p>⚠️ Error retrieving expert analysis. Please try again.</p>";
       setError(errorMessage);
       setMessages(prev => [...prev, { sender: "ai", text: errorMessage }]);
     } finally {
@@ -260,13 +421,28 @@ export default function ExpertsPage() {
     setLoading(true);
 
     try {
-      const conversationHistory: GeminiContent[] = currentMessages.map((msg) => ({
-        role: (msg.sender === "user" ? "user" : "model") as "user" | "model",
-        parts: [{ text: msg.text }],
-      }));
+      // Build conversation history with system prompt
+      const conversationHistory: GeminiContent[] = [
+        { parts: [{ text: createFollowUpSystemPrompt() }] }
+      ];
+      
+      // Add only the actual conversation (skip welcome message)
+      currentMessages.slice(1).forEach((msg) => {
+        conversationHistory.push({
+          role: (msg.sender === "user" ? "user" : "model") as "user" | "model",
+          parts: [{ text: msg.text }],
+        });
+      });
 
-      const text = await fetchGeminiAPI(conversationHistory);
+      let text = await fetchGeminiAPI(conversationHistory);
+      
       if (text) {
+        // Clean up any markdown artifacts
+        text = text.replace(/```html\n?/g, '').replace(/```\n?/g, '');
+        text = text.trim();
+        
+        // Process image placeholders
+        text = await processImagesInText(text);
         setMessages((prev) => [...prev, { sender: "ai", text }]);
       } else {
         throw new Error("No response from Gemini for follow-up.");
@@ -275,7 +451,7 @@ export default function ExpertsPage() {
       console.error("Gemini follow-up fetch error:", err);
       setMessages((prev) => [
         ...prev,
-        { sender: "ai", text: "⚠️ Error communicating with the expert. Please try again." },
+        { sender: "ai", text: "<p>⚠️ Error communicating with the expert. Please try again.</p>" },
       ]);
     } finally {
       setLoading(false);
@@ -322,12 +498,16 @@ export default function ExpertsPage() {
                     </div>
                   )}
                   <div
-                    className={`p-4 md:p-5 rounded-2xl shadow-md border ${
+                    className={`p-4 md:p-5 rounded-2xl shadow-md border prose prose-sm max-w-none ${
                       msg.sender === "user"
                         ? "bg-primary text-primary-foreground border-primary"
                         : "bg-card text-card-foreground border-border"
                     }`}
-                    style={{ wordWrap: "break-word", overflowWrap: "break-word", lineHeight: "1.7" }}
+                    style={{ 
+                      wordWrap: "break-word", 
+                      overflowWrap: "break-word", 
+                      lineHeight: "1.7"
+                    }}
                     dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(msg.text) }}
                   />
                 </div>
@@ -368,7 +548,7 @@ export default function ExpertsPage() {
 
       <div className="border-t border-border bg-card/95 backdrop-blur-sm p-4 md:p-5 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] flex-shrink-0 mb-[70px] md:mb-0">
         <form onSubmit={handleSendMessage} className="max-w-5xl mx-auto">
-          <div className="flex gap-3 md:mb-0">
+          <div className="flex gap-3">
             <input
               type="text"
               value={userInput}
@@ -405,7 +585,6 @@ export default function ExpertsPage() {
           }
         }
 
-        /* Custom scrollbar */
         div::-webkit-scrollbar {
           width: 8px;
         }
@@ -421,6 +600,34 @@ export default function ExpertsPage() {
 
         div::-webkit-scrollbar-thumb:hover {
           background: hsl(var(--muted-foreground));
+        }
+
+        .prose h2 {
+          margin-top: 1.5em;
+          margin-bottom: 0.5em;
+          font-size: 1.5em;
+          font-weight: 700;
+        }
+
+        .prose h3 {
+          margin-top: 1.25em;
+          margin-bottom: 0.5em;
+          font-size: 1.25em;
+          font-weight: 600;
+        }
+
+        .prose p {
+          margin-bottom: 1em;
+        }
+
+        .prose ul, .prose ol {
+          margin-top: 0.75em;
+          margin-bottom: 0.75em;
+          padding-left: 1.5em;
+        }
+
+        .prose li {
+          margin-bottom: 0.5em;
         }
       `}</style>
     </main>

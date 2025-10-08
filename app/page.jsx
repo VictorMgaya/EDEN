@@ -7,7 +7,7 @@ import WeeklyWeather from '../components/weather/weekly';
 import TommorowWeather from '../components/weather/tommorow';
 import TopSoilClassComponent from '../components/soil/dominatingclass';
 import TopSoilClassesChart from '../components/soil/top5classes';
-import ExpertsExperts from './Experts/page';
+
 
 
 export default function Home() {
@@ -89,10 +89,6 @@ export default function Home() {
       <div className="grid md:grid-cols-2 gap-6 p-6 w-full bg-gradient-to-r from-yellow-500/20 to-green-500/20 rounded-b-2xl">
         <TopSoilClassComponent />
         <TopSoilClassesChart />
-      </div>
-      <div>
-
-        <ExpertsExperts />
       </div>
     </div>
   );
