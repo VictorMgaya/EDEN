@@ -552,7 +552,7 @@ export default function ExpertsPage() {
                 </div>
                 <div className="flex-1 max-w-[90%]">
                   <div className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">
-                    Adam AI
+                    Adam
                   </div>
                   <div className="p-4 md:p-5 rounded-2xl bg-card border border-border shadow-md">
                     <div className="flex gap-1.5 mb-2">

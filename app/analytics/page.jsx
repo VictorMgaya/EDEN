@@ -18,6 +18,7 @@ function AnalyticsPage() {
   const [locationPermissionDenied, setLocationPermissionDenied] = useState(false);
   const [showLocationPrompt, setShowLocationPrompt] = useState(true);
   const [showLocationRequiredModal, setShowLocationRequiredModal] = useState(false); // New state for modal
+  const [locationModalMessage, setLocationModalMessage] = useState(""); // State for modal message
   const [watchId, setWatchId] = useState(undefined); // State to store watchPosition ID
   const router = useRouter(); // Initialize useRouter
 
@@ -73,14 +74,15 @@ function AnalyticsPage() {
   const requestLocationPermission = async () => {
     try {
       if (!navigator.geolocation) {
-        alert('Geolocation is not supported by your browser');
+        setLocationModalMessage('Geolocation is not supported by your browser.');
+        setShowLocationRequiredModal(true);
         throw new Error('Geolocation not supported');
       }
 
       const permissionStatus = await navigator.permissions.query({ name: 'geolocation' });
 
       if (permissionStatus.state === 'denied') {
-        alert("Location access is denied. Please enable location services in your browser settings to use this feature.");
+        setLocationModalMessage("Location access is denied. Please enable location services in your browser settings to use this feature.");
         setLocationPermissionDenied(true);
         setShowLocationPrompt(false);
         setShowLocationRequiredModal(true);
@@ -108,8 +110,8 @@ function AnalyticsPage() {
       // Permission denied is now handled by the navigator.permissions.query check
       setLocationPermissionDenied(true);
       setShowLocationPrompt(false);
+      setLocationModalMessage(`Location request failed: ${error.message}. Please try again or search for a location.`);
       setShowLocationRequiredModal(true);
-      alert(`Location request failed: ${error.message}. Please try again or search for a location.`);
       triggerHeaderLocationSearch();
     }
   };
@@ -126,7 +128,8 @@ function AnalyticsPage() {
   const handleTrackLocationClick = async () => {
     setShowLocationRequiredModal(false);
     if (!navigator.geolocation) {
-      alert('Geolocation is not supported by your browser');
+      setLocationModalMessage('Geolocation is not supported by your browser.');
+      setShowLocationRequiredModal(true);
       return;
     }
 
@@ -134,7 +137,7 @@ function AnalyticsPage() {
       const permissionStatus = await navigator.permissions.query({ name: 'geolocation' });
 
       if (permissionStatus.state === 'denied') {
-        alert("Location access is denied. Please enable location services in your browser settings to use this feature.");
+        setLocationModalMessage("Location access is denied. Please enable location services in your browser settings to use this feature.");
         setLocationPermissionDenied(true);
         setShowLocationPrompt(false);
         setShowLocationRequiredModal(true);
@@ -170,8 +173,8 @@ function AnalyticsPage() {
           console.error("Error getting location:", error?.message || "Unknown error");
           setLocationPermissionDenied(true);
           setShowLocationPrompt(false);
+          setLocationModalMessage(`Location tracking failed: ${error.message}. Please try again or search for a location.`);
           setShowLocationRequiredModal(true);
-          alert(`Location tracking failed: ${error.message}. Please try again or search for a location.`);
           triggerHeaderLocationSearch();
           if (watchId !== undefined) {
             navigator.geolocation.clearWatch(watchId);
@@ -190,8 +193,8 @@ function AnalyticsPage() {
       console.warn('Location access failed:', error);
       setLocationPermissionDenied(true);
       setShowLocationPrompt(false);
+      setLocationModalMessage(`Location request failed: ${error.message}. Please try again or search for a location.`);
       setShowLocationRequiredModal(true);
-      alert(`Location request failed: ${error.message}. Please try again or search for a location.`);
       triggerHeaderLocationSearch();
     }
   };
@@ -285,7 +288,7 @@ function AnalyticsPage() {
           <div className="dark:bg-green-900 text-red p-8 rounded-lg shadow-lg text-center">
             <AlertTriangle className="mx-auto mb-4 text-red-500" size={48} />
             <h2 className="text-xl font-semibold mb-4">Location Required</h2>
-            <p className="mb-6">Location is required to start analysis. Please search for a location or let Eden track your current location.</p>
+            <p className="mb-6">{locationModalMessage || "Location is required to start analysis. Please search for a location or let Eden track your current location."}</p>
             <div className="flex justify-center gap-8">
               <Button onClick={handleSearchOptionClick}>Search a location <Search/></Button>
               <Button onClick={handleTrackLocationClick}>Track my location <MapPin/> </Button>
