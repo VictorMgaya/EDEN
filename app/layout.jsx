@@ -9,6 +9,7 @@ import { useState, useEffect } from "react";
 import Footer from "@/components/footer";
 import Header from "@/components/Header";
 import Loading from "@/components/Loader";
+import LoadingProgressBar from "@/components/LoadingProgressBar"; // Import the new component
 import { NextAuthProvider } from "./providers";
 import { LanguageProvider } from '@/context/LanguageContext';
 import { languageMetadata, seoByRegion } from '@/config/languages';
@@ -77,7 +78,10 @@ const seoTranslations = {
 
 export default function RootLayout({ children, session }) {
   const pathname = usePathname();
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true); // Existing full-page loader state
+  const [loadingProgress, setLoadingProgress] = useState(0); // New state for progress bar
+  const [isProgressBarVisible, setIsProgressBarVisible] = useState(false); // New state for progress bar visibility
+  const [pageBlurAmount, setPageBlurAmount] = useState(0); // New state for page blur effect
   const [pageMetadata, setPageMetadata] = useState(defaultMetadata);
   const [currentLang, setCurrentLang] = useState('en');
   const [textDirection, setTextDirection] = useState('ltr');
@@ -101,9 +105,66 @@ export default function RootLayout({ children, session }) {
     };
 
     detectUserLanguage();
-    const timeout = setTimeout(() => setLoading(false), 1000);
-    return () => clearTimeout(timeout);
-  }, []);
+
+    // Existing full-page loader timeout
+    const fullPageLoaderTimeout = setTimeout(() => setLoading(false), 1000);
+
+    // Progress bar and blur logic
+    let progressInterval;
+    let blurInterval;
+
+    const handleStartProgressBar = () => {
+      setIsProgressBarVisible(true);
+      setLoadingProgress(0); // Start from 0
+      setPageBlurAmount(10); // Start with blur
+
+      progressInterval = setInterval(() => {
+        setLoadingProgress(oldProgress => {
+          const newProgress = oldProgress + 5; // Smooth increment
+          if (newProgress >= 100) {
+            clearInterval(progressInterval);
+            return 100;
+          }
+          return newProgress;
+        });
+      }, 100); // Update every 100ms
+
+      // Gradually reduce blur as progress increases
+      blurInterval = setInterval(() => {
+        setPageBlurAmount(oldBlur => {
+          const newBlur = oldBlur - 0.5; // Gradually reduce blur
+          if (newBlur <= 0) {
+            clearInterval(blurInterval);
+            return 0;
+          }
+          return newBlur;
+        });
+      }, 50); // Update blur more frequently for smoothness
+    };
+
+    const handleCompleteProgressBar = () => {
+      clearInterval(progressInterval);
+      clearInterval(blurInterval);
+      setLoadingProgress(100);
+      setPageBlurAmount(0); // Ensure no blur at the end
+      setTimeout(() => {
+        setIsProgressBarVisible(false);
+        setLoadingProgress(0); // Reset for next load
+      }, 500); // Fade out duration for the bar
+    };
+
+    // Trigger progress bar on initial mount and subsequent pathname changes
+    handleStartProgressBar();
+    // Simulate completion after a fixed duration, or when actual page content is ready
+    const routeChangeCompleteTimeout = setTimeout(handleCompleteProgressBar, 2000); // Increased duration for blur effect
+
+    return () => {
+      clearTimeout(fullPageLoaderTimeout);
+      clearInterval(progressInterval);
+      clearInterval(blurInterval);
+      clearTimeout(routeChangeCompleteTimeout);
+    };
+  }, [pathname]); // Re-run effect when pathname changes
 
   const alternateLanguages = Object.keys(languageMetadata).map(lang => (
     <link
@@ -189,13 +250,14 @@ export default function RootLayout({ children, session }) {
         <meta name="yandex-verification" content="ccf10bbb05eec883" />
       </head>
       <body
-        className={`${Lexend.variable} min-h-screen`}
+        className={`${Lexend.variable} h-screen`}
         style={{
-          marginTop: "60px",
           position: "relative",
           top: "0",
+          bottom: "0"
         }}
       >
+        <LoadingProgressBar progress={loadingProgress} isVisible={isProgressBarVisible} /> {/* Add the progress bar */}
         <NextAuthProvider>
           <LanguageProvider>
             <ThemeProvider
@@ -205,7 +267,14 @@ export default function RootLayout({ children, session }) {
               disableTransitionOnChange
             >
               {pathname !== "/auth" && <Header />}
-              {loading ? <Loading /> : <>{children}</>}
+              <div
+                style={{
+                  filter: `blur(${pageBlurAmount}px)`,
+                  transition: 'filter 0.5s ease-in-out', // Changed to ease-in-out
+                }}
+              >
+                {loading ? <Loading /> : <>{children}</>}
+              </div>
               {pathname !== '/auth' && pathname !== '/Experts' && <Footer />}
             </ThemeProvider>
           </LanguageProvider>

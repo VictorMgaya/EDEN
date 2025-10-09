@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { getRawXMLCache } from "@/utils/analyticsCache";
 import DOMPurify from "dompurify";
+import { Send } from "react-feather";
 
 const GOOGLE_CSE_KEYS = [
   process.env.NEXT_PUBLIC_GOOGLE_CUSTOM_SEARCH_API_KEY,
@@ -493,8 +494,8 @@ export default function ExpertsPage() {
   );
 
   return (
-    <main className="flex flex-col h-svh bg-background font-[family-name:var(--font-lexend)] fixed inset-0 overflow-hidden">
-      <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-4 md:p-8 overscroll-contain pb-24 md:pb-4">
+    <main className="relative flex flex-col h-screen bg-background font-[family-name:var(--font-lexend)] overflow-hidden">
+      <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-4 overscroll-contain pb-[100px] pt-16">
         {!xmlData && !loading ? (
           renderNoDataMessage()
         ) : (
@@ -517,7 +518,7 @@ export default function ExpertsPage() {
                 <div className={`flex-1 ${msg.sender === "user" ? "max-w-[85%]" : "max-w-[90%]"} min-w-0`}>
                   {msg.sender === "ai" && (
                     <div className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">
-                      {index === 0 ? "Adam AI Expert Advisor" : "Adam AI"}
+                      {index === 0 ? "Adam AI Expert Advisor" : "Adam"}
                     </div>
                   )}
                   <div
@@ -573,7 +574,7 @@ export default function ExpertsPage() {
         )}
       </div>
 
-      <div className="border-t border-border bg-card/95 backdrop-blur-sm p-4 md:p-5 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] flex-shrink-0 mb-[70px] md:mb-0">
+      <div className="fixed bottom-0 md:p-b-20 left-0 rounded-t-2xl w-full border-t border-border bg-card/95 backdrop-blur-sm p-4 md:p-5 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] z-50 pb-16">
         <form onSubmit={handleSendMessage} className="max-w-5xl mx-auto">
           <div className="flex gap-3">
             <input
@@ -590,11 +591,11 @@ export default function ExpertsPage() {
             />
             <button
               type="submit"
-              className="w-12 h-12 md:w-13 md:h-13 flex-shrink-0 rounded-full bg-gradient-to-br from-primary to-primary/80 text-primary-foreground flex items-center justify-center text-xl font-bold shadow-md hover:shadow-lg hover:scale-105 active:scale-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+              className="w-14 h-14 md:w-15 md:h-15 flex-shrink-0 rounded-full bg-gradient-to-br from-blue-600 to-purple-700 text-primary-foreground flex items-center justify-center text-xl font-bold shadow-md hover:shadow-lg hover:scale-105 active:scale-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               disabled={loading || !xmlData || !userInput.trim()}
               title="Send message"
             >
-              ➤
+              <Send/>
             </button>
           </div>
         </form>

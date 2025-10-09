@@ -21,6 +21,11 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true,
         enum: ['credentials', 'google'],
+    },
+    bio: {
+        type: String,
+        default: '',
+        maxlength: [500, 'Bio cannot exceed 500 characters'],
     }
 }, {
     timestamps: true,

@@ -236,7 +236,7 @@ function AnalyticsPage() {
 
 
   return (
-    <div className='p-4'>
+    <div className='mt-20 p-1'>
       <div className='container:w-full mb-4 p-1 content-center rounded-2xl bg-blue-500/20 z-0 relative'>
         <MapContainerComponent
           center={center}
