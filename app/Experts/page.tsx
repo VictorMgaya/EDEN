@@ -238,14 +238,14 @@ const WELCOME_MESSAGE = `
     <li>🎯 <strong>Action Plan</strong> - Concrete next steps for implementation</li>
   </ul>
   
-  <p>My analysis is data-driven and based on the geographic and environmental information from your location. Give me a moment to generate your detailed report...</p>
+  <p>My analysis is data-driven and based on the geographic and environmental information from your location. Give me a moment to analyze your detailed data...</p>
   
   <p><em>Feel free to ask follow-up questions once the report is ready!</em></p>
 </div>
 `;
 
 const createFollowUpSystemPrompt = () => `
-You are Adam, the AI Expert Advisor made by Eden Resources Analysis Engine (RAE) and Trained by Google. You're having a conversation with a client about their resource analysis report.
+You are Adam, the AI Expert Advisor made by Eden Resource Analysis Engine (RAE) and Trained by Google. You're having a conversation with a client about their resource analysis report.
 
 CRITICAL OUTPUT FORMAT:
 Respond ONLY with clean, valid HTML. No markdown, no code blocks, no backticks.
@@ -518,7 +518,7 @@ export default function ExpertsPage() {
                 <div className={`flex-1 ${msg.sender === "user" ? "max-w-[85%]" : "max-w-[90%]"} min-w-0`}>
                   {msg.sender === "ai" && (
                     <div className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">
-                      {index === 0 ? "Adam AI Expert Advisor" : "Adam"}
+                      {index === 0 ? "Adam-AI Expert Advisor" : "Adam"}
                     </div>
                   )}
                   <div

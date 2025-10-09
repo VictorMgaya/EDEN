@@ -3,6 +3,78 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import dbConnect from "@/app/lib/dbConnect";
 import User from "@/app/model/user";
+import bcrypt from 'bcryptjs'; // Import bcryptjs for password hashing
+
+export async function POST(request: Request) {
+    try {
+        await dbConnect();
+        const { name, email, password, image, provider, bio } = await request.json();
+
+        // Check if user already exists
+        let user = await User.findOne({ email });
+
+        if (user) {
+            // If user exists and is trying to register with credentials but already has a Google account
+            if (provider === 'credentials' && user.provider === 'google') {
+                return NextResponse.json(
+                    { error: "An account with this email already exists via Google. Please sign in with Google." },
+                    { status: 409 }
+                );
+            }
+            // If user exists and is trying to register with Google but already has a credentials account
+            if (provider === 'google' && user.provider === 'credentials') {
+                // Update existing user with Google info if they previously registered with credentials
+                user.name = name;
+                user.image = image;
+                user.provider = provider;
+                await user.save();
+                const userResponse = user.toObject();
+                delete userResponse.password;
+                return NextResponse.json(userResponse, { status: 200 });
+            }
+            // If user exists and is signing in with Google again, just return the user
+            if (provider === 'google' && user.provider === 'google') {
+                const userResponse = user.toObject();
+                delete userResponse.password;
+                return NextResponse.json(userResponse, { status: 200 });
+            }
+            // For credentials provider, if user exists, it means they are trying to register again
+            if (provider === 'credentials') {
+                return NextResponse.json(
+                    { error: "User with this email already exists." },
+                    { status: 409 }
+                );
+            }
+        }
+
+        // Hash password if provided (for credentials provider)
+        let hashedPassword = null;
+        if (password) {
+            hashedPassword = await bcrypt.hash(password, 10);
+        }
+
+        // Create new user
+        user = await User.create({
+            name,
+            email,
+            password: hashedPassword,
+            image: image || 'https://www.gravatar.com/avatar/?d=mp', // Default image
+            provider,
+            bio: bio || '', // Default empty bio
+        });
+
+        const userResponse = user.toObject();
+        delete userResponse.password;
+
+        return NextResponse.json(userResponse, { status: 201 });
+    } catch (error: any) {
+        console.error("Error in POST /api/users:", error.message);
+        return NextResponse.json(
+            { error: "An error occurred during user creation." },
+            { status: 500 }
+        );
+    }
+}
 
 export async function PATCH(request: Request) {
     try {
