@@ -248,6 +248,58 @@ export default function RootLayout({ children }) {
         <meta name="google-site-verification" content="xhS9AxO9_lnZW5qXS9B3tCziTO-v0E0pAv8OicFMsd4" />
         <meta name="msvalidate.01" content="3D027736EF5CFEE53D03C112F845FE16" />
         <meta name="yandex-verification" content="ccf10bbb05eec883" />
+
+        {/* PWA Meta Tags */}
+        <meta name="theme-color" content="#3b82f6" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="Eden" />
+        <meta name="application-name" content="Eden" />
+        <meta name="msapplication-TileColor" content="#3b82f6" />
+        <meta name="msapplication-config" content="/browserconfig.xml" />
+
+        {/* PWA Icons for Apple */}
+        <link rel="apple-touch-icon" sizes="180x180" href="/edenlogo.svg" />
+        <link rel="apple-touch-icon" sizes="152x152" href="/edenlogo.svg" />
+        <link rel="apple-touch-icon" sizes="120x120" href="/edenlogo.svg" />
+        <link rel="apple-touch-icon" sizes="76x76" href="/edenlogo.svg" />
+
+        {/* Web App Manifest */}
+        <link rel="manifest" href="/manifest.json" />
+
+        {/* Service Worker Registration */}
+        <script dangerouslySetInnerHTML={{
+          __html: `
+            if ('serviceWorker' in navigator) {
+              window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js', { scope: '/' })
+                  .then(function(registration) {
+                    console.log('[SW] Registered successfully with scope:', registration.scope);
+
+                    // Handle updates
+                    registration.addEventListener('updatefound', function() {
+                      const newWorker = registration.installing;
+                      newWorker.addEventListener('statechange', function() {
+                        if (newWorker.state === 'installed') {
+                          if (navigator.serviceWorker.controller) {
+                            // New content available, notify user
+                            if (confirm('New version available! Reload to update?')) {
+                              newWorker.postMessage({ type: 'SKIP_WAITING' });
+                              window.location.reload();
+                            }
+                          }
+                        }
+                      });
+                    });
+                  }).catch(function(error) {
+                    console.log('[SW] Registration failed:', error);
+                  });
+              });
+            }
+          `
+        }} />
       </head>
       <body
         className={`${Lexend.variable} h-screen`}
