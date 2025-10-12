@@ -30,19 +30,26 @@ export default function AuthPage() {
     // Check if user needs to create bio on mount and session change
     useEffect(() => {
         const checkUserBio = async () => {
+            // Only check bio after authentication is confirmed
             if (status === 'authenticated' && session?.user?.email) {
-                try {
-                    const response = await fetch(`/api/users/profile?email=${encodeURIComponent(session.user.email)}`);
-                    if (response.ok) {
-                        const data = await response.json();
-                        const wordCount = data.bio ? data.bio.trim().split(/\s+/).filter((word: string) => word.length > 0).length : 0;
-                        if (!data.bio || data.bio.trim().length === 0 || wordCount < 50) {
-                            setShowBioModal(true);
+                // Small delay to ensure session is fully loaded
+                setTimeout(async () => {
+                    try {
+                        const profileEmail = session.user?.email;
+                        if (!profileEmail) return;
+
+                        const response = await fetch(`/api/users/profile?email=${encodeURIComponent(profileEmail)}`);
+                        if (response.ok) {
+                            const data = await response.json();
+                            const wordCount = data.bio ? data.bio.trim().split(/\s+/).filter((word: string) => word.length > 0).length : 0;
+                            if (!data.bio || data.bio.trim().length === 0 || wordCount < 50) {
+                                setShowBioModal(true);
+                            }
                         }
+                    } catch (error) {
+                        console.error('Error checking user bio:', error);
                     }
-                } catch (error) {
-                    console.error('Error checking user bio:', error);
-                }
+                }, 500); // Wait 500ms for session to fully initialize
             }
         };
 

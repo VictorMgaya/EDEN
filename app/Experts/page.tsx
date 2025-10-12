@@ -353,7 +353,7 @@ export default function ExpertsPage() {
     if (status === 'loading') return;
 
     if (status === 'unauthenticated') {
-      router.push('/auth');
+      router.push('/');
       return;
     }
 

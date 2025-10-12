@@ -1,17 +1,23 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import L from 'leaflet';
-import MapContainerComponent from '@/components/maps/container';
-import TopSoilClassChart from '@/components/soil/allclasses';
-import SoilPropertiesChart from '@/components/soil/properties';
-import WeeklyWeather from '@/components/weather/weekly';
-import PopulationDetailsComponent from '@/components/Population/100msq'
-import LocationDetails from '@/components/LocationDetails.jsx';
+import React, { useEffect, useState, useMemo } from 'react';
+import dynamic from 'next/dynamic';
 import { Button } from '@/components/ui/button';
-import { BarChart2, MapPin, AlertTriangle, Search } from 'react-feather';
+import { BarChart2, AlertTriangle, Search } from 'react-feather';
 import { saveAnalyticsCache } from '@/utils/analyticsCache';
-import { useRouter } from 'next/navigation'; // Import useRouter
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+
+// Dynamic imports to prevent SSR issues
+const MapContainerComponent = dynamic(() => import('@/components/maps/container'), {
+  ssr: false,
+  loading: () => <div className="h-64 bg-gray-100 rounded-2xl flex items-center justify-center">Loading map...</div>
+});
+const TopSoilClassChart = dynamic(() => import('@/components/soil/allclasses'), { ssr: false });
+const SoilPropertiesChart = dynamic(() => import('@/components/soil/properties'), { ssr: false });
+const WeeklyWeather = dynamic(() => import('@/components/weather/weekly'), { ssr: false });
+const PopulationDetailsComponent = dynamic(() => import('@/components/Population/100msq'), { ssr: false });
+const LocationDetails = dynamic(() => import('@/components/LocationDetails.jsx'), { ssr: false });
 
 function AnalyticsPage() {
   const [center, setCenter] = useState({ lat: 51.9, lng: -0.09 });
@@ -25,10 +31,14 @@ function AnalyticsPage() {
   const router = useRouter(); // Initialize useRouter
   const { data: session, status } = useSession();
 
-  const icon = L.icon({
-    iconUrl: './locationtag.png',
-    iconSize: [25, 40],
-  });
+  const icon = useMemo(() => {
+    // This will only run on client side due to dynamic import check
+    const L = require('leaflet');
+    return L.icon({
+      iconUrl: './locationtag.png',
+      iconSize: [25, 40],
+    });
+  }, []);
 
   // Track loading state of each component
   const [locationDetailsLoaded, setLocationDetailsLoaded] = useState(false);
@@ -254,7 +264,7 @@ function AnalyticsPage() {
     if (status === 'loading') return;
 
     if (status === 'unauthenticated') {
-      router.push('/auth');
+      router.push('/');
       return;
     }
 

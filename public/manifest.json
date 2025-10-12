@@ -5,7 +5,7 @@
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#3b82f6",
+  "theme_color": "#0D120A",
   "orientation": "portrait-primary",
   "scope": "/",
   "icons": [
@@ -20,12 +20,6 @@
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"
-    },
-    {
-      "src": "favicon.ico",
-      "sizes": "32x32 16x16",
-      "type": "image/x-icon",
-      "purpose": "any"
     },
     {
       "src": "window.svg",
@@ -43,7 +37,7 @@
       "short_name": "Home",
       "description": "Go to home page",
       "url": "/",
-      "icons": [{ "src": "next.svg", "sizes": "96x96" }]
+      "icons": [{ "src": "eden.svg", "sizes": "96x96" }]
     },
     {
       "name": "Analytics",
