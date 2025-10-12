@@ -8,6 +8,7 @@ import Link from "next/link";
 import { getRawXMLCache } from "@/utils/analyticsCache";
 import DOMPurify from "dompurify";
 import { Send } from "react-feather";
+import CreditModal from "@/components/CreditModal";
 
 const GOOGLE_CSE_KEYS = [
   process.env.NEXT_PUBLIC_GOOGLE_CUSTOM_SEARCH_API_KEY,
@@ -346,6 +347,29 @@ export default function ExpertsPage() {
   const [userInput, setUserInput] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [showCreditModal, setShowCreditModal] = useState(false);
+  const [userCredits, setUserCredits] = useState(0);
+  const [userSubscription, setUserSubscription] = useState('freemium');
+
+  // Check credits on component mount
+  useEffect(() => {
+    const checkCredits = async () => {
+      try {
+        const response = await fetch('/api/users/credits/check');
+        if (response.ok) {
+          const data = await response.json();
+          setUserCredits(data.credits);
+          setUserSubscription(data.subscription || 'freemium');
+        }
+      } catch (error) {
+        console.error('Error checking credits:', error);
+      }
+    };
+
+    if (status === 'authenticated') {
+      checkCredits();
+    }
+  }, [status]);
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -449,6 +473,12 @@ export default function ExpertsPage() {
     e.preventDefault();
     if (!userInput.trim() || loading) return;
 
+    // Check credits before sending message
+    if (userSubscription === 'freemium' && userCredits < 10) {
+      setShowCreditModal(true);
+      return;
+    }
+
     const newUserMessage = { sender: "user", text: userInput };
     const currentMessages = [...messages, newUserMessage];
     setMessages(currentMessages);
@@ -456,11 +486,32 @@ export default function ExpertsPage() {
     setLoading(true);
 
     try {
+      // Deduct credits first
+      const creditResponse = await fetch('/api/users/credits/deduct', {
+        method: 'POST',
+      });
+
+      const creditData = await creditResponse.json();
+
+      if (!creditResponse.ok) {
+        if (creditResponse.status === 402) {
+          // Insufficient credits
+          setShowCreditModal(true);
+          setMessages((prev) => prev.slice(0, -1)); // Remove the message
+          setLoading(false);
+          return;
+        }
+        throw new Error(creditData.error || 'Credit deduction failed');
+      }
+
+      // Update credits
+      setUserCredits(creditData.credits);
+
       // Build conversation history with system prompt
       const conversationHistory: GeminiContent[] = [
         { parts: [{ text: createFollowUpSystemPrompt() }] }
       ];
-      
+
       // Add only the actual conversation (skip welcome message)
       currentMessages.slice(1).forEach((msg) => {
         conversationHistory.push({
@@ -470,12 +521,12 @@ export default function ExpertsPage() {
       });
 
       let text = await fetchGeminiAPI(conversationHistory);
-      
+
       if (text) {
         // Clean up any markdown artifacts
         text = text.replace(/```html\n?/g, '').replace(/```\n?/g, '');
         text = text.trim();
-        
+
         // Process image placeholders
         text = await processImagesInText(text);
         setMessages((prev) => [...prev, { sender: "ai", text }]);
@@ -488,6 +539,14 @@ export default function ExpertsPage() {
         ...prev,
         { sender: "ai", text: "<p>⚠️ Error communicating with the expert. Please try again.</p>" },
       ]);
+
+      // Try to refund credits on error
+      try {
+        await fetch('/api/users/credits/refund', { method: 'POST' });
+        setUserCredits(prev => prev + 10);
+      } catch (refundError) {
+        console.error("Failed to refund credits:", refundError);
+      }
     } finally {
       setLoading(false);
     }
@@ -703,6 +762,13 @@ export default function ExpertsPage() {
           }
         }
       `}</style>
+
+      <CreditModal
+        isOpen={showCreditModal}
+        onClose={() => setShowCreditModal(false)}
+        credits={userCredits}
+        subscription={userSubscription}
+      />
     </main>
   );
 }

@@ -26,6 +26,16 @@ const userSchema = new mongoose.Schema({
         type: String,
         default: '',
         maxlength: [500, 'Bio cannot exceed 500 characters'],
+    },
+    // Credit system
+    credits: { type: Number, default: 50 }, // Starting credits
+    lastCreditReset: { type: Date, default: Date.now },
+    subscription: {
+        type: { type: String, enum: ['freemium', 'pro', 'enterprise'], default: 'freemium' },
+        stripeCustomerId: { type: String },
+        stripeSubscriptionId: { type: String },
+        currentPeriodEnd: { type: Date },
+        cancelAtPeriodEnd: { type: Boolean, default: false }
     }
 }, {
     timestamps: true,

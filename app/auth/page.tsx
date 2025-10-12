@@ -42,7 +42,7 @@ export default function AuthPage() {
                         if (response.ok) {
                             const data = await response.json();
                             const wordCount = data.bio ? data.bio.trim().split(/\s+/).filter((word: string) => word.length > 0).length : 0;
-                            if (!data.bio || data.bio.trim().length === 0 || wordCount < 50) {
+                            if (!data.bio || data.bio.trim().length === 0 || wordCount < 15) {
                                 setShowBioModal(true);
                             }
                         }
@@ -76,8 +76,8 @@ export default function AuthPage() {
 
         // Validate bio word count
         const wordCount = bio.trim().split(/\s+/).filter(word => word.length > 0).length;
-        if (wordCount < 50) {
-            setErrorMessage(`Bio must be at least 50 words. Current word count: ${wordCount}`);
+        if (wordCount < 15) {
+            setErrorMessage(`Bio must be at least 15 words. Current word count: ${wordCount}`);
             setIsLoading(false);
             return;
         }
@@ -182,10 +182,10 @@ export default function AuthPage() {
 
     // Calculate word count
     const bioWordCount = bio.trim().split(/\s+/).filter(word => word.length > 0).length;
-    const isWordCountValid = bioWordCount >= 50;
+    const isWordCountValid = bioWordCount >= 15;
     
     const modalBioWordCount = modalBio.trim().split(/\s+/).filter(word => word.length > 0).length;
-    const isModalBioValid = modalBioWordCount >= 50;
+    const isModalBioValid = modalBioWordCount >= 15;
 
     if (status === 'loading') {
         return (
@@ -366,7 +366,7 @@ export default function AuthPage() {
                             <div className="relative">
                                 <FiFileText className="absolute left-3 top-3 text-gray-400" />
                                 <textarea
-                                    placeholder="Write a bio about yourself (minimum 50 words)..."
+                                    placeholder="Write a bio about yourself (minimum 15 words)..."
                                     value={bio}
                                     onChange={(e) => setBio(e.target.value)}
                                     required
@@ -376,7 +376,7 @@ export default function AuthPage() {
                                     className="w-full pl-10 p-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 outline-none resize-none disabled:opacity-50"
                                 />
                                 <div className={`text-xs mt-1 ${isWordCountValid ? 'text-green-600 dark:text-green-400' : 'text-orange-600 dark:text-orange-400'}`}>
-                                    {bioWordCount} / 50 words minimum {isWordCountValid && '✓'}
+                                    {bioWordCount} / 15 words minimum {isWordCountValid && '✓'}
                                 </div>
                             </div>
 
@@ -392,7 +392,7 @@ export default function AuthPage() {
                                 />
                                 <label htmlFor="terms" className="text-sm">
                                     I agree to the{' '}
-                                    <a href="/privacy-policy" className="text-blue-500 hover:text-blue-600">
+                                    <a href="/privacypolicy" className="text-blue-500 hover:text-blue-600">
                                         Privacy Policy
                                     </a>{' '}
                                     and{' '}

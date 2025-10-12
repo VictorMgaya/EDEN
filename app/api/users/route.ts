@@ -109,16 +109,16 @@ export async function PATCH(request: Request) {
         const sanitizedBio = bio.trim();
         const wordCount = sanitizedBio.split(/\s+/).filter((word: string) => word.length > 0).length;
 
-        if (wordCount < 50) {
+        if (wordCount < 15) {
             return NextResponse.json(
-                { error: `Bio must be at least 50 words. Current word count: ${wordCount}` },
+                { error: `Bio must be at least 15 words. Current word count: ${wordCount}` },
                 { status: 400 }
             );
         }
 
-        if (sanitizedBio.length > 500) {
+        if (sanitizedBio.length > 115) {
             return NextResponse.json(
-                { error: "Bio cannot exceed 500 characters" },
+                { error: "Bio cannot exceed 150 characters" },
                 { status: 400 }
             );
         }

@@ -58,8 +58,8 @@ export default function EditProfilePage() {
 
         // Validate bio word count
         const wordCount = bio.trim().split(/\s+/).filter(word => word.length > 0).length;
-        if (wordCount < 50) {
-            setErrorMessage(`Bio must be at least 50 words. Current word count: ${wordCount}`);
+        if (wordCount < 15) {
+            setErrorMessage(`Bio must be at least 15 words. Current word count: ${wordCount}`);
             setIsLoading(false);
             return;
         }
@@ -203,7 +203,7 @@ export default function EditProfilePage() {
                         <div className="relative">
                             <FiFileText className="absolute left-3 top-3 text-gray-400" />
                             <textarea
-                                placeholder="Write a bio about yourself (minimum 50 words)..."
+                                placeholder="Write a bio about yourself (minimum 15 words)..."
                                 value={bio}
                                 onChange={(e) => setBio(e.target.value)}
                                 required
