@@ -2,6 +2,8 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { getRawXMLCache } from "@/utils/analyticsCache";
 import DOMPurify from "dompurify";
@@ -337,6 +339,8 @@ interface GeminiContent {
 }
 
 export default function ExpertsPage() {
+  const { status } = useSession();
+  const router = useRouter();
   const [xmlData, setXmlData] = useState("");
   const [messages, setMessages] = useState<{ sender: string; text: string }[]>([]);
   const [userInput, setUserInput] = useState("");
@@ -345,6 +349,14 @@ export default function ExpertsPage() {
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    // Check authentication
+    if (status === 'loading') return;
+
+    if (status === 'unauthenticated') {
+      router.push('/auth');
+      return;
+    }
+
     const rawXML = getRawXMLCache();
     setXmlData(rawXML || "");
 
@@ -356,7 +368,7 @@ export default function ExpertsPage() {
       setLoading(false);
       setError("No cached analytics data found. Please collect location data first.");
     }
-  }, []);
+  }, [status, router]);
 
   useEffect(() => {
     if (chatContainerRef.current) {

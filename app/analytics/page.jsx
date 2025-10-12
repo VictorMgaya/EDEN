@@ -23,6 +23,7 @@ function AnalyticsPage() {
   const [locationModalMessage, setLocationModalMessage] = useState(""); // State for modal message
   const [watchId, setWatchId] = useState(undefined); // State to store watchPosition ID
   const router = useRouter(); // Initialize useRouter
+  const { data: session, status } = useSession();
 
   const icon = L.icon({
     iconUrl: './locationtag.png',
@@ -249,6 +250,14 @@ function AnalyticsPage() {
   };
 
    useEffect(() => {
+    // Check for authentication when component mounts
+    if (status === 'loading') return;
+
+    if (status === 'unauthenticated') {
+      router.push('/auth');
+      return;
+    }
+
     const urlParams = new URLSearchParams(window.location.search);
     const lat = parseFloat(urlParams.get('lat'));
     const lon = parseFloat(urlParams.get('lon'));
@@ -275,7 +284,7 @@ function AnalyticsPage() {
     };
 
     window.addEventListener('locationSelected', handleLocationUpdate);
-    
+
     return () => {
       window.removeEventListener('locationSelected', handleLocationUpdate);
       // Clear watchPosition on component unmount
@@ -283,7 +292,7 @@ function AnalyticsPage() {
         navigator.geolocation.clearWatch(watchId);
       }
     };
-  }, [router, watchId, scannedLocation]); // Added watchId and scannedLocation to dependencies
+  }, [router, watchId, scannedLocation, status, isCheckingLocation]); // Added status and isCheckingLocation to dependencies
 
 
   return (
