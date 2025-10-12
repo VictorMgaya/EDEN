@@ -165,69 +165,72 @@ const LanguageSelector = () => {
     }, []);
 
     if (!mounted) {
-        return <div className="language-selector-container opacity-50">...</div>;
+        return <div className="bg-white dark:bg-gray-800 rounded-lg p-3 shadow-lg border border-blue-200 dark:border-gray-700 opacity-50">...</div>;
     }
 
     const CurrentFlag = languageMetadata[currentLanguage]?.Flag;
 
     return (
-        <div
-            className="language-selector-container relative"
-            ref={dropdownRef}
-            role="region"
-            aria-label="Language selection"
-        >
-            <button
-                onClick={() => setIsOpen(!isOpen)}
-                disabled={isTranslating}
-                aria-expanded={isOpen}
-                aria-haspopup="listbox"
-                aria-label={languageMetadata[currentLanguage].ariaLabel}
-                className={`flex items-center gap-2 bg-transparent border border-green-500 rounded px-3 py-1 cursor-pointer 
-                    hover:bg-green-500/10 transition-colors w-full
-                    ${isTranslating ? 'opacity-50 cursor-wait' : ''}`}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-blue-200 dark:border-gray-700">
+            <div
+                className="relative"
+                ref={dropdownRef}
+                role="region"
+                aria-label="Language selection"
             >
-                {CurrentFlag && (
-                    <CurrentFlag
-                        className="w-4 h-4"
-                        role="img"
-                        aria-label={languageMetadata[currentLanguage].alt}
-                        title={languageMetadata[currentLanguage].alt}
-                    />
-                )}
-                <span>{languageMetadata[currentLanguage].name}</span>
-                <span className="ml-auto">▼</span>
-            </button>
-
-            {isOpen && (
-                <div
-                    className="absolute top-full left-0 w-full mt-1 bg-white dark:bg-gray-800 border border-green-500 rounded-md shadow-lg z-50"
-                    role="listbox"
-                    aria-label="Available languages"
+                <button
+                    onClick={() => setIsOpen(!isOpen)}
+                    disabled={isTranslating}
+                    aria-expanded={isOpen}
+                    aria-haspopup="listbox"
+                    aria-label={languageMetadata[currentLanguage].ariaLabel}
+                    className={`flex items-center gap-3 bg-gradient-to-r from-blue-50 to-green-50 dark:from-gray-700 dark:to-gray-600 rounded-xl px-4 py-3 cursor-pointer hover:shadow-lg transition-all duration-300 w-full ${
+                        isTranslating ? 'opacity-50 cursor-wait' : ''
+                    }`}
                 >
-                    {Object.entries(languageMetadata).map(([code, { name, Flag, alt, ariaLabel }]) => (
-                        <button
-                            key={code}
-                            onClick={() => handleLanguageChange(code)}
-                            role="option"
-                            aria-selected={currentLanguage === code}
-                            lang={code}
-                            title={alt}
-                            className={`flex items-center gap-2 w-full px-3 py-2 hover:bg-green-500/10 transition-colors
-                                ${currentLanguage === code ? 'bg-green-500/5' : ''}`}
-                        >
-                            <Flag
-                                className="w-4 h-4"
-                                role="img"
-                                aria-label={alt}
+                    {CurrentFlag && (
+                        <CurrentFlag
+                            className="w-5 h-5"
+                            role="img"
+                            aria-label={languageMetadata[currentLanguage].alt}
+                            title={languageMetadata[currentLanguage].alt}
+                        />
+                    )}
+                    <span className="font-semibold text-gray-700 dark:text-gray-300">{languageMetadata[currentLanguage].name}</span>
+                    <span className="ml-auto text-gray-500">▼</span>
+                </button>
+
+                {isOpen && (
+                    <div
+                        className="absolute top-full left-0 w-full mt-2 bg-white dark:bg-gray-800 border border-blue-200 dark:border-gray-700 rounded-xl shadow-xl z-50"
+                        role="listbox"
+                        aria-label="Available languages"
+                    >
+                        {Object.entries(languageMetadata).map(([code, { name, Flag, alt, ariaLabel }]) => (
+                            <button
+                                key={code}
+                                onClick={() => handleLanguageChange(code)}
+                                role="option"
+                                aria-selected={currentLanguage === code}
+                                lang={code}
                                 title={alt}
-                            />
-                            <span>{name}</span>
-                        </button>
-                    ))}
-                </div>
-            )}
-            <div id="google_translate_element" className="hidden" aria-hidden="true" />
+                                className={`flex items-center gap-3 w-full px-4 py-3 hover:bg-gradient-to-r hover:from-blue-50 hover:to-green-50 dark:hover:from-gray-700 dark:hover:to-gray-600 transition-colors rounded-xl ${
+                                    currentLanguage === code ? 'bg-gradient-to-r from-blue-100 to-green-100 dark:from-gray-600 dark:to-gray-500' : ''
+                                }`}
+                            >
+                                <Flag
+                                    className="w-5 h-5"
+                                    role="img"
+                                    aria-label={alt}
+                                    title={alt}
+                                />
+                                <span className="font-medium text-gray-700 dark:text-gray-300">{name}</span>
+                            </button>
+                        ))}
+                    </div>
+                )}
+                <div id="google_translate_element" className="hidden" aria-hidden="true" />
+            </div>
         </div>
     );
 };

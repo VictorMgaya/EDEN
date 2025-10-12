@@ -95,23 +95,33 @@ export default function AnalyticsContainer() {
 
   // Render as raw HTML for LLMs or other consumers
   return (
-    <>
-      <MapContainerComponent
-        center={center}
-        zoom={zoom}
-        scannedLocation={scannedLocation}
-        icon={icon}
-      />
-      <Button onClick={() => window.location.reload()}>
-        <BarChart2 />Analyse
-      </Button>
-      {scannedLocation && (
-        <>
-          <PopulationDetailsComponent />
-          <WeeklyWeather />
-          <TopSoilClassChart />
-        </>
-      )}
-    </>
+    <div className="bg-gradient-to-br from-blue-50 to-green-50 dark:from-gray-800 dark:to-gray-900 min-h-screen p-6">
+      <div className="max-w-7xl mx-auto">
+        <MapContainerComponent
+          center={center}
+          zoom={zoom}
+          scannedLocation={scannedLocation}
+          icon={icon}
+        />
+        <div className="mt-6">
+          <Button onClick={() => window.location.reload()} className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white font-semibold py-2 px-4 rounded-lg shadow-lg">
+            <BarChart2 className="mr-2" />Analyse
+          </Button>
+        </div>
+        {scannedLocation && (
+          <div className="mt-8 space-y-6">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-blue-200 dark:border-gray-700">
+              <PopulationDetailsComponent />
+            </div>
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-blue-200 dark:border-gray-700">
+              <WeeklyWeather />
+            </div>
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-blue-200 dark:border-gray-700">
+              <TopSoilClassChart />
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }

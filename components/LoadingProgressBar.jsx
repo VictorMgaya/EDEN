@@ -5,17 +5,13 @@ import React from 'react';
 const LoadingProgressBar = ({ progress, isVisible }) => {
   return (
     <div
+      className={`fixed top-0 left-0 h-1 bg-gradient-to-r from-blue-600 to-green-600 shadow-lg transition-all duration-300 ease-in-out ${
+        isVisible ? 'opacity-100' : 'opacity-0'
+      }`}
       style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
         width: `${progress}%`,
-        height: '4px',
-        backgroundColor: '#006816ff', // Green color
         zIndex: 9999,
-        opacity: isVisible ? 1 : 0,
-        transition: 'width 0.3s ease-in, opacity 0.5s ease-out',
-        boxShadow: '0 0 10px #013b09ff, 0 0 5px #002c0aff',
+        boxShadow: '0 0 10px rgba(59, 130, 246, 0.5), 0 0 5px rgba(34, 197, 94, 0.5)',
       }}
     />
   );

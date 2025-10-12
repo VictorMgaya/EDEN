@@ -4,8 +4,10 @@ import React, { useEffect, useState } from 'react';
 import L from 'leaflet';
 import MapContainerComponent from '@/components/maps/container';
 import TopSoilClassChart from '@/components/soil/allclasses';
+import SoilPropertiesChart from '@/components/soil/properties';
 import WeeklyWeather from '@/components/weather/weekly';
 import PopulationDetailsComponent from '@/components/Population/100msq'
+import LocationDetails from '@/components/LocationDetails.jsx';
 import { Button } from '@/components/ui/button';
 import { BarChart2, MapPin, AlertTriangle, Search } from 'react-feather';
 import { saveAnalyticsCache } from '@/utils/analyticsCache';
@@ -28,14 +30,19 @@ function AnalyticsPage() {
   });
 
   // Track loading state of each component
+  const [locationDetailsLoaded, setLocationDetailsLoaded] = useState(false);
   const [populationLoaded, setPopulationLoaded] = useState(false);
   const [weatherLoaded, setWeatherLoaded] = useState(false);
   const [soilLoaded, setSoilLoaded] = useState(false);
+  const [soilPropertiesLoaded, setSoilPropertiesLoaded] = useState(false);
+  const [isCheckingLocation, setIsCheckingLocation] = useState(false);
 
   // Callback props for child components to signal when loaded
+  const handleLocationDetailsLoaded = () => setLocationDetailsLoaded(true);
   const handlePopulationLoaded = () => setPopulationLoaded(true);
   const handleWeatherLoaded = () => setWeatherLoaded(true);
   const handleSoilLoaded = () => setSoilLoaded(true);
+  const handleSoilPropertiesLoaded = () => setSoilPropertiesLoaded(true);
 
   // Cache only when all components are loaded
   // Track if cache has already been saved for this session
@@ -43,7 +50,7 @@ function AnalyticsPage() {
 
   // Cache only when all analysis components are fully rendered
   useEffect(() => {
-    if (!cacheSaved && populationLoaded && weatherLoaded && soilLoaded) {
+    if (!cacheSaved && locationDetailsLoaded && populationLoaded && weatherLoaded && soilLoaded && soilPropertiesLoaded) {
       setTimeout(() => {
         const container = document.querySelector('.p-4');
         if (container) {
@@ -59,7 +66,7 @@ function AnalyticsPage() {
         }
       }, 0);
     }
-  }, [populationLoaded, weatherLoaded, soilLoaded, cacheSaved, scannedLocation, zoom]);
+  }, [locationDetailsLoaded, populationLoaded, weatherLoaded, soilLoaded, soilPropertiesLoaded, cacheSaved, scannedLocation, zoom]);
 
     const handleLocationSelect = (location) => {
     setScannedLocation(location);
@@ -72,10 +79,13 @@ function AnalyticsPage() {
   };
 
   const requestLocationPermission = async () => {
+    if (isCheckingLocation) return;
+    setIsCheckingLocation(true);
     try {
       if (!navigator.geolocation) {
         setLocationModalMessage('Geolocation is not supported by your browser.');
         setShowLocationRequiredModal(true);
+        setIsCheckingLocation(false);
         throw new Error('Geolocation not supported');
       }
 
@@ -87,6 +97,7 @@ function AnalyticsPage() {
         setShowLocationPrompt(false);
         setShowLocationRequiredModal(true);
         triggerHeaderLocationSearch();
+        setIsCheckingLocation(false);
         return;
       }
 
@@ -113,6 +124,8 @@ function AnalyticsPage() {
       setLocationModalMessage(`Location request failed: ${error.message}. Please try again or search for a location.`);
       setShowLocationRequiredModal(true);
       triggerHeaderLocationSearch();
+    } finally {
+      setIsCheckingLocation(false);
     }
   };
 
@@ -125,11 +138,14 @@ function AnalyticsPage() {
     setShowLocationRequiredModal(false);
   };
 
-  const handleTrackLocationClick = async () => {
+  const handleTrackLocationClick = async (checkPermissionOnly = false) => {
+    if (isCheckingLocation) return;
+    setIsCheckingLocation(true);
     setShowLocationRequiredModal(false);
     if (!navigator.geolocation) {
       setLocationModalMessage('Geolocation is not supported by your browser.');
       setShowLocationRequiredModal(true);
+      setIsCheckingLocation(false);
       return;
     }
 
@@ -142,53 +158,76 @@ function AnalyticsPage() {
         setShowLocationPrompt(false);
         setShowLocationRequiredModal(true);
         triggerHeaderLocationSearch();
+        setIsCheckingLocation(false);
         return;
       }
 
-      // Clear any existing watch
-      if (watchId !== undefined) {
-        navigator.geolocation.clearWatch(watchId);
+      if (checkPermissionOnly) {
+        // Just show message about permission status
+        const messages = {
+          granted: "Location permission is granted. You can use location tracking features.",
+          prompt: "Location permission is set to prompt. You will be asked for permission when tracking location.",
+          denied: "Location permission is denied. Please enable it in your browser settings."
+        };
+        setLocationModalMessage(messages[permissionStatus.state] || 'Unknown permission status.');
+        setShowLocationRequiredModal(true);
+        setIsCheckingLocation(false);
+        return;
       }
 
-      const newWatchId = navigator.geolocation.watchPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          const currentLat = scannedLocation?.lat || 0;
-          const currentLon = scannedLocation?.lng || 0;
+      // Proceed to start tracking
+      if (permissionStatus.state === 'granted') {
+        // Clear any existing watch
+        if (watchId !== undefined) {
+          navigator.geolocation.clearWatch(watchId);
+        }
 
-          // Check if location has changed significantly (more than 0.0001 degrees)
-          if (Math.abs(latitude - currentLat) > 0.0001 || Math.abs(longitude - currentLon) > 0.0001) {
-            const newLocation = { lat: latitude, lng: longitude };
-            handleLocationSelect(newLocation); // Update state and URL
-            router.push(`?lon=${longitude}&lat=${latitude}`);
-            setTimeout(() => window.location.reload(), 5000);
-            // Clear the watch after successful location update
+        const newWatchId = navigator.geolocation.watchPosition(
+          (position) => {
+            const { latitude, longitude } = position.coords;
+            const currentLat = scannedLocation?.lat || 0;
+            const currentLon = scannedLocation?.lng || 0;
+
+            // Check if location has changed significantly (more than 0.0001 degrees)
+            if (Math.abs(latitude - currentLat) > 0.0001 || Math.abs(longitude - currentLon) > 0.0001) {
+              const newLocation = { lat: latitude, lng: longitude };
+              handleLocationSelect(newLocation); // Update state and URL
+              router.push(`?lon=${longitude}&lat=${latitude}`);
+              // Remove the page reload to prevent glitching
+              // Clear the watch after successful location update
+              if (watchId !== undefined) {
+                navigator.geolocation.clearWatch(watchId);
+                setWatchId(undefined);
+              }
+            }
+            setIsCheckingLocation(false);
+          },
+          (error) => {
+            console.error("Error getting location:", error?.message || "Unknown error");
+            setLocationPermissionDenied(true);
+            setShowLocationPrompt(false);
+            setLocationModalMessage(`Location tracking failed: ${error.message}. Please try again or search for a location.`);
+            setShowLocationRequiredModal(true);
+            triggerHeaderLocationSearch();
             if (watchId !== undefined) {
               navigator.geolocation.clearWatch(watchId);
               setWatchId(undefined);
             }
+            setIsCheckingLocation(false);
+          },
+          {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 300000
           }
-        },
-        (error) => {
-          console.error("Error getting location:", error?.message || "Unknown error");
-          setLocationPermissionDenied(true);
-          setShowLocationPrompt(false);
-          setLocationModalMessage(`Location tracking failed: ${error.message}. Please try again or search for a location.`);
-          setShowLocationRequiredModal(true);
-          triggerHeaderLocationSearch();
-          if (watchId !== undefined) {
-            navigator.geolocation.clearWatch(watchId);
-            setWatchId(undefined);
-          }
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 300000
-        }
-      );
-      setWatchId(newWatchId);
-
+        );
+        setWatchId(newWatchId);
+      } else {
+        // If not granted, show modal
+        setLocationModalMessage("Location permission is not granted.");
+        setShowLocationRequiredModal(true);
+        setIsCheckingLocation(false);
+      }
     } catch (error) {
       console.warn('Location access failed:', error);
       setLocationPermissionDenied(true);
@@ -196,6 +235,7 @@ function AnalyticsPage() {
       setLocationModalMessage(`Location request failed: ${error.message}. Please try again or search for a location.`);
       setShowLocationRequiredModal(true);
       triggerHeaderLocationSearch();
+      setIsCheckingLocation(false);
     }
   };
 
@@ -213,7 +253,9 @@ function AnalyticsPage() {
     } else {
       // Initial request location permission on component mount
       // This will trigger the watchPosition logic if permission is granted
-      handleTrackLocationClick();
+      if (!isCheckingLocation) {
+        handleTrackLocationClick();
+      }
     }
 
     // Listen for location updates from header search
@@ -254,22 +296,30 @@ function AnalyticsPage() {
       </div>
       {scannedLocation && (
         <>
-          <PopulationDetailsComponent onLoaded={handlePopulationLoaded} />
+          <LocationDetails scannedLocation={scannedLocation} onLoaded={handleLocationDetailsLoaded} />
+          <div className='mt-7'>
+            <PopulationDetailsComponent onLoaded={handlePopulationLoaded} />
+          </div>
           <div className='mt-7'>
             <WeeklyWeather onLoaded={handleWeatherLoaded} />
           </div>
           <div className='mt-7'>
             <TopSoilClassChart onLoaded={handleSoilLoaded} />
           </div>
+          <div className='mt-7'>
+            <SoilPropertiesChart onLoaded={handleSoilPropertiesLoaded} />
+          </div>
         </>
       )}
       {!cacheSaved && (
-        (!populationLoaded || !weatherLoaded || !soilLoaded) ? (
+        (!locationDetailsLoaded || !populationLoaded || !weatherLoaded || !soilLoaded || !soilPropertiesLoaded) ? (
           <div className='mt-8 text-center text-yellow-700 font-semibold'>
             {`please Waiting for: `}
+            {(!locationDetailsLoaded ? 'Location Details ' : '')}
             {(!populationLoaded ? 'Population ' : '')}
             {(!weatherLoaded ? 'Weather ' : '')}
-            {(!soilLoaded ? 'Soil ' : '')}
+            {(!soilLoaded ? 'Soil Classification ' : '')}
+            {(!soilPropertiesLoaded ? 'Soil Properties ' : '')}
             {`Data to be collected and loaded...`}
           </div>
         ) : null
@@ -291,7 +341,7 @@ function AnalyticsPage() {
             <p className="mb-6">{locationModalMessage || "Location is required to start analysis. Please search for a location or let Eden track your current location."}</p>
             <div className="flex justify-center gap-8">
               <Button onClick={handleSearchOptionClick}>Search a location <Search/></Button>
-              <Button onClick={handleTrackLocationClick}>Track my location <MapPin/> </Button>
+              <Button onClick={() => handleTrackLocationClick(true)} disabled={isCheckingLocation}>Check Location Permission <MapPin/> </Button>
             </div>
           </div>
         </div>

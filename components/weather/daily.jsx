@@ -36,34 +36,71 @@ const DailyWeather = () => {
     }, []);
 
     if (loading) return <Loading />;
-    if (error) return <p>Error: {error}</p>;
+    if (error) return (
+        <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg p-4 text-red-600 dark:text-red-400">
+            Error: {error}
+        </div>
+    );
 
     return (
-        <div className="weather-container bg-gradient-to-r from-blue-500/20 to-blue-300/20 p-6 rounded-2xl shadow-xl max-w-4xl mx-auto">
-            <h2 className="text-2xl font-semibold mb-4">Current Weather</h2>
-            <div className="flex items-center mb-6">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-blue-200 dark:border-gray-700 max-w-4xl mx-auto">
+            <h2 className="text-2xl font-bold mb-6 bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">
+                Current Weather
+            </h2>
+
+            <div className="flex flex-col md:flex-row items-start md:items-center mb-6 space-y-4 md:space-y-0 md:space-x-6">
                 <img
                     src={`http://openweathermap.org/img/wn/${weatherData.weather[0].icon}@2x.png`}
                     alt={weatherData.weather[0].description}
-                    className="w-24 h-24 mr-4"
+                    className="w-24 h-24"
                 />
-                <div>
-                    <p className="text-lg font-medium"><strong>Location:</strong> {weatherData.name}</p>
-                    <p className="text-lg"><strong>Temperature:</strong> {weatherData.main.temp}°C</p>
-                    <p className="text-lg"><strong>Weather:</strong> {weatherData.weather[0].description}</p>
+                <div className="flex-1">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-lg">
+                        <p className="text-gray-700 dark:text-gray-300">
+                            <span className="font-semibold text-blue-600 dark:text-blue-400">Location:</span> {weatherData.name}
+                        </p>
+                        <p className="text-gray-700 dark:text-gray-300">
+                            <span className="font-semibold text-green-600 dark:text-green-400">Temperature:</span> {weatherData.main.temp}°C
+                        </p>
+                        <p className="text-gray-700 dark:text-gray-300">
+                            <span className="font-semibold text-purple-600 dark:text-purple-400">Weather:</span> {weatherData.weather[0].description}
+                        </p>
+                    </div>
                 </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-                <p className="text-lg"><strong>Humidity:</strong> {weatherData.main.humidity}%</p>
-                <p className="text-lg"><strong>Wind Speed:</strong> {weatherData.wind.speed} m/s</p>
-                <p className="text-lg"><strong>Pressure:</strong> {weatherData.main.pressure} hPa</p>
-                <p className="text-lg"><strong>Visibility:</strong> {weatherData.visibility / 1000} km</p>
+
+            <div className="grid grid-cols-2 gap-4 mb-6">
+                <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3">
+                    <p className="text-blue-600 dark:text-blue-400 font-semibold">Humidity</p>
+                    <p className="text-lg text-gray-700 dark:text-gray-300">{weatherData.main.humidity}%</p>
+                </div>
+                <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-3">
+                    <p className="text-green-600 dark:text-green-400 font-semibold">Wind Speed</p>
+                    <p className="text-lg text-gray-700 dark:text-gray-300">{weatherData.wind.speed} m/s</p>
+                </div>
+                <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-3">
+                    <p className="text-purple-600 dark:text-purple-400 font-semibold">Pressure</p>
+                    <p className="text-lg text-gray-700 dark:text-gray-300">{weatherData.main.pressure} hPa</p>
+                </div>
+                <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-3">
+                    <p className="text-yellow-600 dark:text-yellow-400 font-semibold">Visibility</p>
+                    <p className="text-lg text-gray-700 dark:text-gray-300">{weatherData.visibility / 1000} km</p>
+                </div>
             </div>
-            <div className="mt-6">
-                <h3 className="text-xl font-semibold">Additional Information</h3>
-                <p className="text-lg"><strong>Cloudiness:</strong> {weatherData.clouds.all}%</p>
-                <p className="text-lg"><strong>Sunrise:</strong> {new Date(weatherData.sys.sunrise * 1000).toLocaleTimeString()}</p>
-                <p className="text-lg"><strong>Sunset:</strong> {new Date(weatherData.sys.sunset * 1000).toLocaleTimeString()}</p>
+
+            <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                <h3 className="text-xl font-semibold mb-3 text-gray-700 dark:text-gray-300">Additional Information</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-lg">
+                    <p className="text-gray-700 dark:text-gray-300">
+                        <span className="font-semibold text-blue-600 dark:text-blue-400">Cloudiness:</span> {weatherData.clouds.all}%
+                    </p>
+                    <p className="text-gray-700 dark:text-gray-300">
+                        <span className="font-semibold text-orange-600 dark:text-orange-400">Sunrise:</span> {new Date(weatherData.sys.sunrise * 1000).toLocaleTimeString()}
+                    </p>
+                    <p className="text-gray-700 dark:text-gray-300">
+                        <span className="font-semibold text-red-600 dark:text-red-400">Sunset:</span> {new Date(weatherData.sys.sunset * 1000).toLocaleTimeString()}
+                    </p>
+                </div>
             </div>
         </div>
     );

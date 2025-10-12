@@ -76,7 +76,7 @@ const seoTranslations = {
   }
 };
 
-export default function RootLayout({ children, session }) {
+export default function RootLayout({ children }) {
   const pathname = usePathname();
   const [loading, setLoading] = useState(true); // Existing full-page loader state
   const [loadingProgress, setLoadingProgress] = useState(0); // New state for progress bar
@@ -266,7 +266,7 @@ export default function RootLayout({ children, session }) {
               enableSystem
               disableTransitionOnChange
             >
-              {pathname !== "/auth" && <Header />}
+              {pathname !== "/auth" && pathname !== "/" && <Header />}
               <div
                 style={{
                   filter: `blur(${pageBlurAmount}px)`,
