@@ -334,7 +334,7 @@ function AnalyticsPage() {
       )}
 
       {showLocationRequiredModal && (
-        <div className="hidden md:fixed md:inset-0 md:bg-black md:bg-opacity-50 md:backdrop-blur-sm md:flex md:items-center md:justify-center md:z-50">
+        <div className="hidden md:fixed md:inset-0 md:bg-black md:backdrop-blur-sm md:flex md:items-center md:justify-center md:z-40">
           <div className="dark:bg-green-900 text-red p-8 rounded-lg shadow-lg text-center">
             <AlertTriangle className="mx-auto mb-4 text-red-500" size={48} />
             <h2 className="text-xl font-semibold mb-4">Location Required</h2>
