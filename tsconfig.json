@@ -37,6 +37,6 @@
     "components/footer.jsx",
     "app/layout.jsx",
     "components/Header.jsx"
-, "app/api/Experts/[biologicalName/route.js", "components/Experts.jsx", "components/weather/daily.jsx", "app/Experts/[id]/page.jsx", "app/api/auth/[...nextauth]/route.js", "app/api/users/route.js", "app/lib/dbConnect.js", "next.config.js", "components/soil/top5classes.jsx", "components/ui/dialog.jsx", "components/Loader.jsx"  ],
+, "app/api/Experts/[biologicalName/route.js", "components/Experts.jsx", "components/weather/daily.jsx", "app/Experts/[id]/page.jsx", "app/api/auth/[...nextauth]/route.js", "app/api/users/route.js", "app/lib/dbConnect.js", "next.config.js", "components/soil/top5classes.jsx", "components/ui/dialog.jsx", "components/Loader.jsx", "components/soil/properties.jsx"  ],
   "exclude": ["node_modules"]
 }
