@@ -339,9 +339,9 @@ function AnalyticsPage() {
             <AlertTriangle className="mx-auto mb-4 text-red-500" size={48} />
             <h2 className="text-xl font-semibold mb-4">Location Required</h2>
             <p className="mb-6">{locationModalMessage || "Location is required to start analysis. Please search for a location or let Eden track your current location."}</p>
-            <div className="flex justify-center gap-8">
+<h2 className="flex justify-center">Or<h2>
+            <div className="flex justify-center ">
               <Button onClick={handleSearchOptionClick}>Search a location <Search/></Button>
-              <Button onClick={() => handleTrackLocationClick(true)} disabled={isCheckingLocation}>Check Location Permission <MapPin/> </Button>
             </div>
           </div>
         </div>
