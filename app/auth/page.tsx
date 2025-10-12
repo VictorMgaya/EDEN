@@ -219,24 +219,10 @@ export default function AuthPage() {
                                 Tell us about yourself to get more personalized analysis and recommendations. This helps us understand you better and provide tailored insights.
                             </p>
 
-                            {errorMessage && (
-                                <div className="bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 p-3 rounded-lg text-center mb-4">
-                                    {errorMessage}
-                                </div>
-                            )}
-
-                            <div className="relative mb-4">
-                                <FiFileText className="absolute left-3 top-3 text-gray-400" />
-                                <textarea
-                                    placeholder="Write about yourself - your interests, background, goals, or anything you'd like to share (minimum 50 words)..."
-                                    value={modalBio}
-                                    onChange={(e) => setModalBio(e.target.value)}
-                                    rows={6}
-                                    className="w-full pl-10 p-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 outline-none resize-none"
-                                />
-                                <div className={`text-xs mt-1 ${isModalBioValid ? 'text-green-600 dark:text-green-400' : 'text-orange-600 dark:text-orange-400'}`}>
-                                    {modalBioWordCount} / 50 words minimum {isModalBioValid && '✓'}
-                                </div>
+                            <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg mb-6">
+                                <p className="text-blue-700 dark:text-blue-300 text-sm font-medium">
+                                    ✏️ You need to write a bio with at least 50 words about yourself.
+                                </p>
                             </div>
 
                             <div className="flex gap-3">
