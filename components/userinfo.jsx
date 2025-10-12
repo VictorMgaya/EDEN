@@ -41,22 +41,32 @@ export default function UserInfo() {
                         </div>
                     </div>
 
-                    <div className="flex items-center justify-center gap-8 pt-8">
+                    <div className="flex flex-col items-center gap-4 pt-8">
                         <Button
-                            onClick={() => window.location.href = '/'}
-                            className="group flex items-center gap-3 px-8 py-6 bg-green-600 hover:bg-green-700 transition-all duration-300"
+                            onClick={() => window.location.href = '/auth/edit'}
+                            className="group flex items-center gap-3 px-8 py-6 bg-blue-600 hover:bg-blue-700 transition-all duration-300"
                         >
-                            <Home className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                            <span className="font-semibold">HOME</span>
+                            <User className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                            <span className="font-semibold">EDIT PROFILE</span>
                         </Button>
 
-                        <Button
-                            onClick={() => signOut()}
-                            className="group flex items-center gap-3 px-8 py-6 bg-red-600 hover:bg-red-700 transition-all duration-300"
-                        >
-                            <span className="font-semibold">LOGOUT</span>
-                            <LogOut className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                        </Button>
+                        <div className="flex items-center gap-8">
+                            <Button
+                                onClick={() => window.location.href = '/'}
+                                className="group flex items-center gap-3 px-8 py-6 bg-green-600 hover:bg-green-700 transition-all duration-300"
+                            >
+                                <Home className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                                <span className="font-semibold">HOME</span>
+                            </Button>
+
+                            <Button
+                                onClick={() => signOut()}
+                                className="group flex items-center gap-3 px-8 py-6 bg-red-600 hover:bg-red-700 transition-all duration-300"
+                            >
+                                <span className="font-semibold">LOGOUT</span>
+                                <LogOut className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                            </Button>
+                        </div>
                     </div>
                 </div>
             </div>

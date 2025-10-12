@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable react/no-unescaped-entities */
 'use client';
 
 import { signIn, signOut } from 'next-auth/react';
@@ -36,7 +35,8 @@ export default function AuthPage() {
                     const response = await fetch(`/api/users/profile?email=${encodeURIComponent(session.user.email)}`);
                     if (response.ok) {
                         const data = await response.json();
-                        if (!data.bio || data.bio.trim().length === 0) {
+                        const wordCount = data.bio ? data.bio.trim().split(/\s+/).filter((word: string) => word.length > 0).length : 0;
+                        if (!data.bio || data.bio.trim().length === 0 || wordCount < 50) {
                             setShowBioModal(true);
                         }
                     }
@@ -162,43 +162,9 @@ export default function AuthPage() {
         }
     };
 
-    const handleBioSubmit = async () => {
-        setErrorMessage('');
-        
-        const wordCount = modalBio.trim().split(/\s+/).filter(word => word.length > 0).length;
-        if (wordCount < 50) {
-            setErrorMessage(`Bio must be at least 50 words. Current word count: ${wordCount}`);
-            return;
-        }
-
-        setIsSubmittingBio(true);
-
-        try {
-            const response = await fetch('/api/users/update-bio', {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    email: session?.user?.email,
-                    bio: modalBio.trim(),
-                }),
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                setErrorMessage(data.error || 'Failed to update bio');
-                setIsSubmittingBio(false);
-                return;
-            }
-
-            setShowBioModal(false);
-            setModalBio('');
-            router.refresh();
-        } catch (error) {
-            console.error('Error updating bio:', error);
-            setErrorMessage('An error occurred while updating bio');
-            setIsSubmittingBio(false);
-        }
+    const handleBioRedirect = () => {
+        setShowBioModal(false);
+        router.push('/auth/edit');
     };
 
     const handleLogout = async () => {
@@ -275,15 +241,10 @@ export default function AuthPage() {
 
                             <div className="flex gap-3">
                                 <button
-                                    onClick={handleBioSubmit}
-                                    disabled={!isModalBioValid || isSubmittingBio}
-                                    className={`flex-1 p-3 rounded-xl bg-gradient-to-r from-blue-500 to-green-500 text-white font-medium ${
-                                        !isModalBioValid || isSubmittingBio
-                                            ? 'opacity-50 cursor-not-allowed'
-                                            : 'hover:from-blue-600 hover:to-green-600'
-                                    }`}
+                                    onClick={handleBioRedirect}
+                                    className="flex-1 p-3 rounded-xl bg-gradient-to-r from-blue-500 to-green-500 text-white font-medium hover:from-blue-600 hover:to-green-600"
                                 >
-                                    {isSubmittingBio ? 'Saving...' : 'Save Bio'}
+                                    Edit Profile
                                 </button>
                                 <button
                                     onClick={handleLogout}

@@ -80,7 +80,7 @@ export async function PATCH(request: Request) {
     try {
         // Check authentication
         const session = await getServerSession();
-        
+
         if (!session || !session.user || !session.user.email) {
             return NextResponse.json(
                 { error: "Unauthorized. Please login to continue." },
@@ -88,7 +88,7 @@ export async function PATCH(request: Request) {
             );
         }
 
-        const { email, bio } = await request.json();
+        const { name, email, image, bio } = await request.json();
 
         // Verify the email matches the session email (prevent users from updating other users)
         if (email !== session.user.email) {
@@ -125,10 +125,15 @@ export async function PATCH(request: Request) {
 
         await dbConnect();
 
-        // Update user bio
+        // Update user profile
         const user = await User.findOneAndUpdate(
             { email: session.user.email },
-            { bio: sanitizedBio },
+            {
+                name: name.trim(),
+                email: email.trim().toLowerCase(),
+                image: image?.trim() || 'https://www.gravatar.com/avatar/?d=mp',
+                bio: sanitizedBio
+            },
             { new: true, runValidators: true }
         );
 
@@ -143,13 +148,13 @@ export async function PATCH(request: Request) {
         delete userResponse.password;
 
         return NextResponse.json(
-            { message: "Bio updated successfully", user: userResponse },
+            { message: "Profile updated successfully", user: userResponse },
             { status: 200 }
         );
     } catch (err: any) {
-        console.error("Error in PATCH /api/users/update-bio:", err.message);
+        console.error("Error in PATCH /api/users:", err.message);
         return NextResponse.json(
-            { error: "An error occurred while updating bio" },
+            { error: "An error occurred while updating profile" },
             { status: 500 }
         );
     }

@@ -495,50 +495,56 @@ export default function ExpertsPage() {
   );
 
   return (
-    <main className="relative flex flex-col h-screen bg-background font-[family-name:var(--font-lexend)] overflow-hidden">
-      <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-4 overscroll-contain pb-[100px] pt-16">
+    <main className="relative flex flex-col min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 dark:from-slate-900 dark:via-slate-800 dark:to-blue-950 font-[family-name:var(--font-lexend)] overflow-hidden">
+      <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-4 overscroll-contain pb-[120px] pt-16 sm:pt-20">
         {!xmlData && !loading ? (
           renderNoDataMessage()
         ) : (
-          <div className="max-w-5xl mx-auto flex flex-col gap-6 pb-4">
+          <div className="max-w-4xl mx-auto flex flex-col gap-6 pb-4">
             {messages.map((msg, index) => (
               <div
                 key={index}
                 className={`flex gap-3 md:gap-4 ${
                   msg.sender === "user" ? "flex-row-reverse" : "flex-row"
                 }`}
-                style={{ animation: "messageSlide 0.4s ease-out" }}
+                style={{
+                  animation: "messageSlide 0.6s cubic-bezier(0.4, 0, 0.2, 1)",
+                  animationFillMode: "both"
+                }}
               >
                 {msg.sender === "ai" && (
-                  <div className="flex-shrink-0 w-10 h-10 md:w-11 md:h-11 rounded-full flex items-center justify-center shadow-lg border-2" style={{ background: 'linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary)) 70%, hsl(var(--accent)))', borderColor: 'hsl(var(--primary) / 0.5)' }}>
-                    <svg className="w-6 h-6 md:w-7 md:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="flex-shrink-0 w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center shadow-xl border-2 bg-gradient-to-br from-blue-500 via-purple-600 to-teal-500 text-white" style={{ borderColor: 'rgba(59, 130, 246, 0.3)', boxShadow: '0 10px 25px -5px rgba(59, 130, 246, 0.25), 0 8px 10px -6px rgba(59, 130, 246, 0.1)' }}>
+                    <svg className="w-7 h-7 md:w-8 md:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                     </svg>
                   </div>
                 )}
-                <div className={`flex-1 ${msg.sender === "user" ? "max-w-[85%]" : "max-w-[90%]"} min-w-0`}>
+                <div className={`flex-1 ${msg.sender === "user" ? "max-w-[85%]" : "max-w-[92%]"} min-w-0`}>
                   {msg.sender === "ai" && (
-                    <div className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">
-                      {index === 0 ? "Adam-AI Expert Advisor" : "Adam"}
+                    <div className="text-xs font-bold text-slate-600 dark:text-slate-400 mb-3 uppercase tracking-wider">
+                      {index === 0 ? "🏭 Adam AI - Resource Analysis Expert" : "💡 Adam AI"}
                     </div>
                   )}
                   <div
-                    className={`p-4 md:p-5 rounded-2xl shadow-md border prose prose-sm max-w-none ${
+                    className={`p-5 md:p-6 rounded-2xl shadow-lg border backdrop-blur-sm prose prose-sm max-w-none ${
                       msg.sender === "user"
-                        ? "bg-primary text-primary-foreground border-primary"
-                        : "bg-card text-card-foreground border-border"
+                        ? "bg-gradient-to-br from-blue-500 to-purple-600 text-white border-blue-400 shadow-blue-500/25"
+                        : "bg-white/90 dark:bg-slate-800/90 text-slate-800 dark:text-slate-200 border-slate-200/50 dark:border-slate-700/50"
                     }`}
-                    style={{ 
-                      wordWrap: "break-word", 
-                      overflowWrap: "break-word", 
-                      lineHeight: "1.7"
+                    style={{
+                      wordWrap: "break-word",
+                      overflowWrap: "break-word",
+                      lineHeight: "1.75",
+                      boxShadow: msg.sender === "user"
+                        ? "0 10px 40px -10px rgba(59, 130, 246, 0.4), 0 4px 25px -5px rgba(59, 130, 246, 0.1)"
+                        : "0 4px 20px -4px rgba(0, 0, 0, 0.1), 0 2px 8px -2px rgba(0, 0, 0, 0.05)"
                     }}
                     dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(msg.text) }}
                   />
                 </div>
                 {msg.sender === "user" && (
-                  <div className="flex-shrink-0 w-10 h-10 md:w-11 md:h-11 rounded-full flex items-center justify-center shadow-lg border-2" style={{ background: 'linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)))', borderColor: 'hsl(var(--primary) / 0.5)' }}>
-                    <svg className="w-6 h-6 md:w-7 md:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="flex-shrink-0 w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center shadow-xl border-2 bg-gradient-to-br from-emerald-400 to-cyan-500 text-white" style={{ borderColor: 'rgba(16, 185, 129, 0.3)', boxShadow: '0 10px 25px -5px rgba(16, 185, 129, 0.25), 0 8px 10px -6px rgba(16, 185, 129, 0.1)' }}>
+                    <svg className="w-7 h-7 md:w-8 md:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
                   </div>
@@ -546,26 +552,31 @@ export default function ExpertsPage() {
               </div>
             ))}
             {loading && (
-              <div className="flex gap-3 md:gap-4" style={{ animation: "messageSlide 0.4s ease-out" }}>
-                <div className="flex-shrink-0 w-10 h-10 md:w-11 md:h-11 rounded-full flex items-center justify-center shadow-lg border-2" style={{ background: 'linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary)) 70%, hsl(var(--accent)))', borderColor: 'hsl(var(--primary) / 0.5)' }}>
-                  <svg className="w-6 h-6 md:w-7 md:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="flex gap-3 md:gap-4" style={{
+                animation: "messageSlide 0.6s cubic-bezier(0.4, 0, 0.2, 1)",
+                animationFillMode: "both"
+              }}>
+                <div className="flex-shrink-0 w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center shadow-xl border-2 bg-gradient-to-br from-blue-500 via-purple-600 to-teal-500 text-white" style={{ borderColor: 'rgba(59, 130, 246, 0.3)', boxShadow: '0 10px 25px -5px rgba(59, 130, 246, 0.25), 0 8px 10px -6px rgba(59, 130, 246, 0.1)' }}>
+                  <svg className="w-7 h-7 md:w-8 md:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                   </svg>
                 </div>
-                <div className="flex-1 max-w-[90%]">
-                  <div className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">
-                    Adam
+                <div className="flex-1 max-w-[92%]">
+                  <div className="text-xs font-bold text-slate-600 dark:text-slate-400 mb-3 uppercase tracking-wider">
+                    💡 Adam AI
                   </div>
-                  <div className="p-4 md:p-5 rounded-2xl bg-card border border-border shadow-md">
-                    <div className="flex gap-1.5 mb-2">
-                      <span className="w-2.5 h-2.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: "0s", animationDuration: "1.4s" }}></span>
-                      <span className="w-2.5 h-2.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: "0.2s", animationDuration: "1.4s" }}></span>
-                      <span className="w-2.5 h-2.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: "0.4s", animationDuration: "1.4s" }}></span>
+                  <div className="p-5 md:p-6 rounded-2xl bg-white/90 dark:bg-slate-800/90 border border-slate-200/50 dark:border-slate-700/50 shadow-lg backdrop-blur-sm">
+                    <div className="flex gap-2 mb-3">
+                      <div className="flex gap-1">
+                        <span className="w-3 h-3 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: "0s", animationDuration: "1.5s" }}></span>
+                        <span className="w-3 h-3 rounded-full bg-purple-400 animate-bounce" style={{ animationDelay: "0.15s", animationDuration: "1.5s" }}></span>
+                        <span className="w-3 h-3 rounded-full bg-teal-400 animate-bounce" style={{ animationDelay: "0.3s", animationDuration: "1.5s" }}></span>
+                      </div>
                     </div>
-                    <p className="text-sm text-muted-foreground italic">
+                    <p className="text-sm text-slate-600 dark:text-slate-300">
                       {messages.length <= 1
-                        ? "Analyzing resource data and generating comprehensive report..."
-                        : "Processing your question..."}
+                        ? "🔍 Analyzing your comprehensive resource data and preparing expert recommendations..."
+                        : "🤔 Processing your question and formulating detailed insights..."}
                     </p>
                   </div>
                 </div>
@@ -575,29 +586,33 @@ export default function ExpertsPage() {
         )}
       </div>
 
-      <div className="fixed bottom-0 md:p-b-20 left-0 rounded-t-2xl w-full border-t border-border bg-card/95 backdrop-blur-sm p-4 md:p-5 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] z-50 pb-16">
-        <form onSubmit={handleSendMessage} className="max-w-5xl mx-auto">
-          <div className="flex gap-3">
-            <input
-              type="text"
-              value={userInput}
-              onChange={(e) => setUserInput(e.target.value)}
-              placeholder={
-                !xmlData
-                  ? "Please collect analytics data first..."
-                  : "Ask a follow-up question about the analysis..."
-              }
-              className="flex-1 px-4 md:px-5 py-3 md:py-3.5 border-2 border-input rounded-full bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all disabled:opacity-60 disabled:cursor-not-allowed"
-              disabled={loading || !xmlData}
-            />
+      <div className="fixed bottom-0 left-0 w-full border-t border-slate-200/50 dark:border-slate-700/50 bg-gradient-to-t from-white/95 via-white/90 to-white/70 dark:from-slate-900/95 dark:via-slate-900/90 dark:to-slate-900/70 backdrop-blur-md p-4 md:p-6 shadow-[0_-8px_32px_0_rgba(0,0,0,0.12)] z-50 pb-safe">
+        <form onSubmit={handleSendMessage} className="max-w-4xl mx-auto">
+          <div className="flex gap-4 items-end">
+            <div className="flex-1 relative">
+              <input
+                type="text"
+                value={userInput}
+                onChange={(e) => setUserInput(e.target.value)}
+                placeholder={
+                  !xmlData
+                    ? "🌱 Please collect analytics data first to begin consultation..."
+                    : "💬 Ask about soil analysis, crop recommendations, water management, or economic potential..."
+                }
+                className="w-full px-5 py-4 text-base border-2 border-slate-200 dark:border-slate-600 rounded-2xl bg-white/90 dark:bg-slate-800/90 text-slate-800 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all disabled:opacity-60 disabled:cursor-not-allowed backdrop-blur-sm shadow-lg"
+                disabled={loading || !xmlData}
+              />
+            </div>
             <button
               type="submit"
-              className="w-14 h-14 md:w-15 md:h-15 flex-shrink-0 rounded-full text-primary-foreground flex items-center justify-center text-xl font-bold shadow-md hover:shadow-lg hover:scale-105 active:scale-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 focus:outline-none focus:ring-2 focus:ring-offset-2"
-              style={{ background: 'linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)))' }}
+              className="w-16 h-14 md:w-18 md:h-16 flex-shrink-0 rounded-2xl bg-gradient-to-br from-blue-500 via-purple-600 to-teal-500 hover:from-blue-600 hover:via-purple-700 hover:to-teal-600 text-white flex items-center justify-center text-2xl font-bold shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              style={{
+                boxShadow: '0 10px 25px -5px rgba(59, 130, 246, 0.4), 0 8px 10px -6px rgba(59, 130, 246, 0.1)'
+              }}
               disabled={loading || !xmlData || !userInput.trim()}
               title="Send message"
             >
-              <Send/>
+              <Send className="w-6 h-6 md:w-7 md:h-7"/>
             </button>
           </div>
         </form>
@@ -607,36 +622,37 @@ export default function ExpertsPage() {
         @keyframes messageSlide {
           from {
             opacity: 0;
-            transform: translateY(20px);
+            transform: translateY(30px) scale(0.95);
           }
           to {
             opacity: 1;
-            transform: translateY(0);
+            transform: translateY(0) scale(1);
           }
         }
 
         div::-webkit-scrollbar {
-          width: 8px;
+          width: 6px;
         }
 
         div::-webkit-scrollbar-track {
-          background: hsl(var(--background));
+          background: transparent;
         }
 
         div::-webkit-scrollbar-thumb {
-          background: hsl(var(--border));
-          border-radius: 4px;
+          background: rgba(148, 163, 184, 0.3);
+          border-radius: 3px;
         }
 
         div::-webkit-scrollbar-thumb:hover {
-          background: hsl(var(--muted-foreground));
+          background: rgba(148, 163, 184, 0.5);
         }
 
         .prose h2 {
           margin-top: 1.5em;
-          margin-bottom: 0.5em;
+          margin-bottom: 0.75em;
           font-size: 1.5em;
           font-weight: 700;
+          color: hsl(var(--foreground));
         }
 
         .prose h3 {
@@ -644,10 +660,13 @@ export default function ExpertsPage() {
           margin-bottom: 0.5em;
           font-size: 1.25em;
           font-weight: 600;
+          color: hsl(var(--foreground));
         }
 
         .prose p {
           margin-bottom: 1em;
+          color: hsl(var(--foreground));
+          line-height: 1.7;
         }
 
         .prose ul, .prose ol {
@@ -658,6 +677,18 @@ export default function ExpertsPage() {
 
         .prose li {
           margin-bottom: 0.5em;
+          color: hsl(var(--foreground));
+        }
+
+        .prose strong {
+          color: hsl(var(--foreground));
+          font-weight: 600;
+        }
+
+        @media (max-width: 640px) {
+          .pb-safe {
+            padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+          }
         }
       `}</style>
     </main>

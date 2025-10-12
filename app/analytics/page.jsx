@@ -52,19 +52,28 @@ function AnalyticsPage() {
   useEffect(() => {
     if (!cacheSaved && locationDetailsLoaded && populationLoaded && weatherLoaded && soilLoaded && soilPropertiesLoaded) {
       setTimeout(() => {
-        const container = document.querySelector('.p-4');
+        const container = document.querySelector('.mt-16');
         if (container) {
-          const children = Array.from(container.children).slice(1);
+          console.log('🔄 Starting analytics cache save...');
           const pageHtml = container.outerHTML;
-          saveAnalyticsCache({
+          console.log('📄 HTML captured, length:', pageHtml.length);
+          const success = saveAnalyticsCache({
             scannedLocation,
             zoom,
             timestamp: new Date().toISOString(),
             pageHtml
           });
-          setCacheSaved(true);
+          console.log('💾 Cache saved:', success);
+          if (success) {
+            setCacheSaved(true);
+            console.log('✅ Analytics cache completed');
+          } else {
+            console.error('❌ Failed to save analytics cache');
+          }
+        } else {
+          console.error('❌ Container not found for caching');
         }
-      }, 0);
+      }, 1000); // Increase delay to ensure components are fully rendered
     }
   }, [locationDetailsLoaded, populationLoaded, weatherLoaded, soilLoaded, soilPropertiesLoaded, cacheSaved, scannedLocation, zoom]);
 
@@ -334,12 +343,11 @@ function AnalyticsPage() {
       )}
 
       {showLocationRequiredModal && (
-        <div className="hidden md:fixed md:inset-0 md:bg-black md:backdrop-blur-sm md:flex md:items-center md:justify-center md:z-40">
+        <div className="hidden md:fixed md:inset-0 md:bg-black md:bg-blur md:backdrop-blur-sm md:flex md:items-center md:justify-center md:z-40">
           <div className="dark:bg-green-900 text-red p-8 rounded-lg shadow-lg text-center">
             <AlertTriangle className="mx-auto mb-4 text-red-500" size={48} />
             <h2 className="text-xl font-semibold mb-4">Location Required</h2>
-            <p className="mb-6">{locationModalMessage || "Location is required to start analysis. Please search for a location or let Eden track your current location."}</p>
-<h2 className="flex justify-center">Or<h2>
+            <p className="mb-6">Location is required to start analysis. Please search for a location or let Eden track your current location.</p>
             <div className="flex justify-center ">
               <Button onClick={handleSearchOptionClick}>Search a location <Search/></Button>
             </div>
