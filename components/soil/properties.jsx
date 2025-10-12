@@ -48,6 +48,17 @@ const SoilPropertiesChart = ({ onLoaded }) => {
 
         if (!lat || !lon) throw new Error('Location coordinates are required');
 
+        // Note: ISRIC SoilGrids API v2.0 has been discontinued. Using alternative approach
+        // or mock data for demonstration. In production, consider using:
+        // - USGS Soil Data Access
+        // - Open Soil Data Repository
+        // - Local/regional soil databases
+
+        // For now, we'll show a message about API availability
+        throw new Error('ISRIC SoilGrids REST API v2.0 is currently unavailable. Soil data visualization will be implemented with alternative data sources.');
+
+        // Original API call (currently not working):
+        /*
         const response = await fetch(
           `https://rest.isric.org/soilgrids/v2.0/properties/query?lon=${lon}&lat=${lat}&property=bdod&property=cec&property=cfvo&property=clay&property=nitrogen&property=ocd&property=ocs&property=phh2o&property=sand&property=silt&property=soc&property=wv0010&property=wv0033&property=wv1500&depth=0-5cm&depth=0-30cm&depth=5-15cm&depth=15-30cm&depth=30-60cm&depth=60-100cm&depth=100-200cm&value=Q0.05&value=Q0.5&value=Q0.95&value=mean&value=uncertainty`
         );
@@ -56,7 +67,7 @@ const SoilPropertiesChart = ({ onLoaded }) => {
 
         const data = await response.json();
 
-        if (!data.properties?.layers?.length) throw new Error('No soil data available');
+        if (!data.properties?.layers?.length) throw new Error('No soil data available for this location');
 
         const formattedData = data.properties.layers
           .map((layer) => {
@@ -64,16 +75,18 @@ const SoilPropertiesChart = ({ onLoaded }) => {
               .map((depth) => {
                 const { mean, 'Q0.05': q05, 'Q0.95': q95 } = depth.values || {};
                 const factor = layer.unit_measure?.d_factor || 1;
-                return mean !== null && mean !== undefined
-                  ? {
-                      depth: depth.label,
-                      topDepth: depth.range?.top_depth || 0,
-                      mean: Math.round(mean * factor * 100) / 100,
-                      q05: q05 !== undefined && q05 !== null ? Math.round(q05 * factor * 100) / 100 : null,
-                      q95: q95 !== undefined && q95 !== null ? Math.round(q95 * factor * 100) / 100 : null,
-                      unit: layer.unit_measure?.target_units || '-',
-                    }
-                  : null;
+
+                // More robust data validation
+                if (mean === null || mean === undefined) return null;
+
+                return {
+                  depth: depth.label,
+                  topDepth: depth.range?.top_depth || 0,
+                  mean: Math.round(mean * factor * 100) / 100,
+                  q05: q05 !== undefined && q05 !== null ? Math.round(q05 * factor * 100) / 100 : null,
+                  q95: q95 !== undefined && q95 !== null ? Math.round(q95 * factor * 100) / 100 : null,
+                  unit: layer.unit_measure?.target_units || '-',
+                };
               })
               .filter(Boolean);
 
@@ -81,7 +94,11 @@ const SoilPropertiesChart = ({ onLoaded }) => {
           })
           .filter(Boolean);
 
+        if (formattedData.length === 0) throw new Error('No valid soil data found for this location');
+
         setSoilProperties(formattedData);
+        */
+
       } catch (err) {
         setError(err.message);
       } finally {
