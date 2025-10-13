@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { headers } from 'next/headers';
 import Stripe from 'stripe';
 import dbConnect from '@/app/lib/dbConnect';
 import User from '@/app/model/user';
@@ -21,20 +20,31 @@ const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
 export async function POST(request: NextRequest) {
   try {
     console.log('🎯 [WEBHOOK] ========== WEBHOOK RECEIVED ==========');
-    console.log('Timestamp:', new Date().toISOString());
-    console.log('Headers:', Object.fromEntries(request.headers.entries()));
+    console.log('🕒 Timestamp:', new Date().toISOString());
+    console.log('🌐 Request URL:', request.url);
+    console.log('📋 Request method:', request.method);
+
+    // Log all headers for debugging
+    const allHeaders = Object.fromEntries(request.headers.entries());
+    console.log('📨 All headers:', allHeaders);
 
     const body = await request.text();
-    const headersList = await headers();
-    const sig = headersList.get('stripe-signature') || '';
+    const sig = request.headers.get('stripe-signature') || '';
 
-    console.log('📦 [WEBHOOK] Body length:', body.length);
-    console.log('🔐 [WEBHOOK] Signature present:', !!sig);
+    console.log('📦 [WEBHOOK] Raw body length:', body.length);
+    console.log('🔐 [WEBHOOK] Stripe signature present:', !!sig);
     console.log('🔑 [WEBHOOK] Webhook secret configured:', !!endpointSecret);
+    console.log('🔑 [WEBHOOK] Webhook secret value:', endpointSecret ? 'LOADED' : 'NOT LOADED');
 
     if (!endpointSecret) {
       console.error('❌ [WEBHOOK] STRIPE_WEBHOOK_SECRET not configured!');
       return NextResponse.json({ error: 'Webhook secret not configured' }, { status: 500 });
+    }
+
+    if (!sig) {
+      console.error('❌ [WEBHOOK] No stripe-signature header found!');
+      console.error('❌ [WEBHOOK] This means Stripe is not sending signed webhooks');
+      return NextResponse.json({ error: 'No signature provided' }, { status: 400 });
     }
 
     let event: Stripe.Event;
@@ -43,8 +53,16 @@ export async function POST(request: NextRequest) {
       event = stripe.webhooks.constructEvent(body, sig, endpointSecret);
       console.log('✅ [WEBHOOK] Signature verified successfully');
     } catch (err) {
-      console.error(`❌ [WEBHOOK] Signature verification failed:`, err);
-      return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      console.error(`❌ [WEBHOOK] Signature verification failed:`, errorMessage);
+      console.error(`❌ [WEBHOOK] Body preview:`, body.substring(0, 200) + '...');
+      console.error(`❌ [WEBHOOK] Signature:`, sig);
+      return NextResponse.json({
+        error: 'Invalid signature',
+        details: errorMessage,
+        signatureLength: sig.length,
+        bodyLength: body.length
+      }, { status: 400 });
     }
 
     console.log('📋 [WEBHOOK] Event type:', event.type);
