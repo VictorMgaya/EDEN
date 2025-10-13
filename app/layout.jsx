@@ -6,6 +6,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import Footer from "@/components/footer";
 import Header from "@/components/Header";
 import Loading from "@/components/Loader";
@@ -76,6 +77,37 @@ const seoTranslations = {
     keywords: "Ressourcenanalyse, Management, Analytik, Deutsch"
   }
 };
+
+// Session wrapper component to handle session loading states
+function SessionWrapper({ children, pathname }) {
+  const { data: session, status } = useSession();
+
+  // Show loading spinner while session is being determined
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-green-50 dark:from-gray-900 dark:to-gray-800">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400">Loading session...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show loading for auth pages while session is being established
+  if ((pathname === '/auth' || pathname === '/') && status === 'loading') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-green-50 dark:from-gray-900 dark:to-gray-800">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400">Authenticating...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return <>{children}</>;
+}
 
 export default function RootLayout({ children }) {
   const pathname = usePathname();
@@ -235,6 +267,9 @@ export default function RootLayout({ children }) {
           gtag('js', new Date());
           gtag('config', 'G-54BWW075M3');
         `}} />
+
+        {/* PayPal SDK */}
+        <script src={`https://www.paypal.com/sdk/js?client-id=${process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || 'ATc_MeBksiGVgeaRpZ2spfCp9LM-a7TqwrA22HwlwcMSJlzc7xFVPGpiilMsj8xjEdAmVxJO_epin9PW'}&currency=USD&components=buttons`}></script>
         <meta name="google-adsense-account" content="ca-pub-9431888211578782" />
         <meta name="google-site-verification" content="xhS9AxO9_lnZW5qXS9B3tCziTO-v0E0pAv8OicFMsd4" />
         <meta name="msvalidate.01" content="3D027736EF5CFEE53D03C112F845FE16" />
@@ -302,27 +337,29 @@ export default function RootLayout({ children }) {
       >
         <LoadingProgressBar progress={loadingProgress} isVisible={isProgressBarVisible} /> {/* Add the progress bar */}
         <NextAuthProvider>
-          <LanguageProvider>
-            <ThemeProvider
-              attribute="class"
-              defaultTheme="system"
-              enableSystem
-              disableTransitionOnChange
-            >
-              <SidebarComponent>
-                {pathname !== "/auth" && pathname !== "/" &&pathname !== "/purchase" && <Header />}
-                <div
-                  style={{
-                    filter: `blur(${pageBlurAmount}px)`,
-                    transition: 'filter 0.5s ease-in-out', // Changed to ease-in-out
-                  }}
-                >
-                  {loading ? <Loading /> : <>{children}</>}
-                </div>
-                {pathname !== '/auth' && pathname !== '/Experts' && <Footer />}
-              </SidebarComponent>
-            </ThemeProvider>
-          </LanguageProvider>
+          <SessionWrapper pathname={pathname}>
+            <LanguageProvider>
+              <ThemeProvider
+                attribute="class"
+                defaultTheme="system"
+                enableSystem
+                disableTransitionOnChange
+              >
+                <SidebarComponent>
+                  {pathname !== "/auth" && pathname !== "/" &&pathname !== "/purchase" && <Header />}
+                  <div
+                    style={{
+                      filter: `blur(${pageBlurAmount}px)`,
+                      transition: 'filter 0.5s ease-in-out', // Changed to ease-in-out
+                    }}
+                  >
+                    {loading ? <Loading /> : <>{children}</>}
+                  </div>
+                  {pathname !== '/auth' && pathname !== '/Experts' && <Footer />}
+                </SidebarComponent>
+              </ThemeProvider>
+            </LanguageProvider>
+          </SessionWrapper>
         </NextAuthProvider>
       </body>
     </html>

@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities */
 'use client';
 
 import React, { useState } from 'react';
@@ -12,24 +13,35 @@ interface CreditModalProps {
 
 export default function CreditModal({ isOpen, onClose, credits, subscription }: CreditModalProps) {
     const [isLoading, setIsLoading] = useState(false);
+    const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'paypal'>('stripe');
 
-    const handleStripeCheckout = async (planId: string) => {
+    const handleSubscriptionCheckout = async (planId: string) => {
         setIsLoading(true);
         try {
+            const paymentType = paymentMethod === 'stripe' ? 'subscription' : 'paypal_subscription';
+
             const response = await fetch('/api/payments', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    type: 'subscription',
+                    type: paymentType,
                     plan: planId
                 }),
             });
 
             const data = await response.json();
 
-            if (data.url) {
-                window.location.href = data.url;
-            } 
+            if (paymentMethod === 'stripe') {
+                if (data.url) {
+                    window.location.href = data.url;
+                }
+            } else if (paymentMethod === 'paypal') {
+                if (data.approvalUrl) {
+                    window.location.href = data.approvalUrl;
+                } else {
+                    throw new Error('No approval URL received from PayPal');
+                }
+            }
         } catch (error) {
             console.error('Payment error:', error);
             alert('Payment failed. Please try again.');
@@ -37,22 +49,32 @@ export default function CreditModal({ isOpen, onClose, credits, subscription }: 
         }
     };
 
-    const buyCredits = async (amount: number) => {
+    const handleCreditPurchase = async (amount: number) => {
         setIsLoading(true);
         try {
+            const paymentType = paymentMethod === 'stripe' ? 'credits' : 'paypal_credits';
+
             const response = await fetch('/api/payments', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    type: 'credits',
+                    type: paymentType,
                     credits: amount.toString()
                 }),
             });
 
             const data = await response.json();
 
-            if (data.url) {
-                window.location.href = data.url;
+            if (paymentMethod === 'stripe') {
+                if (data.url) {
+                    window.location.href = data.url;
+                }
+            } else if (paymentMethod === 'paypal') {
+                if (data.approvalUrl) {
+                    window.location.href = data.approvalUrl;
+                } else {
+                    throw new Error('No approval URL received from PayPal');
+                }
             }
         } catch (error) {
             console.error('Credit purchase error:', error);
@@ -91,6 +113,44 @@ export default function CreditModal({ isOpen, onClose, credits, subscription }: 
                     </div>
                 </div>
 
+                {/* Payment Method Selector */}
+                <div className="px-6 pb-4 border-b border-gray-200 dark:border-gray-700">
+                    <div className="flex justify-center">
+                        <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+                            <div className="flex space-x-1">
+                                <button
+                                    onClick={() => setPaymentMethod('stripe')}
+                                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                                        paymentMethod === 'stripe'
+                                            ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
+                                            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-300'
+                                    }`}
+                                >
+                                    Stripe
+                                </button>
+                                <button
+                                    onClick={() => setPaymentMethod('paypal')}
+                                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                                        paymentMethod === 'paypal'
+                                            ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
+                                            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-300'
+                                    }`}
+                                >
+                                    PayPal
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {paymentMethod === 'paypal' && (
+                        <div className="mt-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 text-center">
+                            <p className="text-blue-800 dark:text-blue-200 text-xs">
+                                You'll be redirected to PayPal's secure website to complete your payment
+                            </p>
+                        </div>
+                    )}
+                </div>
+
                 {/* Content */}
                 <div className="p-6 space-y-6">
                     <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg">
@@ -107,14 +167,20 @@ export default function CreditModal({ isOpen, onClose, credits, subscription }: 
 
                             <div className="grid gap-3">
                                 <button
-                                    onClick={() => handleStripeCheckout('pro')}
+                                    onClick={() => handleSubscriptionCheckout('pro')}
                                     disabled={isLoading}
-                                    className="w-full p-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all disabled:opacity-50"
+                                    className={`w-full p-4 text-white rounded-lg transition-all disabled:opacity-50 ${
+                                        paymentMethod === 'paypal'
+                                            ? 'bg-blue-600 hover:bg-blue-700'
+                                            : 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700'
+                                    }`}
                                 >
                                     <div className="flex items-center justify-between">
                                         <div>
-                                            <div className="font-semibold">Pro Subscription</div>
-                                            <div className="text-sm opacity-90">$20/month</div>
+                                            <div className="font-semibold">
+                                                Pro Subscription {paymentMethod === 'paypal' ? '(PayPal)' : '(Stripe)'}
+                                            </div>
+                                            <div className="text-sm opacity-90">$29/month</div>
                                         </div>
                                         <div className="text-right">
                                             <div className="text-lg font-bold">Unlimited</div>
@@ -127,14 +193,20 @@ export default function CreditModal({ isOpen, onClose, credits, subscription }: 
                                 </button>
 
                                 <button
-                                    onClick={() => handleStripeCheckout('enterprise')}
+                                    onClick={() => handleSubscriptionCheckout('enterprise')}
                                     disabled={isLoading}
-                                    className="w-full p-4 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-lg hover:from-purple-600 hover:to-pink-700 transition-all disabled:opacity-50"
+                                    className={`w-full p-4 text-white rounded-lg transition-all disabled:opacity-50 ${
+                                        paymentMethod === 'paypal'
+                                            ? 'bg-blue-600 hover:bg-blue-700'
+                                            : 'bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700'
+                                    }`}
                                 >
                                     <div className="flex items-center justify-between">
                                         <div>
-                                            <div className="font-semibold">Enterprise</div>
-                                            <div className="text-sm opacity-90">$100/month</div>
+                                            <div className="font-semibold">
+                                                Enterprise {paymentMethod === 'paypal' ? '(PayPal)' : '(Stripe)'}
+                                            </div>
+                                            <div className="text-sm opacity-90">$99/month</div>
                                         </div>
                                         <div className="text-right">
                                             <div className="text-lg font-bold">Priority</div>
@@ -154,9 +226,13 @@ export default function CreditModal({ isOpen, onClose, credits, subscription }: 
 
                                 <div className="grid gap-2">
                                     <button
-                                        onClick={() => buyCredits(100)}
+                                        onClick={() => handleCreditPurchase(100)}
                                         disabled={isLoading}
-                                        className="w-full p-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg hover:from-green-600 hover:to-emerald-700 transition-all disabled:opacity-50"
+                                        className={`w-full p-3 text-white rounded-lg transition-all disabled:opacity-50 ${
+                                            paymentMethod === 'paypal'
+                                                ? 'bg-blue-600 hover:bg-blue-700'
+                                                : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700'
+                                        }`}
                                     >
                                         <div className="flex items-center justify-between">
                                             <div className="font-semibold">100 Credits</div>
@@ -168,9 +244,13 @@ export default function CreditModal({ isOpen, onClose, credits, subscription }: 
                                     </button>
 
                                     <button
-                                        onClick={() => buyCredits(500)}
+                                        onClick={() => handleCreditPurchase(500)}
                                         disabled={isLoading}
-                                        className="w-full p-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg hover:from-green-600 hover:to-emerald-700 transition-all disabled:opacity-50"
+                                        className={`w-full p-3 text-white rounded-lg transition-all disabled:opacity-50 ${
+                                            paymentMethod === 'paypal'
+                                                ? 'bg-blue-600 hover:bg-blue-700'
+                                                : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700'
+                                        }`}
                                     >
                                         <div className="flex items-center justify-between">
                                             <div className="font-semibold">500 Credits</div>
@@ -182,9 +262,13 @@ export default function CreditModal({ isOpen, onClose, credits, subscription }: 
                                     </button>
 
                                     <button
-                                        onClick={() => buyCredits(1000)}
+                                        onClick={() => handleCreditPurchase(1000)}
                                         disabled={isLoading}
-                                        className="w-full p-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg hover:from-green-600 hover:to-emerald-700 transition-all disabled:opacity-50"
+                                        className={`w-full p-3 text-white rounded-lg transition-all disabled:opacity-50 ${
+                                            paymentMethod === 'paypal'
+                                                ? 'bg-blue-600 hover:bg-blue-700'
+                                                : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700'
+                                        }`}
                                     >
                                         <div className="flex items-center justify-between">
                                             <div className="font-semibold">1,000 Credits</div>
@@ -196,9 +280,13 @@ export default function CreditModal({ isOpen, onClose, credits, subscription }: 
                                     </button>
 
                                     <button
-                                        onClick={() => buyCredits(2500)}
+                                        onClick={() => handleCreditPurchase(2500)}
                                         disabled={isLoading}
-                                        className="w-full p-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg hover:from-green-600 hover:to-emerald-700 transition-all disabled:opacity-50"
+                                        className={`w-full p-3 text-white rounded-lg transition-all disabled:opacity-50 ${
+                                            paymentMethod === 'paypal'
+                                                ? 'bg-blue-600 hover:bg-blue-700'
+                                                : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700'
+                                        }`}
                                     >
                                         <div className="flex items-center justify-between">
                                             <div className="font-semibold">2,500 Credits</div>

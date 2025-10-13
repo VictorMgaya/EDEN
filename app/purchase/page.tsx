@@ -191,8 +191,8 @@ export default function PurchasePage() {
         </div>
 
         {/* Payment Method Selector */}
-        <div className="flex justify-center mb-8">
-          <div className="bg-white dark:bg-slate-800 rounded-lg p-1 shadow-sm">
+        <div className="flex flex-col items-center mb-8">
+          <div className="bg-white dark:bg-slate-800 rounded-lg p-1 shadow-sm mb-4">
             <div className="flex space-x-1">
               <button
                 onClick={() => setPaymentMethod('stripe')}
@@ -216,6 +216,14 @@ export default function PurchasePage() {
               </button>
             </div>
           </div>
+
+          {paymentMethod === 'paypal' && (
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 max-w-2xl text-center">
+              <p className="text-blue-800 dark:text-blue-200 text-sm">
+                <strong>PayPal Selected:</strong> You'll be redirected to PayPal's secure website to complete your payment using your PayPal account, credit card, or other payment methods.
+              </p>
+            </div>
+          )}
         </div>
 
         <div className="grid lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
@@ -294,24 +302,45 @@ export default function PurchasePage() {
               {/* Selected Credits Purchase */}
               {selectedCredits && (
                 <div className="pt-4 border-t">
-                  <Button
-                    onClick={() => handleCreditPurchase(selectedCredits)}
-                    disabled={isProcessing}
-                    className="w-full text-lg py-6"
-                    size="lg"
-                  >
-                    {isProcessing ? (
-                      <>
-                        <Loader2 className="h-5 w-5 animate-spin mr-2" />
-                        Processing...
-                      </>
-                    ) : (
-                      <>
-                        Purchase {selectedCredits.toLocaleString()} Credits for $
-                        {calculateCreditValue(selectedCredits)}
-                      </>
-                    )}
-                  </Button>
+                  {paymentMethod === 'stripe' ? (
+                    <Button
+                      onClick={() => handleCreditPurchase(selectedCredits)}
+                      disabled={isProcessing}
+                      className="w-full text-lg py-6"
+                      size="lg"
+                    >
+                      {isProcessing ? (
+                        <>
+                          <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                          Processing...
+                        </>
+                      ) : (
+                        <>
+                          Purchase {selectedCredits.toLocaleString()} Credits for $
+                          {calculateCreditValue(selectedCredits)}
+                        </>
+                      )}
+                    </Button>
+                  ) : (
+                    <Button
+                      onClick={() => handleCreditPurchase(selectedCredits)}
+                      disabled={isProcessing}
+                      className="w-full text-lg py-6 bg-blue-600 hover:bg-blue-700"
+                      size="lg"
+                    >
+                      {isProcessing ? (
+                        <>
+                          <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                          Processing...
+                        </>
+                      ) : (
+                        <>
+                          Pay with PayPal - {selectedCredits.toLocaleString()} Credits for $
+                          {calculateCreditValue(selectedCredits)}
+                        </>
+                      )}
+                    </Button>
+                  )}
                 </div>
               )}
             </CardContent>
@@ -360,7 +389,7 @@ export default function PurchasePage() {
                     <Button
                       onClick={() => handleSubscriptionPurchase(plan.id)}
                       disabled={isProcessing}
-                      className="w-full"
+                      className={`w-full ${paymentMethod === 'paypal' ? 'bg-blue-600 hover:bg-blue-700' : ''}`}
                       size="lg"
                     >
                       {isProcessing ? (
@@ -369,7 +398,9 @@ export default function PurchasePage() {
                           Processing...
                         </>
                       ) : (
-                        `Subscribe to ${plan.name}`
+                        paymentMethod === 'paypal'
+                          ? `Subscribe with PayPal - ${plan.name}`
+                          : `Subscribe to ${plan.name}`
                       )}
                     </Button>
                   </CardContent>

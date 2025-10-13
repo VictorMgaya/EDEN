@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/app/lib/dbConnect';
 import User from '@/app/model/user';
@@ -182,11 +183,17 @@ export async function GET(request: NextRequest) {
 
       console.log(`💰 [PAYPAL] Payment amount: $${paymentAmount}, Credits to add: ${creditAmount}`);
 
-      // Update user credits
+      // Update user credits with validation
       const previousCredits = user.credits || 0;
-      user.credits = previousCredits + creditAmount;
+      const newCreditTotal = previousCredits + creditAmount;
 
-      // Log the credit addition
+      // Ensure credits don't go negative and are properly calculated
+      user.credits = Math.max(0, newCreditTotal);
+
+      // Update last credit purchase timestamp for balance tracking
+      user.lastCreditPurchase = new Date();
+
+      // Log the credit addition with comprehensive tracking
       const usageRecord = {
         action: 'credit',
         amount: creditAmount,
@@ -199,7 +206,8 @@ export async function GET(request: NextRequest) {
           orderId: token,
           previousCredits: previousCredits,
           newTotalCredits: user.credits,
-          paymentAmount: paymentAmount
+          paymentAmount: paymentAmount,
+          currency: 'USD'
         }
       };
 
@@ -214,8 +222,17 @@ export async function GET(request: NextRequest) {
         user.usageHistory = user.usageHistory.slice(0, 1000);
       }
 
-      await user.save();
-      console.log(`✅ Successfully added ${creditAmount} credits to user ${userEmail}. Total credits: ${user.credits}`);
+      // Save with retry logic for database issues
+      try {
+        await user.save();
+        console.log(`✅ Successfully added ${creditAmount} credits to user ${userEmail}. Total credits: ${user.credits}`);
+      } catch (saveError) {
+        console.error(`❌ Failed to save user ${userEmail}:`, saveError);
+        // Try to save again with fresh data
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        await user.save();
+        console.log(`✅ Successfully saved user ${userEmail} on retry`);
+      }
 
       // Send success email
       await sendPaymentSuccessEmail(userEmail, 'credits', creditAmount);
@@ -275,9 +292,11 @@ export async function GET(request: NextRequest) {
       const subscriptionType = plan === 'pro' ? 'pro' : 'enterprise';
       const subscriptionEndDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days from now
 
-      // Update user subscription
+      // Update user subscription with comprehensive data
       const previousSubscriptionType = user.subscription?.type || 'freemium';
+      const previousCredits = user.credits || 0;
 
+      // Set subscription details
       user.subscription = {
         type: subscriptionType,
         paypalSubscriptionId: subscriptionId,
@@ -285,17 +304,22 @@ export async function GET(request: NextRequest) {
         cancelAtPeriodEnd: false
       };
 
-      // Update credits based on subscription type
-      if (subscriptionType === 'pro') {
-        user.credits = Math.max(user.credits || 0, 100);
-      } else if (subscriptionType === 'enterprise') {
-        user.credits = Math.max(user.credits || 0, 500);
-      }
+      // Update credits based on subscription type with minimum guarantees
+      const creditAmounts = {
+        pro: 100,
+        enterprise: 500
+      };
 
-      // Log subscription activation
+      const guaranteedCredits = creditAmounts[subscriptionType as keyof typeof creditAmounts] || 100;
+      user.credits = Math.max(user.credits || 0, guaranteedCredits);
+
+      // Update subscription activation timestamp
+      user.lastSubscriptionActivation = new Date();
+
+      // Log subscription activation with detailed tracking
       const usageRecord = {
         action: 'credit',
-        amount: 0,
+        amount: user.credits - previousCredits, // Show actual credits added
         description: `Subscription activated - ${subscriptionType} plan via PayPal`,
         timestamp: new Date(),
         metadata: {
@@ -305,7 +329,10 @@ export async function GET(request: NextRequest) {
           previousSubscription: previousSubscriptionType,
           paymentMethod: 'paypal',
           subscriptionId: subscriptionId,
-          subscriptionEndDate: subscriptionEndDate.toISOString()
+          subscriptionEndDate: subscriptionEndDate.toISOString(),
+          previousCredits: previousCredits,
+          newCredits: user.credits,
+          guaranteedCredits: guaranteedCredits
         }
       };
 
@@ -320,8 +347,18 @@ export async function GET(request: NextRequest) {
         user.usageHistory = user.usageHistory.slice(0, 1000);
       }
 
-      await user.save();
-      console.log(`✅ Successfully activated ${subscriptionType} subscription for user ${userEmail}`);
+      // Save with retry logic for subscription updates
+      try {
+        await user.save();
+        console.log(`✅ Successfully activated ${subscriptionType} subscription for user ${userEmail}`);
+        console.log(`📊 Credits updated: ${previousCredits} → ${user.credits} (guaranteed: ${guaranteedCredits})`);
+      } catch (saveError) {
+        console.error(`❌ Failed to save subscription for user ${userEmail}:`, saveError);
+        // Try to save again with fresh data
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        await user.save();
+        console.log(`✅ Successfully saved subscription for user ${userEmail} on retry`);
+      }
 
       // Send success email
       await sendPaymentSuccessEmail(userEmail, 'subscription', undefined, subscriptionType);

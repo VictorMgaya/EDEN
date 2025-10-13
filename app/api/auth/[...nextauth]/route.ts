@@ -91,16 +91,51 @@ const authOptions: NextAuthOptions = {
             }
             return true;
         },
-        async jwt({ token, user }) {
-            console.log("JWT callback:", { token, user }); // Debug log
+        async jwt({ token, user, account }) {
+            console.log("JWT callback:", { token, user, account }); // Debug log
+
+            // Initial sign in
             if (user) {
-                token.user = user;
+                (token as any).user = user;
             }
+
+            // For OAuth providers, ensure we have the latest user data
+            if (account?.provider === "google" && token.sub) {
+                try {
+                    const userEmail = user?.email || (token as any).user?.email;
+                    if (userEmail) {
+                        const response = await fetch(`${process.env.NEXTAUTH_URL}/api/users/profile?email=${encodeURIComponent(userEmail)}`);
+                        if (response.ok) {
+                            const userData = await response.json();
+                            (token as any).user = {
+                                id: userData._id,
+                                name: userData.name,
+                                email: userData.email,
+                                image: userData.image
+                            };
+                        }
+                    }
+                } catch (error) {
+                    console.error("Error fetching user data in JWT callback:", error);
+                }
+            }
+
             return token;
         },
         async session({ session, token }) {
             console.log("Session callback:", { session, token }); // Debug log
-            session.user = token.user as any;
+
+            // Ensure session has the latest user data
+            const tokenUser = (token as any).user;
+            if (tokenUser) {
+                session.user = {
+                    id: tokenUser.id,
+                    name: tokenUser.name,
+                    email: tokenUser.email,
+                    image: tokenUser.image
+                } as any;
+            }
+
             return session;
         }
     }

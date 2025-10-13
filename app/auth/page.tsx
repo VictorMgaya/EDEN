@@ -127,6 +127,30 @@ export default function AuthPage() {
                 return;
             }
 
+            // Wait for session to be established before redirecting
+            let attempts = 0;
+            const maxAttempts = 30; // 3 seconds max wait
+
+            const waitForSession = () => {
+                return new Promise<void>((resolve, reject) => {
+                    const checkSession = () => {
+                        attempts++;
+
+                        if (status === 'authenticated' && session?.user?.email) {
+                            console.log('✅ Session established, redirecting...');
+                            resolve();
+                        } else if (attempts >= maxAttempts) {
+                            console.warn('⚠️ Session establishment timeout, redirecting anyway');
+                            resolve(); // Resolve anyway to prevent infinite waiting
+                        } else {
+                            setTimeout(checkSession, 100); // Check every 100ms
+                        }
+                    };
+                    checkSession();
+                });
+            };
+
+            await waitForSession();
             router.push('/');
         } catch (error) {
             console.error('Registration error:', error);
@@ -161,6 +185,30 @@ export default function AuthPage() {
                 return;
             }
 
+            // Wait for session to be established before redirecting
+            let attempts = 0;
+            const maxAttempts = 30; // 3 seconds max wait
+
+            const waitForSession = () => {
+                return new Promise<void>((resolve, reject) => {
+                    const checkSession = () => {
+                        attempts++;
+
+                        if (status === 'authenticated' && session?.user?.email) {
+                            console.log('✅ Session established, redirecting...');
+                            resolve();
+                        } else if (attempts >= maxAttempts) {
+                            console.warn('⚠️ Session establishment timeout, redirecting anyway');
+                            resolve(); // Resolve anyway to prevent infinite waiting
+                        } else {
+                            setTimeout(checkSession, 100); // Check every 100ms
+                        }
+                    };
+                    checkSession();
+                });
+            };
+
+            await waitForSession();
             router.push('/');
         } catch (error) {
             console.error('Login error:', error);

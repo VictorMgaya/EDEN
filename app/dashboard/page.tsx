@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable react/no-unescaped-entities */
 'use client';
 
@@ -15,23 +16,28 @@ import {
   ArrowDownLeft,
   RefreshCw,
   History,
-  MapPin,
+  Database,
   MessageSquare,
   Eye,
   BarChart3,
   PieChart,
   Clock,
   Target,
-  Leaf,
-  Cloud,
-  Droplets,
+  Brain,
+  Cpu,
+  Shield,
   Award,
   Zap,
   Users,
   CheckCircle,
   Star,
   Sparkles,
-  Gem
+  Gem,
+  Layers,
+  Leaf,
+  Cloud,
+  MapPin,
+  Droplets
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -134,10 +140,10 @@ export default function DashboardPage() {
   useEffect(() => {
     if (status === 'loading') return;
 
-    if (status === 'unauthenticated') {
-      router.push('/');
-      return;
-    }
+    //if (status === 'unauthenticated') {
+      //router.push('/');
+      //return;
+    //}
 
     fetchDashboardData();
   }, [status, router, fetchDashboardData]);
@@ -709,7 +715,7 @@ export default function DashboardPage() {
               <Card className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm border-white/20">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <BarChart3 className="h-5 w-5" />
+                    <Layers className="h-5 w-5" />
                     Usage Analytics
                   </CardTitle>
                   <CardDescription>Your credit usage patterns over time</CardDescription>

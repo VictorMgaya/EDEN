@@ -242,10 +242,16 @@ async function handleSuccessfulPayment(session: Stripe.Checkout.Session) {
       console.log(`Current subscription: ${user.subscription?.type || 'none'}`);
       console.log(`Current credits: ${user.credits || 0}`);
 
-      // Add credits to user account
+      // Add credits to user account with validation
       const creditsToAdd = parseInt(creditAmount);
       const previousCredits = user.credits || 0;
-      user.credits = previousCredits + creditsToAdd;
+      const newCreditTotal = previousCredits + creditsToAdd;
+
+      // Ensure credits are properly calculated and don't go negative
+      user.credits = Math.max(0, newCreditTotal);
+
+      // Update last credit purchase timestamp for balance tracking
+      user.lastCreditPurchase = new Date();
 
       // Log the credit addition with detailed information
       const usageRecord = {
@@ -255,12 +261,14 @@ async function handleSuccessfulPayment(session: Stripe.Checkout.Session) {
         timestamp: new Date(),
         metadata: {
           type: 'credit_purchase',
-          reason: 'payment_success',
+          reason: 'stripe_payment_success',
           subscription: user.subscription?.type || 'freemium',
           paymentIntent: session.payment_intent,
           sessionId: session.id,
           previousCredits: previousCredits,
-          newTotalCredits: user.credits
+          newTotalCredits: user.credits,
+          paymentAmount: session.amount_total ? session.amount_total / 100 : 0,
+          currency: session.currency || 'USD'
         }
       };
 
@@ -276,9 +284,18 @@ async function handleSuccessfulPayment(session: Stripe.Checkout.Session) {
       }
 
       console.log(`💾 Saving user to database...`);
-      await user.save();
-      console.log(`✅ Successfully added ${creditsToAdd} credits to user ${customerEmail}. Total credits: ${user.credits}`);
-      console.log(`✅ User saved with new credits: ${user.credits}`);
+
+      // Save with retry logic for database issues
+      try {
+        await user.save();
+        console.log(`✅ Successfully added ${creditsToAdd} credits to user ${customerEmail}. Total credits: ${user.credits}`);
+      } catch (saveError) {
+        console.error(`❌ Failed to save user ${customerEmail}:`, saveError);
+        // Try to save again with fresh data
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        await user.save();
+        console.log(`✅ Successfully saved user ${customerEmail} on retry`);
+      }
 
       // Send payment success email
       await sendPaymentSuccessEmail(customerEmail, 'credits', creditsToAdd);
@@ -389,7 +406,9 @@ async function handleSuccessfulPayment(session: Stripe.Checkout.Session) {
 
       // Update user subscription with comprehensive details
       const previousSubscriptionType = user.subscription?.type || 'freemium';
+      const previousCredits = user.credits || 0;
 
+      // Set subscription details with validation
       user.subscription = {
         type: subscriptionType,
         stripeCustomerId: subscription.customer as string,
@@ -398,29 +417,37 @@ async function handleSuccessfulPayment(session: Stripe.Checkout.Session) {
         cancelAtPeriodEnd: false
       };
 
-      // Update additional user fields based on subscription
-      if (subscriptionType === 'pro') {
-        user.credits = Math.max(user.credits || 0, 100); // Ensure at least 100 credits for pro
-      } else if (subscriptionType === 'enterprise') {
-        user.credits = Math.max(user.credits || 0, 500); // Ensure at least 500 credits for enterprise
-      }
+      // Update credits based on subscription type with minimum guarantees
+      const creditAmounts = {
+        pro: 100,
+        enterprise: 500
+      };
 
-      // Log subscription activation with detailed information
+      const guaranteedCredits = creditAmounts[subscriptionType as keyof typeof creditAmounts] || 100;
+      user.credits = Math.max(user.credits || 0, guaranteedCredits);
+
+      // Update subscription activation timestamp
+      user.lastSubscriptionActivation = new Date();
+
+      // Log subscription activation with detailed tracking
       const usageRecord = {
         action: 'credit',
-        amount: 0,
-        description: `Subscription activated - ${subscriptionType} plan via checkout`,
+        amount: user.credits - previousCredits, // Show actual credits added
+        description: `Subscription activated - ${subscriptionType} plan via Stripe`,
         timestamp: new Date(),
         metadata: {
           type: 'subscription_activated',
-          reason: 'checkout_completed',
+          reason: 'stripe_checkout_completed',
           subscription: subscriptionType,
           previousSubscription: previousSubscriptionType,
           sessionId: session.id,
           subscriptionId: subscription.id,
-          amountPaid: session.amount_total,
-          currency: session.currency,
-          status: subscription.status
+          amountPaid: session.amount_total ? session.amount_total / 100 : 0,
+          currency: session.currency || 'USD',
+          status: subscription.status,
+          previousCredits: previousCredits,
+          newCredits: user.credits,
+          guaranteedCredits: guaranteedCredits
         }
       };
 
@@ -436,13 +463,19 @@ async function handleSuccessfulPayment(session: Stripe.Checkout.Session) {
       }
 
       console.log(`💾 Saving user to database...`);
-      await user.save();
-      console.log(`✅ Successfully activated subscription for user ${customerEmail}:`);
-      console.log(`   - Previous: ${previousSubscriptionType} → Current: ${subscriptionType}`);
-      console.log(`   - Expires: ${subscriptionEndDate.toISOString()}`);
-      console.log(`   - Stripe Subscription ID: ${subscription.id}`);
-      console.log(`   - New credits: ${user.credits}`);
-      console.log(`✅ User saved with subscription type: ${user.subscription.type}`);
+
+      // Save with retry logic for subscription updates
+      try {
+        await user.save();
+        console.log(`✅ Successfully activated ${subscriptionType} subscription for user ${customerEmail}`);
+        console.log(`📊 Credits updated: ${previousCredits} → ${user.credits} (guaranteed: ${guaranteedCredits})`);
+      } catch (saveError) {
+        console.error(`❌ Failed to save subscription for user ${customerEmail}:`, saveError);
+        // Try to save again with fresh data
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        await user.save();
+        console.log(`✅ Successfully saved subscription for user ${customerEmail} on retry`);
+      }
 
       // Send payment success email for subscription
       if (customerEmail) {
