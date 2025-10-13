@@ -583,10 +583,22 @@ const SidebarComponent = ({ children }) => {
 
   return (
     <div className="flex min-h-screen w-full relative">
-      <div className="fixed left-0 top-0 z-40 h-screen">
+      <div
+        className="fixed left-0 top-0 z-40 h-screen"
+        style={{
+          width: isDesktopCollapsed ? "4rem" : "18rem",
+          transition: "width 300ms ease-in-out"
+        }}
+      >
         {sidebarContent}
       </div>
-      <div className={`flex-1 overflow-hidden min-h-screen ${isDesktopCollapsed ? "" : "ml-72"} transition-all duration-300 ease-in-out`}>
+      <div
+        className="flex-1 overflow-hidden min-h-screen transition-all duration-300 ease-in-out"
+        style={{
+          marginLeft: isDesktopCollapsed ? "4rem" : "18rem",
+          transition: "margin-left 300ms ease-in-out"
+        }}
+      >
         <div className="flex flex-col h-full">
           {children}
         </div>

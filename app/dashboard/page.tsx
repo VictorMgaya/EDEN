@@ -19,7 +19,11 @@ import {
   History,
   MapPin,
   MessageSquare,
-  Eye
+  Eye,
+  BarChart3,
+  PieChart,
+  Clock,
+  Target
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -396,14 +400,18 @@ export default function DashboardPage() {
 
         {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-8">
+          <TabsList className="grid w-full grid-cols-3 mb-8">
             <TabsTrigger value="overview" className="flex items-center gap-2">
               <Activity className="h-4 w-4" />
               Overview
             </TabsTrigger>
+            <TabsTrigger value="analytics" className="flex items-center gap-2">
+              <BarChart3 className="h-4 w-4" />
+              Analytics
+            </TabsTrigger>
             <TabsTrigger value="sessions" className="flex items-center gap-2">
               <History className="h-4 w-4" />
-              Session History
+              Sessions
             </TabsTrigger>
           </TabsList>
 
@@ -504,6 +512,102 @@ export default function DashboardPage() {
             </Card>
           </TabsContent>
 
+          <TabsContent value="analytics" className="space-y-6">
+            {/* Activity Analytics */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Usage Over Time Chart */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BarChart3 className="h-5 w-5" />
+                    Usage Over Time
+                  </CardTitle>
+                  <CardDescription>
+                    Your credit usage and earnings over the last 30 days
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-64 flex items-center justify-center text-slate-500 dark:text-slate-400">
+                    <div className="text-center">
+                      <BarChart3 className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                      <p>Chart visualization would go here</p>
+                      <p className="text-sm">Showing daily usage patterns</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Activity Breakdown */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <PieChart className="h-5 w-5" />
+                    Activity Breakdown
+                  </CardTitle>
+                  <CardDescription>
+                    Distribution of your activities by type
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-64 flex items-center justify-center text-slate-500 dark:text-slate-400">
+                    <div className="text-center">
+                      <PieChart className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                      <p>Pie chart visualization</p>
+                      <p className="text-sm">Analysis vs Chat activities</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Activity Timeline */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Clock className="h-5 w-5" />
+                  Recent Activity Timeline
+                </CardTitle>
+                <CardDescription>
+                  Your latest activities and session history
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {usageHistory && usageHistory.history.length > 0 ? (
+                  <div className="space-y-4">
+                    {usageHistory.history.slice(0, 10).map((record, index) => (
+                      <div key={index} className="flex items-center gap-4 p-3 border rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                        <div className={`p-2 rounded-full ${getActionColor(record.action)}`}>
+                          {getActionIcon(record.action)}
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-medium text-slate-900 dark:text-slate-100">
+                            {record.description}
+                          </p>
+                          <p className="text-sm text-slate-500 dark:text-slate-400">
+                            {formatDate(record.timestamp)}
+                          </p>
+                        </div>
+                        <Badge variant={record.action === 'credit' ? 'default' : 'secondary'}>
+                          {formatAmount(record.amount, record.action)}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <Target className="h-12 w-12 text-slate-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100 mb-2">
+                      No Recent Activity
+                    </h3>
+                    <p className="text-slate-600 dark:text-slate-400">
+                      Start using the platform to see your activity timeline.
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           <TabsContent value="sessions" className="space-y-6">
             {/* Session History */}
             <Card>
@@ -518,7 +622,10 @@ export default function DashboardPage() {
                       View and revisit your previous location analysis sessions
                     </CardDescription>
                   </div>
-
+                  <Button variant="outline" size="sm" onClick={() => router.push('/analytics')}>
+                    <MapPin className="h-4 w-4 mr-2" />
+                    New Analysis
+                  </Button>
                 </div>
               </CardHeader>
               <CardContent>

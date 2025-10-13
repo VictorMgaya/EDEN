@@ -61,6 +61,11 @@ export async function POST(request: NextRequest) {
         await handleSubscriptionUpdate(updatedSubscription);
         break;
 
+      case 'customer.subscription.created':
+        const createdSubscription = event.data.object as Stripe.Subscription;
+        await handleSubscriptionCreated(createdSubscription);
+        break;
+
       default:
         console.log(`Unhandled event type ${event.type}`);
     }
@@ -142,16 +147,33 @@ async function handleSubscriptionPayment(invoice: Stripe.Invoice) {
     await dbConnect();
 
     const customerEmail = invoice.customer_email;
+    const customerId = invoice.customer as string;
 
-    if (!customerEmail) {
-      console.error('No customer email found for subscription');
-      return;
+    console.log(`🔍 Processing subscription payment for invoice: ${invoice.id}`);
+    console.log(`   - Customer Email: ${customerEmail}`);
+    console.log(`   - Customer ID: ${customerId}`);
+
+    // Try multiple methods to find the user
+    let user = null;
+
+    // Method 1: Find by Stripe customer ID (most reliable)
+    if (customerId) {
+      user = await User.findOne({ 'subscription.stripeCustomerId': customerId });
+      if (user) {
+        console.log(`✅ Found user by Stripe customer ID: ${user.email}`);
+      }
     }
 
-    const user = await User.findOne({ email: customerEmail });
+    // Method 2: Fall back to email if customer ID didn't work
+    if (!user && customerEmail) {
+      user = await User.findOne({ email: customerEmail });
+      if (user) {
+        console.log(`✅ Found user by email: ${user.email}`);
+      }
+    }
 
     if (!user) {
-      console.error(`User not found: ${customerEmail}`);
+      console.error(`❌ User not found with customer ID: ${customerId} or email: ${customerEmail}`);
       return;
     }
 
@@ -388,7 +410,6 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
       type: subscriptionType,
       stripeCustomerId: subscription.customer as string,
       stripeSubscriptionId: subscription.id,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       currentPeriodEnd: new Date((subscription as Stripe.Subscription & { current_period_end: number }).current_period_end * 1000),
       cancelAtPeriodEnd: subscription.cancel_at_period_end || false
     };
@@ -424,9 +445,99 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
     await user.save();
 
     console.log(`✅ Successfully updated subscription for user ${user.email}:`);
-    console.log(`   - Previous: ${previousSubscriptionType} → Current: ${subscriptionType}`);
     console.log(`   - Status: ${subscription.status}`);
   } catch (error) {
     console.error('❌ Error handling subscription update:', error);
+  }
+}
+
+async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
+  try {
+    await dbConnect();
+
+    console.log(`🔍 Processing subscription creation: ${subscription.id}`);
+    console.log(`   - Customer ID: ${subscription.customer}`);
+    console.log(`   - Status: ${subscription.status}`);
+
+    // Get customer details from Stripe
+    const customerResponse = await stripe.customers.retrieve(subscription.customer as string);
+    const customer = customerResponse as Stripe.Customer;
+
+    if (!customer.email) {
+      console.error(`❌ No email found for customer: ${subscription.customer}`);
+      return;
+    }
+
+    // Find user by email
+    const user = await User.findOne({ email: customer.email });
+
+    if (!user) {
+      console.error(`❌ User not found: ${customer.email}`);
+      return;
+    }
+
+    console.log(`✅ Found user for subscription creation: ${user.email}`);
+
+    // Map Stripe subscription to our subscription types
+    let subscriptionType = 'freemium';
+
+    if (subscription.items?.data.length > 0) {
+      const priceId = subscription.items.data[0].price?.id;
+
+      // Map actual price IDs to subscription types
+      const priceMapping: { [key: string]: string } = {
+        [process.env.STRIPE_PRO_PRICE_ID || '']: 'pro',
+        [process.env.STRIPE_ENTERPRISE_PRICE_ID || '']: 'enterprise',
+      };
+
+      subscriptionType = priceMapping[priceId] || 'freemium';
+    }
+
+    // Update user subscription with customer ID and subscription details
+    user.subscription = {
+      type: subscriptionType,
+      stripeCustomerId: subscription.customer as string,
+      stripeSubscriptionId: subscription.id,
+      currentPeriodEnd: new Date((subscription as Stripe.Subscription & { current_period_end: number }).current_period_end * 1000),
+      cancelAtPeriodEnd: false
+    };
+
+    // Log subscription creation
+    const usageRecord = {
+      action: 'credit',
+      amount: 0,
+      description: `Subscription created - ${subscriptionType} plan`,
+      timestamp: new Date(),
+      metadata: {
+        type: 'subscription_created',
+        reason: 'subscription_created',
+        subscription: subscriptionType,
+        subscriptionId: subscription.id,
+        customerId: subscription.customer,
+        status: subscription.status,
+        currentPeriodEnd: user.subscription.currentPeriodEnd?.toISOString()
+      }
+    };
+
+    if (!user.usageHistory) {
+      user.usageHistory = [];
+    }
+
+    user.usageHistory.unshift(usageRecord);
+
+    // Keep only last 1000 records
+    if (user.usageHistory.length > 1000) {
+      user.usageHistory = user.usageHistory.slice(0, 1000);
+    }
+
+    await user.save();
+
+    console.log(`✅ Successfully created subscription for user ${user.email}:`);
+    console.log(`   - Subscription Type: ${subscriptionType}`);
+    console.log(`   - Customer ID: ${subscription.customer}`);
+    console.log(`   - Subscription ID: ${subscription.id}`);
+    console.log(`   - Expires: ${user.subscription.currentPeriodEnd?.toISOString()}`);
+  } catch (error) {
+    console.error('❌ Error handling subscription creation:', error);
   }
 }
