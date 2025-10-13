@@ -44,7 +44,7 @@ import { Separator } from "@/components/ui/separator";
 
 // Navigation items
 const navigationItems = [
-  { title: "Dashboard", url: "/", icon: Home },
+  { title: "Dashboard", url: "/dashboard", icon: Home },
   { title: "Analytics", url: "/analytics", icon: BarChart2, badge: "Pro" },
   { title: "Experts", url: "/Experts", icon: Users },
   { title: "Services", url: "/services", icon: MapPin },
@@ -148,7 +148,7 @@ const SidebarComponent = ({ children }) => {
     e.preventDefault();
     e.stopPropagation();
     try {
-      await signOut({ callbackUrl: "/", redirect: false });
+      await signOut({ callbackUrl: "/dashboard", redirect: false });
       if (isMobile) setIsSheetOpen(false);
     } catch (err) {
       console.error("Error signing out:", err);
@@ -177,7 +177,7 @@ const SidebarComponent = ({ children }) => {
         : "bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800 border-r border-slate-700/50 shadow-2xl"
       }
       ${isMobile ? "w-full h-full" : `${isDesktopCollapsed ? "w-16" : "w-72"} h-screen`}
-      flex flex-col backdrop-blur-sm
+      flex flex-col backdrop-blur-md
       ${isMobile ? "shadow-2xl" : ""}
       transition-all duration-300 ease-in-out
     `}>
@@ -536,7 +536,7 @@ const SidebarComponent = ({ children }) => {
             <Button
               variant="ghost"
               size="icon"
-              className="fixed top-4 left-4 z-50 md:hidden bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-lg hover:bg-white dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-700"
+              className="fixed top-4 left-4 z-50 md:hidden bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-lg hover:bg-white dark:hover:bg-gray-800"
               onClick={(e) => {
                 e.preventDefault();
                 setIsSheetOpen(true);
@@ -547,7 +547,7 @@ const SidebarComponent = ({ children }) => {
           </SheetTrigger>
           <SheetContent
             side="left"
-            className="p-0 w-80 [&>button]:hidden"
+            className="p-0 w-80 border-0 shadow-2xl [&>button]:hidden"
             onInteractOutside={(e) => {
               // Prevent closing when clicking inside
               e.preventDefault();
@@ -582,9 +582,11 @@ const SidebarComponent = ({ children }) => {
   }
 
   return (
-    <div className="flex min-h-screen w-full">
-      {sidebarContent}
-      <div className="flex-1 overflow-hidden min-h-screen">
+    <div className="flex min-h-screen w-full relative">
+      <div className="fixed left-0 top-0 z-40 h-screen">
+        {sidebarContent}
+      </div>
+      <div className={`flex-1 overflow-hidden min-h-screen ${isDesktopCollapsed ? "" : "ml-72"} transition-all duration-300 ease-in-out`}>
         <div className="flex flex-col h-full">
           {children}
         </div>

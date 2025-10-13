@@ -8,9 +8,9 @@ export default function Home() {
   const router = useRouter();
   const { data: session, status } = useSession();
 
-  // If user is authenticated, redirect to analytics
+  // If user is authenticated, redirect to dashboard
   if (status === 'authenticated') {
-    router.push('/analytics');
+    router.push('/dashboard');
     return null;
   }
 
@@ -109,39 +109,8 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Custom animations in style tag */}
-      <style jsx>{`
-        @keyframes fade-in-down {
-          from {
-            opacity: 0;
-            transform: translateY(-20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        @keyframes fade-in {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
-        }
-
-        @keyframes fade-in-up {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
+      {/* Custom animations using Tailwind */}
+      <style>{`
         @keyframes blob {
           0%, 100% {
             transform: translate(0, 0) scale(1);
@@ -157,40 +126,8 @@ export default function Home() {
           }
         }
 
-        .animate-fade-in-down {
-          animation: fade-in-down 0.8s ease-out;
-        }
-
-        .animate-fade-in {
-          animation: fade-in 1s ease-out;
-        }
-
-        .animate-fade-in-up {
-          animation: fade-in-up 0.8s ease-out;
-        }
-
         .animate-blob {
           animation: blob 7s infinite;
-        }
-
-        .animation-delay-300 {
-          animation-delay: 300ms;
-        }
-
-        .animation-delay-600 {
-          animation-delay: 600ms;
-        }
-
-        .animation-delay-900 {
-          animation-delay: 900ms;
-        }
-
-        .animation-delay-2000 {
-          animation-delay: 2s;
-        }
-
-        .animation-delay-4000 {
-          animation-delay: 4s;
         }
       `}</style>
     </div>

@@ -13,19 +13,29 @@ interface CreditModalProps {
 export default function CreditModal({ isOpen, onClose, credits, subscription }: CreditModalProps) {
     const [isLoading, setIsLoading] = useState(false);
 
-    const handleStripeCheckout = async (priceId: string) => {
+    const handleStripeCheckout = async (planId: string) => {
         setIsLoading(true);
         try {
-            const response = await fetch('/api/stripe/create-checkout-session', {
+            const response = await fetch('/api/payments', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ priceId }),
+                body: JSON.stringify({
+                    type: 'subscription',
+                    plan: planId
+                }),
             });
 
-            const { url } = await response.json();
-            window.location.href = url;
+            const data = await response.json();
+
+            if (data.url) {
+                window.location.href = data.url;
+            } else {
+                alert('Subscription setup failed. Please try again.');
+                setIsLoading(false);
+            }
         } catch (error) {
             console.error('Payment error:', error);
+            alert('Payment failed. Please try again.');
             setIsLoading(false);
         }
     };
@@ -33,16 +43,26 @@ export default function CreditModal({ isOpen, onClose, credits, subscription }: 
     const buyCredits = async (amount: number) => {
         setIsLoading(true);
         try {
-            const response = await fetch('/api/stripe/create-credit-session', {
+            const response = await fetch('/api/payments', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ credits: amount }),
+                body: JSON.stringify({
+                    type: 'credits',
+                    credits: amount.toString()
+                }),
             });
 
-            const { url } = await response.json();
-            window.location.href = url;
+            const data = await response.json();
+
+            if (data.url) {
+                window.location.href = data.url;
+            } else {
+                alert('Payment setup failed. Please try again.');
+                setIsLoading(false);
+            }
         } catch (error) {
             console.error('Credit purchase error:', error);
+            alert('Credit purchase failed. Please try again.');
             setIsLoading(false);
         }
     };
@@ -93,7 +113,7 @@ export default function CreditModal({ isOpen, onClose, credits, subscription }: 
 
                             <div className="grid gap-3">
                                 <button
-                                    onClick={() => handleStripeCheckout('price_pro_monthly')}
+                                    onClick={() => handleStripeCheckout('pro')}
                                     disabled={isLoading}
                                     className="w-full p-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all disabled:opacity-50"
                                 >
@@ -113,7 +133,7 @@ export default function CreditModal({ isOpen, onClose, credits, subscription }: 
                                 </button>
 
                                 <button
-                                    onClick={() => handleStripeCheckout('price_enterprise_monthly')}
+                                    onClick={() => handleStripeCheckout('enterprise')}
                                     disabled={isLoading}
                                     className="w-full p-4 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-lg hover:from-purple-600 hover:to-pink-700 transition-all disabled:opacity-50"
                                 >

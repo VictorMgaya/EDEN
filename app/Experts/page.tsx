@@ -351,7 +351,7 @@ export default function ExpertsPage() {
   const [userCredits, setUserCredits] = useState(0);
   const [userSubscription, setUserSubscription] = useState('freemium');
 
-  // Check credits on component mount
+  // Check credits on component mount and refresh after modal interactions
   useEffect(() => {
     const checkCredits = async () => {
       try {
@@ -370,6 +370,27 @@ export default function ExpertsPage() {
       checkCredits();
     }
   }, [status]);
+
+  // Refresh credits when modal closes (after potential purchase)
+  useEffect(() => {
+    if (!showCreditModal && status === 'authenticated') {
+      const refreshCredits = async () => {
+        try {
+          const response = await fetch('/api/users/credits/check');
+          if (response.ok) {
+            const data = await response.json();
+            setUserCredits(data.credits);
+            setUserSubscription(data.subscription || 'freemium');
+          }
+        } catch (error) {
+          console.error('Error refreshing credits:', error);
+        }
+      };
+
+      // Small delay to allow webhook processing
+      setTimeout(refreshCredits, 1000);
+    }
+  }, [showCreditModal, status]);
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -379,6 +400,28 @@ export default function ExpertsPage() {
     if (status === 'unauthenticated') {
       router.push('/');
       return;
+    }
+
+    // Check if user selected a specific session from dashboard
+    const selectedSession = localStorage.getItem('selectedSession');
+    if (selectedSession) {
+      try {
+        const sessionData = JSON.parse(selectedSession);
+        if (sessionData && sessionData.locationData) {
+          // Create mock XML data from session location for analysis
+          const mockXML = createMockXMLFromSession(sessionData);
+          setXmlData(mockXML);
+          setMessages([{
+            sender: "ai",
+            text: `<div><h2>📍 Session Reference</h2><p>I'm analyzing your previous session from ${formatDate(sessionData.startTime)} at coordinates ${sessionData.locationData.lat.toFixed(4)}, ${sessionData.locationData.lng.toFixed(4)}.</p><p>What would you like to know about this analysis?</p></div>`
+          }]);
+          setLoading(false);
+          localStorage.removeItem('selectedSession'); // Clear after use
+          return;
+        }
+      } catch (error) {
+        console.error('Error parsing selected session:', error);
+      }
     }
 
     const rawXML = getRawXMLCache();
@@ -393,6 +436,22 @@ export default function ExpertsPage() {
       setError("No cached analytics data found. Please collect location data first.");
     }
   }, [status, router]);
+
+  // Helper function to create mock XML from session data
+  const createMockXMLFromSession = (session: { locationData: { lat: number; lng: number }; startTime: string }) => {
+    const { lat, lng } = session.locationData;
+    return `<div><h2>Location Analysis</h2><p>Coordinates: ${lat}, ${lng}</p><p>Analysis Date: ${session.startTime}</p></div>`;
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
 
   useEffect(() => {
     if (chatContainerRef.current) {

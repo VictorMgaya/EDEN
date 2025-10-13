@@ -22,10 +22,16 @@ const Expertschema = new mongoose.Schema({
 const Crop = mongoose.models.Crop || mongoose.model('Crop', Expertschema);
 
 export async function GET() {
-  await dbConnect();
-
   const hostname = 'https://edenapp.site'; // Replace with your domain
-  const Experts = await Crop.find({}, { slug: 1 }).lean();
+
+  let Experts = [];
+  try {
+    await dbConnect();
+    Experts = await Crop.find({}, { slug: 1 }).lean();
+  } catch (error) {
+    console.warn('Database connection failed during sitemap generation, using static pages only:', error.message);
+    // Continue with empty Experts array for static pages only
+  }
 
   // Construct sitemap XML
   let sitemap = `<?xml version="1.0" encoding="UTF-8"?>

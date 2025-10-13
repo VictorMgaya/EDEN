@@ -149,7 +149,7 @@ export default function PurchaseSuccessPage() {
 
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 pt-4">
-              <Link href="/" className="flex-1">
+              <Link href="/dashboard" className="flex-1">
                 <Button className="w-full" size="lg">
                   <Home className="h-4 w-4 mr-2" />
                   Go to Dashboard

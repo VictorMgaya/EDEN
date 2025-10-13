@@ -75,6 +75,10 @@ export default function PurchasePage() {
         }),
       });
 
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       const data = await response.json();
 
       if (data.url) {
@@ -84,7 +88,8 @@ export default function PurchasePage() {
       }
     } catch (error) {
       console.error('Payment error:', error);
-      alert('Payment failed. Please try again.');
+      const errorMessage = error instanceof Error ? error.message : 'Please try again.';
+      alert(`Payment failed: ${errorMessage}`);
     } finally {
       setIsProcessing(false);
     }
@@ -108,12 +113,15 @@ export default function PurchasePage() {
 
       if (data.url) {
         window.location.href = data.url;
+      } else if (data.error === 'Subscription not configured') {
+        alert(`Subscription Setup Required:\n\n${data.message}\n\nPlease contact support or check the setup documentation.`);
       } else {
         alert('Subscription setup failed. Please try again.');
       }
     } catch (error) {
       console.error('Subscription error:', error);
-      alert('Subscription failed. Please try again.');
+      const errorMessage = error instanceof Error ? error.message : 'Please try again.';
+      alert(`Subscription failed: ${errorMessage}`);
     } finally {
       setIsProcessing(false);
     }

@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { Button } from '@/components/ui/button';
-import { BarChart2, AlertTriangle, Search } from 'react-feather';
+import { BarChart2, AlertTriangle, Search, Navigation } from 'lucide-react';
 import { saveAnalyticsCache } from '@/utils/analyticsCache';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
@@ -265,10 +265,10 @@ function AnalyticsPage() {
     // Check for authentication when component mounts
     if (status === 'loading') return;
 
-    //if (status === 'unauthenticated') {
-      //router.push('/');
-      //return;
-    //}
+    if (status === 'unauthenticated') {
+      router.push('/');
+      return;
+    }
 
     const urlParams = new URLSearchParams(window.location.search);
     const lat = parseFloat(urlParams.get('lat'));
@@ -308,7 +308,7 @@ function AnalyticsPage() {
 
 
   return (
-    <div className='mt-16 p-1'>
+    <div className='mt-16 p-1 pb-20 md:pb-1'>
       <div className='container:w-full mb-4 p-1 content-center rounded-2xl bg-blue-500/20 z-0 relative'>
         <MapContainerComponent
           center={center}
@@ -365,13 +365,33 @@ function AnalyticsPage() {
       )}
 
       {showLocationRequiredModal && (
-        <div className="hidden md:fixed md:inset-0 md:bg-black md:bg-blur md:backdrop-blur-sm md:flex md:items-center md:justify-center md:z-40">
-          <div className="dark:bg-green-900 text-red p-8 rounded-lg shadow-lg text-center">
-            <AlertTriangle className="mx-auto mb-4 text-red-500" size={48} />
-            <h2 className="text-xl font-semibold mb-4">Location Required</h2>
-            <p className="mb-6">Location is required to start analysis. Please search for a location or let Eden track your current location.</p>
-            <div className="flex justify-center ">
-              <Button onClick={handleSearchOptionClick}>Search a location <Search/></Button>
+        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full mx-4">
+            <div className="p-6 text-center">
+              <AlertTriangle className="mx-auto mb-4 text-red-500" size={48} />
+              <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100">
+                Location Required
+              </h2>
+              <p className="mb-6 text-gray-600 dark:text-gray-300">
+                {locationModalMessage || "Location is required to start analysis. Please search for a location or let Eden track your current location."}
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <Button onClick={handleSearchOptionClick} className="flex items-center justify-center">
+                  <Search className="w-4 h-4 mr-2" />
+                  Search Location
+                </Button>
+                <Button
+                  onClick={() => {
+                    setShowLocationRequiredModal(false);
+                    requestLocationPermission();
+                  }}
+                  variant="outline"
+                  className="flex items-center justify-center"
+                >
+                  <Navigation className="w-4 h-4 mr-2" />
+                  Use My Location
+                </Button>
+              </div>
             </div>
           </div>
         </div>

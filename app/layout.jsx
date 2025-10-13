@@ -25,7 +25,7 @@ const Lexend = LexendFont({
 const defaultMetadata = {
   title: "Eden",
   description: "The Resource Analysis Engine",
-  image: "https://edenapp.site/eden.svg",
+  image: "/eden.svg",
   type: "App"
 };
 
@@ -167,14 +167,7 @@ export default function RootLayout({ children }) {
     };
   }, [pathname]); // Re-run effect when pathname changes
 
-  const alternateLanguages = Object.keys(languageMetadata).map(lang => (
-    <link
-      key={lang}
-      rel="alternate"
-      hrefLang={lang}
-      href={`https://edenapp.site${pathname}?lang=${lang}`}
-    />
-  ));
+
 
   return (
     <html lang={currentLang} dir={textDirection} suppressHydrationWarning>
@@ -189,17 +182,17 @@ export default function RootLayout({ children }) {
             key={lang}
             rel="alternate"
             hrefLang={lang}
-            href={`https://edenapp.site${pathname}?lang=${lang}`}
+            href={`${typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000'}${pathname}?lang=${lang}`}
           />
         ))}
-        <link rel="alternate" hrefLang="x-default" href={`https://edenapp.site${pathname}`} />
+        <link rel="alternate" hrefLang="x-default" href={`${typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000'}${pathname}`} />
 
         {/* Structured data for international targeting */}
         <script type="application/ld+json" dangerouslySetInnerHTML={{
           __html: JSON.stringify({
             "@context": "https://schema.org",
             "@type": "WebSite",
-            "url": `https://edenapp.site${pathname}`,
+            "url": `${typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000'}${pathname}`,
             "name": seoTranslations[currentLang]?.title,
             "description": seoTranslations[currentLang]?.description,
             "inLanguage": currentLang,
@@ -223,16 +216,13 @@ export default function RootLayout({ children }) {
         {/* Existing meta tags and scripts */}
         <link
           rel="canonical"
-          href={`https://edenapp.site${pathname}`}
+          href={`${typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000'}${pathname}`}
         />
-
-        <meta name="description" content={pageMetadata.description} />
         <meta property="og:title" content={pageMetadata.title} />
         <meta property="og:description" content={pageMetadata.description} />
         <meta property="og:image" content={pageMetadata.image} />
         <meta property="og:type" content={pageMetadata.type} />
         <meta property="og:locale" content={currentLang} />
-        {alternateLanguages}
         {Object.keys(languageMetadata).map(lang => (
           <meta key={lang} property="og:locale:alternate" content={lang} />
         ))}
@@ -320,7 +310,7 @@ export default function RootLayout({ children }) {
               disableTransitionOnChange
             >
               <SidebarComponent>
-                {pathname !== "/auth" && pathname !== "/" && <Header />}
+                {pathname !== "/auth" && pathname !== "/" &&pathname !== "/purchase" && <Header />}
                 <div
                   style={{
                     filter: `blur(${pageBlurAmount}px)`,

@@ -15,8 +15,13 @@ import {
   Activity,
   ArrowUpRight,
   ArrowDownLeft,
-  RefreshCw
+  RefreshCw,
+  History,
+  MapPin,
+  MessageSquare,
+  Eye
 } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface UsageRecord {
   action: 'credit' | 'debit';
@@ -32,6 +37,27 @@ interface UsageRecord {
 
 interface UsageHistory {
   history: UsageRecord[];
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalItems: number;
+    itemsPerPage: number;
+  };
+}
+
+interface SessionData {
+  id: string;
+  startTime: string;
+  records: UsageRecord[];
+  locationData?: {
+    lat: number;
+    lng: number;
+    [key: string]: unknown;
+  };
+}
+
+interface SessionsResponse {
+  sessions: SessionData[];
   pagination: {
     currentPage: number;
     totalPages: number;
@@ -56,6 +82,7 @@ export default function DashboardPage() {
   const [userStats, setUserStats] = useState<UserStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [activeTab, setActiveTab] = useState('overview');
 
   const fetchDashboardData = useCallback(async () => {
     try {
@@ -91,6 +118,8 @@ export default function DashboardPage() {
       setLoading(false);
     }
   }, []);
+
+
 
   useEffect(() => {
     if (status === 'loading') return;
@@ -144,6 +173,132 @@ export default function DashboardPage() {
       <ArrowDownLeft className="h-4 w-4" />
     ) : (
       <ArrowUpRight className="h-4 w-4" />
+    );
+  };
+
+  // Session History Tab Component
+  const SessionHistoryTab = () => {
+    const [sessions, setSessions] = useState<SessionData[]>([]);
+    const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+      const loadSessions = async () => {
+        setLoading(true);
+        try {
+          const response = await fetch('/api/users/sessions?page=1&limit=20');
+          if (response.ok) {
+            const data: SessionsResponse = await response.json();
+            setSessions(data.sessions || []);
+          }
+        } catch (error) {
+          console.error('Error loading sessions:', error);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      loadSessions();
+    }, []);
+
+    const handleViewAnalysis = (session: SessionData) => {
+      if (session.locationData) {
+        // Redirect to analytics page with the session's location
+        const { lat, lng } = session.locationData;
+        router.push(`/analytics?lat=${lat}&lon=${lng}`);
+      }
+    };
+
+    const handleChatAboutSession = (session: SessionData) => {
+      // Store session data for Experts page to reference
+      localStorage.setItem('selectedSession', JSON.stringify(session));
+      router.push('/Experts');
+    };
+
+    if (loading) {
+      return (
+        <div className="flex items-center justify-center py-12">
+          <RefreshCw className="h-6 w-6 animate-spin mr-2" />
+          <span>Loading sessions...</span>
+        </div>
+      );
+    }
+
+    if (sessions.length === 0) {
+      return (
+        <div className="text-center py-12">
+          <History className="h-12 w-12 text-slate-400 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100 mb-2">
+            No Analysis Sessions
+          </h3>
+          <p className="text-slate-600 dark:text-slate-400 mb-4">
+            Start analyzing locations to see your session history here.
+          </p>
+          <Button onClick={() => router.push('/analytics')}>
+            Go to Analytics
+          </Button>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-4">
+        {sessions.map((session) => (
+          <div key={session.id} className="border rounded-lg p-4 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
+                  <MapPin className="h-5 w-5 text-blue-600" />
+                </div>
+                <div>
+                  <h4 className="font-medium text-slate-900 dark:text-slate-100">
+                    Analysis Session
+                  </h4>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                    {formatDate(session.startTime)}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline">
+                  {session.records.length} interactions
+                </Badge>
+              </div>
+            </div>
+
+            {session.locationData && (
+              <div className="mb-4 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+                  <MapPin className="h-4 w-4" />
+                  <span>
+                    Location: {session.locationData.lat.toFixed(4)}, {session.locationData.lng.toFixed(4)}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleViewAnalysis(session)}
+                className="flex items-center gap-2"
+              >
+                <Eye className="h-4 w-4" />
+                View Analysis
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleChatAboutSession(session)}
+                className="flex items-center gap-2"
+              >
+                <MessageSquare className="h-4 w-4" />
+                Chat About This
+              </Button>
+            </div>
+          </div>
+        ))}
+      </div>
     );
   };
 
@@ -239,100 +394,139 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Usage History */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="flex items-center gap-2">
-                  <Calendar className="h-5 w-5" />
-                  Usage History
-                </CardTitle>
-                <CardDescription>
-                  Detailed log of your AI expert interactions and credit transactions
-                </CardDescription>
-              </div>
-              <Button variant="outline" size="sm" onClick={fetchDashboardData}>
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Refresh
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {usageHistory && usageHistory.history.length > 0 ? (
-              <div className="space-y-4">
-                {usageHistory.history.map((record, index) => (
-                  <div key={index} className="flex items-center justify-between p-4 border rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                    <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-full ${getActionColor(record.action)}`}>
-                        {getActionIcon(record.action)}
-                      </div>
-                      <div>
-                        <p className="font-medium text-slate-900 dark:text-slate-100">
-                          {record.description}
-                        </p>
-                        <p className="text-sm text-slate-500 dark:text-slate-400">
-                          {formatDate(record.timestamp)}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <Badge variant={record.action === 'credit' ? 'default' : 'secondary'}>
-                        {formatAmount(record.amount, record.action)}
-                      </Badge>
-                      {record.metadata?.type && (
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                          {record.metadata.type.replace('_', ' ')}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                ))}
+        {/* Main Content Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-8">
+            <TabsTrigger value="overview" className="flex items-center gap-2">
+              <Activity className="h-4 w-4" />
+              Overview
+            </TabsTrigger>
+            <TabsTrigger value="sessions" className="flex items-center gap-2">
+              <History className="h-4 w-4" />
+              Session History
+            </TabsTrigger>
+          </TabsList>
 
-                {/* Pagination */}
-                {usageHistory.pagination.totalPages > 1 && (
-                  <>
-                    <Separator className="my-6" />
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm text-slate-600 dark:text-slate-400">
-                        Showing {usageHistory.history.length} of {usageHistory.pagination.totalItems} transactions
-                      </p>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          disabled={usageHistory.pagination.currentPage <= 1}
-                        >
-                          Previous
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          disabled={usageHistory.pagination.currentPage >= usageHistory.pagination.totalPages}
-                        >
-                          Next
-                        </Button>
+          <TabsContent value="overview" className="space-y-6">
+            {/* Usage History */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <Calendar className="h-5 w-5" />
+                      Usage History
+                    </CardTitle>
+                    <CardDescription>
+                      Detailed log of your AI expert interactions and credit transactions
+                    </CardDescription>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={fetchDashboardData}>
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Refresh
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {usageHistory && usageHistory.history.length > 0 ? (
+                  <div className="space-y-4">
+                    {usageHistory.history.map((record, index) => (
+                      <div key={index} className="flex items-center justify-between p-4 border rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                        <div className="flex items-center gap-3">
+                          <div className={`p-2 rounded-full ${getActionColor(record.action)}`}>
+                            {getActionIcon(record.action)}
+                          </div>
+                          <div>
+                            <p className="font-medium text-slate-900 dark:text-slate-100">
+                              {record.description}
+                            </p>
+                            <p className="text-sm text-slate-500 dark:text-slate-400">
+                              {formatDate(record.timestamp)}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <Badge variant={record.action === 'credit' ? 'default' : 'secondary'}>
+                            {formatAmount(record.amount, record.action)}
+                          </Badge>
+                          {record.metadata?.type && (
+                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                              {record.metadata.type.replace('_', ' ')}
+                            </p>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  </>
+                    ))}
+
+                    {/* Pagination */}
+                    {usageHistory.pagination.totalPages > 1 && (
+                      <>
+                        <Separator className="my-6" />
+                        <div className="flex items-center justify-between">
+                          <p className="text-sm text-slate-600 dark:text-slate-400">
+                            Showing {usageHistory.history.length} of {usageHistory.pagination.totalItems} transactions
+                          </p>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={usageHistory.pagination.currentPage <= 1}
+                            >
+                              Previous
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={usageHistory.pagination.currentPage >= usageHistory.pagination.totalPages}
+                            >
+                              Next
+                            </Button>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <Activity className="h-12 w-12 text-slate-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100 mb-2">
+                      No Usage History
+                    </h3>
+                    <p className="text-slate-600 dark:text-slate-400 mb-4">
+                      Start using the AI expert to see your usage history here.
+                    </p>
+                    <Button onClick={() => router.push('/Experts')}>
+                      Go to AI Expert
+                    </Button>
+                  </div>
                 )}
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <Activity className="h-12 w-12 text-slate-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100 mb-2">
-                  No Usage History
-                </h3>
-                <p className="text-slate-600 dark:text-slate-400 mb-4">
-                  Start using the AI expert to see your usage history here.
-                </p>
-                <Button onClick={() => router.push('/Experts')}>
-                  Go to AI Expert
-                </Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="sessions" className="space-y-6">
+            {/* Session History */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <History className="h-5 w-5" />
+                      Analysis Sessions
+                    </CardTitle>
+                    <CardDescription>
+                      View and revisit your previous location analysis sessions
+                    </CardDescription>
+                  </div>
+
+                </div>
+              </CardHeader>
+              <CardContent>
+                <SessionHistoryTab />
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
 
         {/* Quick Actions */}
         <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
