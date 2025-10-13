@@ -22,6 +22,8 @@ export default function PurchaseSuccessPage() {
     const type = searchParams.get('type') as 'credits' | 'subscription';
     const amount = searchParams.get('amount');
     const plan = searchParams.get('plan');
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const method = searchParams.get('method') || 'stripe';
 
     if (type) {
       setPurchaseDetails({

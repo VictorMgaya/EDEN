@@ -76,11 +76,13 @@ export default function PurchasePage() {
         headers['x-user-email'] = userEmail;
       }
 
+      const paymentType = paymentMethod === 'stripe' ? 'credits' : 'paypal_credits';
+
       const response = await fetch('/api/payments', {
         method: 'POST',
         headers,
         body: JSON.stringify({
-          type: 'credits',
+          type: paymentType,
           credits: credits.toString(),
         }),
       });
@@ -91,8 +93,16 @@ export default function PurchasePage() {
         throw new Error(data.message || `HTTP error! status: ${response.status}`);
       }
 
-      if (data.url) {
-        window.location.href = data.url;
+      if (paymentMethod === 'stripe') {
+        if (data.url) {
+          window.location.href = data.url;
+        }
+      } else if (paymentMethod === 'paypal') {
+        if (data.approvalUrl) {
+          window.location.href = data.approvalUrl;
+        } else {
+          throw new Error('No approval URL received from PayPal');
+        }
       }
     } catch (error) {
       console.error('Payment error:', error);
@@ -118,11 +128,13 @@ export default function PurchasePage() {
         headers['x-user-email'] = userEmail;
       }
 
+      const paymentType = paymentMethod === 'stripe' ? 'subscription' : 'paypal_subscription';
+
       const response = await fetch('/api/payments', {
         method: 'POST',
         headers,
         body: JSON.stringify({
-          type: 'subscription',
+          type: paymentType,
           plan: planId,
         }),
       });
@@ -134,11 +146,19 @@ export default function PurchasePage() {
 
       const data = await response.json();
 
-      if (data.url) {
-        window.location.href = data.url;
-      } else if (data.error === 'Subscription not configured') {
-        alert(`Subscription Setup Required:\n\n${data.message}\n\nPlease contact support or check the setup documentation.`);
-      } 
+      if (paymentMethod === 'stripe') {
+        if (data.url) {
+          window.location.href = data.url;
+        } else if (data.error === 'Subscription not configured') {
+          alert(`Subscription Setup Required:\n\n${data.message}\n\nPlease contact support or check the setup documentation.`);
+        }
+      } else if (paymentMethod === 'paypal') {
+        if (data.approvalUrl) {
+          window.location.href = data.approvalUrl;
+        } else {
+          throw new Error('No approval URL received from PayPal');
+        }
+      }
     } catch (error) {
       console.error('Subscription error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Please try again.';

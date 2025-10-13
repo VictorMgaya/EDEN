@@ -9,6 +9,11 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
   apiVersion: '2025-09-30.clover',
 });
 
+// PayPal configuration
+const PAYPAL_CLIENT_ID = process.env.PAYPAL_CLIENT_ID || '';
+const PAYPAL_CLIENT_SECRET = process.env.PAYPAL_CLIENT_SECRET || '';
+const PAYPAL_MODE = process.env.PAYPAL_MODE || 'sandbox'; // 'sandbox' or 'live'
+
 // Rate limiting configuration
 const RATE_LIMIT_CONFIG = {
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -150,11 +155,164 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ url: session.url }, { headers: responseHeaders });
     }
 
+    if (type === 'paypal_credits') {
+      // Handle PayPal credit purchase
+      const creditAmount = parseInt(credits) || 100;
+      const usdAmount = Math.ceil(creditAmount / 500); // 500 credits = 1 USD
+
+      // Create PayPal order
+      const paypalOrder = await createPayPalOrder(usdAmount, 'credits', creditAmount, userEmail);
+
+      return NextResponse.json({
+        orderId: paypalOrder.id,
+        approvalUrl: paypalOrder.approvalUrl
+      }, { headers: responseHeaders });
+    }
+
+    if (type === 'paypal_subscription') {
+      // Handle PayPal subscription
+      const subscriptionPrices = {
+        pro: 29,
+        enterprise: 99,
+      };
+
+      const amount = subscriptionPrices[plan as keyof typeof subscriptionPrices] || 29;
+
+      // Create PayPal subscription
+      const paypalSubscription = await createPayPalSubscription(amount, plan, userEmail);
+
+      return NextResponse.json({
+        subscriptionId: paypalSubscription.id,
+        approvalUrl: paypalSubscription.approvalUrl
+      }, { headers: responseHeaders });
+    }
+
     return NextResponse.json({ error: 'Invalid payment type' }, { status: 400 });
   } catch (error) {
     console.error('Payment error:', error);
     return NextResponse.json({ error: 'Payment failed' }, { status: 500 });
   }
+}
+
+// PayPal helper functions
+async function getPayPalAccessToken() {
+  const auth = Buffer.from(`${PAYPAL_CLIENT_ID}:${PAYPAL_CLIENT_SECRET}`).toString('base64');
+
+  const response = await fetch(`${PAYPAL_MODE === 'live' ? 'https://api-m.paypal.com' : 'https://api-m.sandbox.paypal.com'}/v1/oauth2/token`, {
+    method: 'POST',
+    headers: {
+      'Accept': 'application/json',
+      'Accept-Language': 'en_US',
+      'Authorization': `Basic ${auth}`,
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: 'grant_type=client_credentials',
+  });
+
+  if (!response.ok) {
+    throw new Error(`PayPal auth failed: ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  return data.access_token;
+}
+
+async function createPayPalOrder(amount: number, type: string, creditAmount?: number, userEmail?: string | null) {
+  const accessToken = await getPayPalAccessToken();
+
+  const response = await fetch(`${PAYPAL_MODE === 'live' ? 'https://api-m.paypal.com' : 'https://api-m.sandbox.paypal.com'}/v2/checkout/orders`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({
+      intent: 'CAPTURE',
+      purchase_units: [
+        {
+          amount: {
+            currency_code: 'USD',
+            value: amount.toFixed(2),
+          },
+          description: type === 'credits' ? `${creditAmount} Credits` : 'Subscription Purchase',
+        },
+      ],
+      application_context: {
+        return_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/payments/paypal/success`,
+        cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/purchase/cancelled`,
+      },
+      metadata: {
+        type,
+        creditAmount: creditAmount?.toString(),
+        userEmail: userEmail || '',
+      },
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`PayPal order creation failed: ${response.statusText}`);
+  }
+
+  const order = await response.json();
+
+  // Find approval URL
+  const approvalUrl = order.links?.find((link: { rel: string; href: string }) => link.rel === 'approve')?.href;
+
+  return {
+    id: order.id,
+    approvalUrl,
+  };
+}
+
+async function createPayPalSubscription(amount: number, plan: string, userEmail?: string | null) {
+  const accessToken = await getPayPalAccessToken();
+
+  const response = await fetch(`${PAYPAL_MODE === 'live' ? 'https://api-m.paypal.com' : 'https://api-m.sandbox.paypal.com'}/v1/billing/subscriptions`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({
+      plan_id: getPayPalPlanId(plan),
+      subscriber: {
+        email_address: userEmail || undefined,
+      },
+      application_context: {
+        return_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/payments/paypal/success?type=subscription&plan=${plan}`,
+        cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/purchase/cancelled`,
+      },
+      metadata: {
+        type: 'subscription',
+        plan,
+        userEmail: userEmail || '',
+      },
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`PayPal subscription creation failed: ${response.statusText}`);
+  }
+
+  const subscription = await response.json();
+
+  // Find approval URL
+  const approvalUrl = subscription.links?.find((link: { rel: string; href: string }) => link.rel === 'approve')?.href;
+
+  return {
+    id: subscription.id,
+    approvalUrl,
+  };
+}
+
+function getPayPalPlanId(plan: string): string {
+  // Map our plans to PayPal plan IDs (you'll need to create these in your PayPal account)
+  const planIds = {
+    pro: process.env.PAYPAL_PRO_PLAN_ID || '',
+    enterprise: process.env.PAYPAL_ENTERPRISE_PLAN_ID || '',
+  };
+
+  return planIds[plan as keyof typeof planIds] || '';
 }
 
 export async function GET() {
