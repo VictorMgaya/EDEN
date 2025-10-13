@@ -64,10 +64,16 @@ export default function PurchasePage() {
   const handleCreditPurchase = async (credits: number) => {
     setIsProcessing(true);
     try {
+      // Get user session information
+      const userEmail = localStorage.getItem('userEmail') || 'guest@example.com';
+      const userId = localStorage.getItem('userId') || 'guest';
+
       const response = await fetch('/api/payments', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'x-user-email': userEmail,
+          'x-user-id': userId,
         },
         body: JSON.stringify({
           type: 'credits',
@@ -76,7 +82,8 @@ export default function PurchasePage() {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorData = await response.json();
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
@@ -98,16 +105,27 @@ export default function PurchasePage() {
   const handleSubscriptionPurchase = async (planId: string) => {
     setIsProcessing(true);
     try {
+      // Get user session information
+      const userEmail = localStorage.getItem('userEmail') || 'guest@example.com';
+      const userId = localStorage.getItem('userId') || 'guest';
+
       const response = await fetch('/api/payments', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'x-user-email': userEmail,
+          'x-user-id': userId,
         },
         body: JSON.stringify({
           type: 'subscription',
           plan: planId,
         }),
       });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      }
 
       const data = await response.json();
 

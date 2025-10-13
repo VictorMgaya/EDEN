@@ -47,14 +47,18 @@ export async function POST(request: NextRequest) {
       'X-RateLimit-Reset': rateLimitResult.resetTime.toString()
     };
 
-    const { type, credits, plan, userEmail } = await request.json();
+    const { type, credits, plan } = await request.json();
 
-    // Validate that user exists in database before creating checkout session
-    console.log('🔍 [PAYMENT] Validating user exists in database...');
-    console.log('📧 [PAYMENT] User email:', userEmail);
+    // Get user session for authentication
+    console.log('🔍 [PAYMENT] Validating user session...');
 
-    if (!userEmail) {
-      console.error('❌ [PAYMENT] No user email provided');
+    // For now, we'll use a simple approach - in production you should use proper session management
+    // This is a temporary fix until proper NextAuth integration is implemented
+    const userEmail = request.headers.get('x-user-email');
+    const userId = request.headers.get('x-user-id');
+
+    if (!userEmail || !userId) {
+      console.error('❌ [PAYMENT] No user authentication provided');
       return NextResponse.json({
         error: 'User authentication required',
         message: 'Please log in to make a purchase'

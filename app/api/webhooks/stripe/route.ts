@@ -3,6 +3,81 @@ import Stripe from 'stripe';
 import dbConnect from '@/app/lib/dbConnect';
 import User from '@/app/model/user';
 
+// Email service for sending payment notifications
+async function sendPaymentSuccessEmail(userEmail: string, paymentType: string, amount?: number, plan?: string) {
+  try {
+    console.log(`📧 Sending payment success email to ${userEmail}`);
+
+    // For now, we'll use a simple console.log to simulate email sending
+    // In production, you would integrate with an email service like SendGrid, Mailgun, etc.
+    const emailData = {
+      to: userEmail,
+      subject: `Payment Successful - ${paymentType === 'credits' ? 'Credits Purchased' : 'Subscription Activated'}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #10B981;">Payment Successful! 🎉</h2>
+          <p>Hi there,</p>
+          <p>Your payment has been processed successfully.</p>
+
+          ${paymentType === 'credits' && amount ?
+            `<p><strong>Credits Purchased:</strong> ${amount} credits</p>
+             <p>You can now use these credits to access our premium features.</p>`
+            : ''
+          }
+
+          ${paymentType === 'subscription' && plan ?
+            `<p><strong>Plan Activated:</strong> ${plan.charAt(0).toUpperCase() + plan.slice(1)} Plan</p>
+             <p>Your subscription is now active and you have access to all premium features.</p>`
+            : ''
+          }
+
+          <p>Thank you for choosing our service!</p>
+          <p>Best regards,<br>The EDEN Team</p>
+        </div>
+      `,
+      text: `Payment Successful! ${paymentType === 'credits' && amount ? `Credits Purchased: ${amount} credits` : `Plan Activated: ${plan} Plan`}. Thank you for choosing our service!`
+    };
+
+    console.log('📧 Email would be sent:', emailData);
+
+    // TODO: Replace with actual email service integration
+    // Example with SendGrid:
+    // const sgMail = require('@sendgrid/mail');
+    // sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+    // await sgMail.send(emailData);
+
+    // Example with Mailgun:
+    // const mailgun = require('mailgun-js')({
+    //   apiKey: process.env.MAILGUN_API_KEY,
+    //   domain: process.env.MAILGUN_DOMAIN
+    // });
+    // await mailgun.messages().send(emailData);
+
+    console.log(`✅ Email notification prepared for ${userEmail}`);
+    return true;
+  } catch (error) {
+    console.error(`❌ Failed to send payment success email to ${userEmail}:`, error);
+    return false;
+  }
+}
+
+// Database connection cache to avoid repeated connections
+let dbConnectionCache: boolean = false;
+let dbConnectionTimestamp: number = 0;
+const DB_CONNECTION_TTL = 5 * 60 * 1000; // 5 minutes
+
+async function getDbConnection(): Promise<void> {
+  const now = Date.now();
+  if (!dbConnectionCache || (now - dbConnectionTimestamp) > DB_CONNECTION_TTL) {
+    console.log('🔄 Establishing new database connection for webhook');
+    await dbConnect();
+    dbConnectionCache = true;
+    dbConnectionTimestamp = now;
+  } else {
+    console.log('🔄 Using cached database connection for webhook');
+  }
+}
+
 // Extend Stripe subscription type to include period properties
 interface ExtendedSubscription extends Stripe.Subscription {
   current_period_start: number;
@@ -120,7 +195,7 @@ async function handleSuccessfulPayment(session: Stripe.Checkout.Session) {
     console.log('Session mode:', session.mode);
     console.log('Customer email:', session.customer_details?.email || session.customer_email);
 
-    await dbConnect();
+    await getDbConnection();
     console.log('✅ [WEBHOOK] Database connected for successful payment');
 
     const { type, creditAmount } = session.metadata || {};
@@ -196,6 +271,9 @@ async function handleSuccessfulPayment(session: Stripe.Checkout.Session) {
       await user.save();
       console.log(`✅ Successfully added ${creditsToAdd} credits to user ${customerEmail}. Total credits: ${user.credits}`);
       console.log(`✅ User saved with new credits: ${user.credits}`);
+
+      // Send payment success email
+      await sendPaymentSuccessEmail(customerEmail, 'credits', creditsToAdd);
     }
 
     // Handle subscription purchases in checkout.session.completed
@@ -339,6 +417,11 @@ async function handleSuccessfulPayment(session: Stripe.Checkout.Session) {
       console.log(`   - Stripe Subscription ID: ${subscription.id}`);
       console.log(`   - New credits: ${user.credits}`);
       console.log(`✅ User saved with subscription type: ${user.subscription.type}`);
+
+      // Send payment success email for subscription
+      if (customerEmail) {
+        await sendPaymentSuccessEmail(customerEmail, 'subscription', undefined, subscriptionType);
+      }
     }
   } catch (error) {
     console.error('❌ Error handling successful payment:', error);
@@ -349,7 +432,7 @@ async function handleSuccessfulPayment(session: Stripe.Checkout.Session) {
 async function handleSubscriptionPayment(invoice: Stripe.Invoice) {
   try {
     console.log('🔄 Connecting to database for subscription payment...');
-    await dbConnect();
+    await getDbConnection();
     console.log('✅ Database connected for subscription payment');
 
     const customerEmail = invoice.customer_email;
@@ -478,7 +561,7 @@ async function handleSubscriptionPayment(invoice: Stripe.Invoice) {
 async function handleFailedSubscriptionPayment(invoice: Stripe.Invoice) {
   try {
     console.log('🔄 Connecting to database for failed subscription payment...');
-    await dbConnect();
+    await getDbConnection();
     console.log('✅ Database connected for failed subscription payment');
 
     const customerEmail = invoice.customer_email;
@@ -533,7 +616,7 @@ async function handleFailedSubscriptionPayment(invoice: Stripe.Invoice) {
 async function handleSubscriptionCancellation(subscription: Stripe.Subscription) {
   try {
     console.log('🔄 Connecting to database for subscription cancellation...');
-    await dbConnect();
+    await getDbConnection();
     console.log('✅ Database connected for subscription cancellation');
 
     // Find user by Stripe customer ID
@@ -596,7 +679,7 @@ async function handleSubscriptionCancellation(subscription: Stripe.Subscription)
 async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
   try {
     console.log('🔄 Connecting to database for subscription update...');
-    await dbConnect();
+    await getDbConnection();
     console.log('✅ Database connected for subscription update');
 
     // Find user by Stripe customer ID
@@ -673,7 +756,7 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
 async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
   try {
     console.log('🔄 Connecting to database for subscription creation...');
-    await dbConnect();
+    await getDbConnection();
     console.log('✅ Database connected for subscription creation');
 
     console.log(`🔍 Processing subscription creation: ${subscription.id}`);
