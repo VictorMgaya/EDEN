@@ -4,22 +4,161 @@ import dbConnect from '@/app/lib/dbConnect';
 import User from '@/app/model/user';
 import { getServerSession } from 'next-auth';
 
+// Rate limiting store (in production, use Redis or similar)
+const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
+
+// Security configuration
+const MAX_REQUESTS_PER_MINUTE = 5;
+// TODO: Implement hourly rate limiting
+// const MAX_REQUESTS_PER_HOUR = 20;
+// const BLOCK_DURATION = 15 * 60 * 1000; // 15 minutes
+
+// Rate limiting function
+function checkRateLimit(identifier: string): { allowed: boolean; resetTime?: number } {
+  const now = Date.now();
+  const rateLimit = rateLimitStore.get(identifier);
+
+  if (!rateLimit || now > rateLimit.resetTime) {
+    // Reset or initialize rate limit
+    rateLimitStore.set(identifier, {
+      count: 1,
+      resetTime: now + 60000 // 1 minute from now
+    });
+    return { allowed: true };
+  }
+
+  if (rateLimit.count >= MAX_REQUESTS_PER_MINUTE) {
+    return { allowed: false, resetTime: rateLimit.resetTime };
+  }
+
+  rateLimit.count++;
+  return { allowed: true };
+}
+
+// Enhanced security validation
+function validateRequest(request: NextRequest): { valid: boolean; error?: string } {
+  const userAgent = request.headers.get('user-agent');
+  const origin = request.headers.get('origin');
+  const referer = request.headers.get('referer');
+
+  // Check for suspicious user agents
+  if (!userAgent || userAgent.length < 10) {
+    return { valid: false, error: 'Invalid user agent' };
+  }
+
+  // Check for valid origin (adjust for your domain)
+  const allowedOrigins = [
+    'https://edenapp.site',
+    'http://localhost:3000',
+    'https://localhost:3000'
+  ];
+
+  if (origin && !allowedOrigins.includes(origin)) {
+    return { valid: false, error: 'Invalid origin' };
+  }
+
+  // Check for valid referer
+  if (referer && !referer.includes('edenapp.site') && !referer.includes('localhost')) {
+    return { valid: false, error: 'Invalid referer' };
+  }
+
+  return { valid: true };
+}
+
 // Secure payment confirmation endpoint
 export async function POST(request: NextRequest) {
   try {
+    // Enhanced security validation
+    const securityCheck = validateRequest(request);
+    if (!securityCheck.valid) {
+      console.error('🚫 [SECURE] Security validation failed:', securityCheck.error);
+      return NextResponse.json(
+        { error: 'Security validation failed' },
+        { status: 403 }
+      );
+    }
+
+    // Rate limiting check
+    const clientIP = request.headers.get('x-forwarded-for') ||
+                     request.headers.get('x-real-ip') ||
+                     'unknown';
+    const userAgent = request.headers.get('user-agent') || 'unknown';
+    const rateLimitKey = `${clientIP}:${userAgent}`;
+
+    const rateLimitCheck = checkRateLimit(rateLimitKey);
+    if (!rateLimitCheck.allowed) {
+      console.error(`🚫 [SECURE] Rate limit exceeded for ${rateLimitKey}`);
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': Math.ceil((rateLimitCheck.resetTime || 0 - Date.now()) / 1000).toString()
+          }
+        }
+      );
+    }
+
     const session = await getServerSession();
     if (!session?.user?.email) {
+      console.error('🚫 [SECURE] Authentication required but not provided');
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 }
       );
     }
 
-    const { paymentId, paymentMethod, amount, type, plan } = await request.json();
+    const { paymentId, paymentMethod, amount, type, plan, timestamp, userAgent: clientUserAgent } = await request.json();
 
     if (!paymentId || !paymentMethod || !type) {
       return NextResponse.json(
         { error: 'Missing required payment information' },
+        { status: 400 }
+      );
+    }
+
+    // Validate security headers
+    const requestUserAgent = request.headers.get('user-agent');
+    const requestedWith = request.headers.get('x-requested-with');
+    const paymentConfirmation = request.headers.get('x-payment-confirmation');
+
+    if (requestedWith !== 'XMLHttpRequest') {
+      console.error('🚫 [SECURE] Invalid request source');
+      return NextResponse.json(
+        { error: 'Invalid request source' },
+        { status: 403 }
+      );
+    }
+
+    if (paymentConfirmation !== 'true') {
+      console.error('🚫 [SECURE] Missing payment confirmation header');
+      return NextResponse.json(
+        { error: 'Invalid payment confirmation request' },
+        { status: 403 }
+      );
+    }
+
+    // Validate timestamp (prevent replay attacks)
+    if (timestamp) {
+      const requestTime = new Date(timestamp);
+      const now = new Date();
+      const timeDiff = Math.abs(now.getTime() - requestTime.getTime());
+
+      // Reject requests older than 5 minutes or more than 1 minute in the future
+      if (timeDiff > 5 * 60 * 1000 || requestTime.getTime() > now.getTime() + 60000) {
+        console.error('🚫 [SECURE] Invalid timestamp in request');
+        return NextResponse.json(
+          { error: 'Request timestamp validation failed' },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Validate user agent consistency
+    if (clientUserAgent && requestUserAgent && clientUserAgent !== requestUserAgent) {
+      console.error('🚫 [SECURE] User agent mismatch');
+      return NextResponse.json(
+        { error: 'Request validation failed' },
         { status: 400 }
       );
     }
@@ -41,12 +180,14 @@ export async function POST(request: NextRequest) {
 
     console.log(`✅ [SECURE] Found user: ${user.email} (ID: ${user._id})`);
 
-    // Verify payment hasn't already been processed
+    // Verify payment hasn't already been processed (enhanced duplicate prevention)
     const existingPayment = user.usageHistory?.find(
       (record: any) =>
         record.metadata?.paymentId === paymentId ||
         record.metadata?.orderId === paymentId ||
-        record.metadata?.sessionId === paymentId
+        record.metadata?.sessionId === paymentId ||
+        (record.metadata?.type === 'credit_purchase_confirmed' && record.metadata?.confirmedBy === 'authenticated_user') ||
+        (record.metadata?.type === 'subscription_confirmed' && record.metadata?.confirmedBy === 'authenticated_user')
     );
 
     if (existingPayment) {
@@ -57,6 +198,17 @@ export async function POST(request: NextRequest) {
         credits: user.credits,
         alreadyProcessed: true
       });
+    }
+
+    // Additional validation for credit amounts
+    if (type === 'credits' && amount) {
+      const creditAmount = Math.min(parseInt(amount) || 0, 100000); // Max 100k credits
+      if (creditAmount <= 0) {
+        return NextResponse.json(
+          { error: 'Invalid credit amount' },
+          { status: 400 }
+        );
+      }
     }
 
     let creditsToAdd = 0;
@@ -196,6 +348,14 @@ export async function POST(request: NextRequest) {
         subscriptionType: user.subscription?.type,
         confirmed: true,
         dbSaved: true
+      }, {
+        headers: {
+          'X-Content-Type-Options': 'nosniff',
+          'X-Frame-Options': 'DENY',
+          'X-XSS-Protection': '1; mode=block',
+          'Referrer-Policy': 'strict-origin-when-cross-origin',
+          'Content-Security-Policy': "default-src 'self'",
+        }
       });
 
     } catch (saveError) {

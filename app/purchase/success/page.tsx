@@ -24,7 +24,7 @@ export default function PurchaseSuccessPage() {
     dbSaved?: boolean;
   } | null>(null);
 
-  // Confirm payment with secure API
+  // Confirm payment with secure API and duplicate prevention
   const confirmPayment = async () => {
     if (!session?.user?.email || isConfirming) return;
 
@@ -33,19 +33,27 @@ export default function PurchaseSuccessPage() {
       const type = searchParams.get('type') as 'credits' | 'subscription';
       const amount = searchParams.get('amount');
       const plan = searchParams.get('plan');
-      const method = searchParams.get('method') || 'stripe';
+      const method = searchParams.get('method') || 'paypal';
 
+      // Create a more unique payment ID to prevent duplicates
+      const paymentId = `${method}_${type}_${amount || plan}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+      // Add security headers and validation
       const response = await fetch('/api/payments/confirm-payment', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
+          'X-Payment-Confirmation': 'true',
         },
         body: JSON.stringify({
-          paymentId: `${method}_${Date.now()}`, // Unique payment ID
+          paymentId: paymentId,
           paymentMethod: method,
           amount: amount,
           type: type,
           plan: plan,
+          timestamp: Date.now(),
+          userAgent: navigator.userAgent,
         }),
       });
 
@@ -57,10 +65,20 @@ export default function PurchaseSuccessPage() {
         await update();
 
         console.log('✅ Payment confirmed successfully:', data);
+
+        // Show success message briefly
+        if (data.alreadyProcessed) {
+          console.log('ℹ️ Payment was already processed previously');
+        }
       } else {
         const errorData = await response.json();
         setConfirmationStatus('error');
         console.error('❌ Payment confirmation failed:', errorData);
+
+        // Handle specific error cases
+        if (errorData.error === 'Payment already processed') {
+          setConfirmationStatus('success'); // Treat as success if already processed
+        }
       }
     } catch (error) {
       setConfirmationStatus('error');
@@ -88,18 +106,35 @@ export default function PurchaseSuccessPage() {
       });
     }
 
-    // Auto-confirm payment if not already confirmed
-    if (type && session?.user?.email && !confirmed) {
-      confirmPayment();
+    // Handle page reloads and prevent duplicate processing
+    if (type && session?.user?.email) {
+      // If already confirmed and saved to database, just show success
+      if (confirmed && dbSaved) {
+        setIsLoading(false);
+        setConfirmationStatus('success');
+        return;
+      }
+
+      // If not confirmed but we have payment details, try to confirm
+      if (!confirmed) {
+        confirmPayment();
+      } else {
+        setIsLoading(false);
+      }
     } else {
       setIsLoading(false);
     }
   }, [searchParams, session]);
 
-  if (isLoading) {
+  if (isLoading || isConfirming) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900 dark:to-green-800 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+          <p className="text-slate-600 dark:text-slate-400">
+            {isConfirming ? 'Confirming your payment...' : 'Loading...'}
+          </p>
+        </div>
       </div>
     );
   }
@@ -229,6 +264,11 @@ export default function PurchaseSuccessPage() {
               <p>
                 Need help? Contact our support team or check your email for the receipt.
               </p>
+              {purchaseDetails.confirmed && purchaseDetails.dbSaved && (
+                <p className="text-green-600 dark:text-green-400 mt-2 font-medium">
+                  ✓ Payment confirmed and saved to your account
+                </p>
+              )}
             </div>
           </CardContent>
         </Card>

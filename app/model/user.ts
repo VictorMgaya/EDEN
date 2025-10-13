@@ -31,10 +31,17 @@ const userSchema = new mongoose.Schema({
     credits: { type: Number, default: 50 }, // Starting credits
     lastCreditReset: { type: Date, default: Date.now },
     firstAnalyzedDataCall: { type: Boolean, default: true }, // Track first API call for analyzed data
+    // Payment tracking
+    lastCreditPurchase: { type: Date },
+    lastSubscriptionActivation: { type: Date },
+    totalCreditsPurchased: { type: Number, default: 0 },
+    subscriptionStatus: { type: String, enum: ['active', 'inactive', 'cancelled'], default: 'inactive' },
+    paymentMethod: { type: String, enum: ['paypal', 'stripe', 'none'], default: 'none' },
     subscription: {
         type: { type: String, enum: ['freemium', 'pro', 'enterprise'], default: 'freemium' },
         stripeCustomerId: { type: String },
         stripeSubscriptionId: { type: String },
+        paypalSubscriptionId: { type: String },
         currentPeriodEnd: { type: Date },
         cancelAtPeriodEnd: { type: Boolean, default: false }
     },
@@ -49,7 +56,16 @@ const userSchema = new mongoose.Schema({
             reason: { type: String },
             subscription: { type: String }
         }
-    }]
+    }],
+    // Expert system fields
+    isExpert: { type: Boolean, default: false },
+    expertType: { type: String, enum: ['ai', 'person'], default: null },
+    expertTitle: { type: String, default: '' },
+    expertSpecialty: { type: String, default: '' },
+    expertPricePerMessage: { type: Number, default: 0 },
+    expertAvailability: { type: Boolean, default: false },
+    expertRating: { type: Number, default: 0, min: 0, max: 5 },
+    expertTotalConsultations: { type: Number, default: 0 }
 }, {
     timestamps: true,
 });

@@ -269,7 +269,10 @@ export default function RootLayout({ children }) {
         `}} />
 
         {/* PayPal SDK */}
-        <script src={`https://www.paypal.com/sdk/js?client-id=${process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || 'your_paypal_client_id_here'}&currency=USD&components=buttons`}></script>
+        <script
+          src={`https://www.paypal.com/sdk/js?client-id=${process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || 'your_paypal_client_id_here'}&currency=USD&components=buttons`}
+          suppressHydrationWarning={true}
+        ></script>
         <meta name="google-adsense-account" content="ca-pub-9431888211578782" />
         <meta name="google-site-verification" content="xhS9AxO9_lnZW5qXS9B3tCziTO-v0E0pAv8OicFMsd4" />
         <meta name="msvalidate.01" content="3D027736EF5CFEE53D03C112F845FE16" />

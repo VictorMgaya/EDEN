@@ -265,6 +265,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(new URL('/purchase/cancelled?error=invalid_type', request.url));
     }
 
+    // TODO: Implement proper rate limiting with Redis or similar
+    // const rateLimitKey = `paypal_return_${token || subscriptionId}`;
+
+    // TODO: Implement webhook processing check
+    // const webhookProcessedKey = `webhook_processed_${token || subscriptionId}`;
+
     await dbConnect();
     console.log('✅ [PAYPAL] Database connected');
 
@@ -330,7 +336,7 @@ export async function GET(request: NextRequest) {
       user.credits = Math.max(0, newCreditTotal);
 
       // Update user status with enhanced tracking
-      user = await updateUserStatus(user, 'credits', { credits: creditAmount });
+      await updateUserStatus(user, 'credits', { credits: creditAmount });
 
       // Log the credit addition with comprehensive tracking
       const usageRecord = {
@@ -348,7 +354,8 @@ export async function GET(request: NextRequest) {
           newTotalCredits: user.credits,
           paymentAmount: paymentConfirmation.amount,
           currency: paymentConfirmation.currency,
-          confirmed: true
+          confirmed: true,
+          confirmedBy: 'paypal_webhook'
         }
       };
 
@@ -444,6 +451,11 @@ export async function GET(request: NextRequest) {
         cancelAtPeriodEnd: false
       };
 
+      // Update additional payment tracking fields
+      user.subscriptionStatus = 'active';
+      user.paymentMethod = 'paypal';
+      user.lastSubscriptionActivation = new Date();
+
       // Add monthly credits based on subscription type
       const monthlyCreditAmounts = {
         pro: 1000,      // Pro: 1000 credits per month
@@ -452,9 +464,6 @@ export async function GET(request: NextRequest) {
 
       const monthlyCredits = monthlyCreditAmounts[subscriptionType as keyof typeof monthlyCreditAmounts] || 1000;
       user.credits = (user.credits || 0) + monthlyCredits;
-
-      // Update subscription activation timestamp
-      user.lastSubscriptionActivation = new Date();
 
       // Log subscription activation with detailed tracking
       const usageRecord = {
@@ -472,7 +481,9 @@ export async function GET(request: NextRequest) {
           monthlyCredits: monthlyCredits,
           previousCredits: previousCredits,
           newTotalCredits: user.credits,
-          nextCreditDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // Next month
+          nextCreditDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // Next month
+          confirmed: true,
+          confirmedBy: 'paypal_webhook'
         }
       };
 

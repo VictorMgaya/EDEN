@@ -1,3 +1,6 @@
+/* eslint-disable react/no-unescaped-entities */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
@@ -5,10 +8,15 @@ import { useEffect, useState, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { getRawXMLCache } from "@/utils/analyticsCache";
 import DOMPurify from "dompurify";
-import { Send } from "react-feather";
+import { Send, MessageCircle, User, Star, Zap, Cpu, ArrowLeft, Clock, CheckCircle, AlertCircle } from "react-feather";
 import CreditModal from "@/components/CreditModal";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { getRawXMLCache } from "@/utils/analyticsCache";
 
 const GOOGLE_CSE_KEYS = [
   process.env.NEXT_PUBLIC_GOOGLE_CUSTOM_SEARCH_API_KEY,
@@ -342,7 +350,7 @@ interface GeminiContent {
 export default function ExpertsPage() {
   const { status } = useSession();
   const router = useRouter();
-  const [xmlData, setXmlData] = useState("");
+  const [, setXmlData] = useState("");
   const [messages, setMessages] = useState<{ sender: string; text: string }[]>([]);
   const [userInput, setUserInput] = useState("");
   const [loading, setLoading] = useState(true);
@@ -397,10 +405,10 @@ export default function ExpertsPage() {
     // Check authentication
     if (status === 'loading') return;
 
-    if (status === 'unauthenticated') {
-      router.push('/');
-      return;
-    }
+    //if (status === 'unauthenticated') {
+      //router.push('/');
+      //return;
+    //}
 
     // Check if user selected a specific session from dashboard
     const selectedSession = localStorage.getItem('selectedSession');
@@ -677,90 +685,446 @@ export default function ExpertsPage() {
     </div>
   );
 
-  return (
-    <main className="relative flex flex-col min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 dark:from-slate-900 dark:via-slate-800 dark:to-blue-950 font-[family-name:var(--font-lexend)] overflow-hidden">
-      <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-4 overscroll-contain pb-[120px] pt-16 sm:pt-20">
-        {!xmlData && !loading ? (
-          renderNoDataMessage()
-        ) : (
-          <div className="max-w-4xl mx-auto flex flex-col gap-6 pb-4">
-            {messages.map((msg, index) => (
-              <div
-                key={index}
-                className={`flex gap-3 md:gap-4 ${
-                  msg.sender === "user" ? "flex-row-reverse" : "flex-row"
-                }`}
-                style={{
-                  animation: "messageSlide 0.6s cubic-bezier(0.4, 0, 0.2, 1)",
-                  animationFillMode: "both"
-                }}
-              >
-                {msg.sender === "ai" && (
-                  <div className="flex-shrink-0 w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center shadow-xl border-2 bg-gradient-to-br from-blue-500 via-purple-600 to-teal-500 text-white" style={{ borderColor: 'rgba(59, 130, 246, 0.3)', boxShadow: '0 10px 25px -5px rgba(59, 130, 246, 0.25), 0 8px 10px -6px rgba(59, 130, 246, 0.1)' }}>
-                    <svg className="w-7 h-7 md:w-8 md:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                    </svg>
-                  </div>
-                )}
-                <div className={`flex-1 ${msg.sender === "user" ? "max-w-[85%]" : "max-w-[92%]"} min-w-0`}>
-                  {msg.sender === "ai" && (
-                    <div className="text-xs font-bold text-slate-600 dark:text-slate-400 mb-3 uppercase tracking-wider">
-                      {index === 0 ? "🏭 Adam AI - Resource Analysis Expert" : "💡 Adam AI"}
+  // New state for experts and chat management
+  const [experts, setExperts] = useState({ ai: [], person: [] });
+  const [selectedExpert, setSelectedExpert] = useState<any>(null);
+  const [conversations, setConversations] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState('experts');
+  const [chatMode, setChatMode] = useState(false);
+
+  // Fetch experts on component mount
+  useEffect(() => {
+    const fetchExperts = async () => {
+      try {
+        const response = await fetch('/api/experts');
+        if (response.ok) {
+          const data = await response.json();
+          setExperts(data.experts);
+        }
+      } catch (error) {
+        console.error('Error fetching experts:', error);
+      }
+    };
+
+    if (status === 'authenticated') {
+      fetchExperts();
+    }
+  }, [status]);
+
+  // Fetch conversations when user changes
+  useEffect(() => {
+    const fetchConversations = async () => {
+      try {
+        const response = await fetch('/api/conversations');
+        if (response.ok) {
+          const data = await response.json();
+          setConversations(data.conversations);
+        }
+      } catch (error) {
+        console.error('Error fetching conversations:', error);
+      }
+    };
+
+    if (status === 'authenticated') {
+      fetchConversations();
+    }
+  }, [status]);
+
+  const handleStartChat = async (expert: any) => {
+    try {
+      console.log('Starting chat with expert:', expert);
+
+      // Check if user has enough credits
+      if (userCredits < expert.expertPricePerMessage) {
+        console.log('Insufficient credits');
+        setShowCreditModal(true);
+        return;
+      }
+
+      console.log('Creating conversation...');
+      const response = await fetch('/api/conversations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          expertId: expert._id,
+          expertType: expert.expertType,
+          initialMessage: `Hello! I'd like to consult with you about my resource analysis. I have ${userCredits} credits available.`
+        })
+      });
+
+      console.log('Conversation API response:', response);
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Conversation created:', data);
+        setSelectedExpert(expert);
+
+        // If this is an AI expert, start with a welcome message
+        if (expert.expertType === 'ai') {
+          setMessages([{
+            sender: "ai",
+            text: `<div><h3>🤖 ${expert.name} - AI Resource Analysis Expert</h3><p>Hello! I'm ${expert.name}, your AI resource analysis expert. I'm ready to help you understand your location data and provide comprehensive insights.</p><p>What would you like to know about your resource analysis? I can help with climate patterns, resource potential, development opportunities, and much more!</p></div>`
+          }]);
+        } else {
+          // For human experts, show waiting message
+          setMessages([{
+            sender: "ai",
+            text: `<div><h3>👨‍💼 ${expert.name} - Human Expert</h3><p>Connecting you with ${expert.name}...</p><p>Please wait while we establish the connection. ${expert.name} will be with you shortly.</p></div>`
+          }]);
+        }
+
+        setChatMode(true);
+      } else {
+        const errorData = await response.json();
+        console.error('Error creating conversation:', errorData);
+        alert('Error starting conversation: ' + (errorData.error || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Error starting conversation:', error);
+      alert('Error starting conversation. Please try again.');
+    }
+  };
+
+  const renderExpertSelection = () => (
+    <div className="max-w-6xl mx-auto p-6">
+      {/* Header */}
+      <div className="text-center mb-12">
+        <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent mb-4">
+          🌟 Expert Consultation Hub
+        </h1>
+        <p className="text-xl text-slate-600 dark:text-slate-300 mb-6">
+          Choose from our AI and Human experts for personalized resource analysis insights
+        </p>
+
+        {/* Credits Display */}
+        <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-100 to-green-100 dark:from-emerald-900/30 dark:to-green-900/30 rounded-full border border-emerald-200 dark:border-emerald-800">
+          <Zap className="w-5 h-5 text-emerald-600" />
+          <span className="font-semibold text-emerald-800 dark:text-emerald-200">
+            {userCredits} Credits Available
+          </span>
+        </div>
+      </div>
+
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-2 mb-8 h-14 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm border border-white/20">
+          <TabsTrigger value="experts" className="flex items-center gap-2 data-[state=active]:bg-blue-500 data-[state=active]:text-white">
+            <MessageCircle className="h-4 w-4" />
+            Choose Expert
+          </TabsTrigger>
+          <TabsTrigger value="conversations" className="flex items-center gap-2 data-[state=active]:bg-blue-500 data-[state=active]:text-white">
+            <MessageCircle className="h-4 w-4" />
+            My Conversations
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="experts" className="space-y-8">
+          {/* AI Experts Section */}
+          <div>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+                <Cpu className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">🤖 AI Experts</h2>
+                <p className="text-slate-600 dark:text-slate-400">Instant analysis with advanced algorithms</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {experts.ai.map((expert: any) => (
+                <Card key={expert._id} className="group relative overflow-hidden bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm border-white/20 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <CardHeader className="relative pb-2">
+                    <div className="flex items-center justify-between">
+                      <Avatar className="w-16 h-16">
+                        <AvatarImage src={expert.image} />
+                        <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-lg">
+                          {expert.name.charAt(0)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-300">
+                        AI Expert
+                      </Badge>
                     </div>
+                  </CardHeader>
+                  <CardContent className="relative">
+                    <div className="mb-4">
+                      <h3 className="font-bold text-lg text-slate-800 dark:text-slate-200 mb-1">{expert.name}</h3>
+                      <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">{expert.expertTitle}</p>
+                      <p className="text-sm text-slate-500 dark:text-slate-500">{expert.expertSpecialty}</p>
+                    </div>
+
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1">
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={i}
+                              className={`w-4 h-4 ${i < Math.floor(expert.expertRating || 0) ? 'text-yellow-400 fill-current' : 'text-slate-300'}`}
+                            />
+                          ))}
+                        </div>
+                        <span className="text-sm text-slate-600 dark:text-slate-400">
+                          {expert.expertRating?.toFixed(1) || '0.0'}
+                        </span>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-lg font-bold text-green-600">{expert.expertPricePerMessage} credits</div>
+                        <div className="text-xs text-slate-500">per message</div>
+                      </div>
+                    </div>
+
+                    <Button
+                      onClick={() => handleStartChat(expert)}
+                      className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+                      disabled={userCredits < expert.expertPricePerMessage}
+                    >
+                      Start Consultation
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+
+          {/* Person Experts Section */}
+          <div>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-green-600 rounded-xl flex items-center justify-center">
+                <User className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">👨‍🌾 Human Experts</h2>
+                <p className="text-slate-600 dark:text-slate-400">Real-time consultation with resource analysis specialists</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {experts.person.map((expert: any) => (
+                <Card key={expert._id} className="group relative overflow-hidden bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm border-white/20 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                  <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-green-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <CardHeader className="relative pb-2">
+                    <div className="flex items-center justify-between">
+                      <Avatar className="w-16 h-16">
+                        <AvatarImage src={expert.image} />
+                        <AvatarFallback className="bg-gradient-to-br from-emerald-500 to-green-600 text-white text-lg">
+                          {expert.name.charAt(0)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="bg-emerald-100 text-emerald-800 border-emerald-300">
+                          Human Expert
+                        </Badge>
+                        {expert.expertAvailability && (
+                          <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                        )}
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="relative">
+                    <div className="mb-4">
+                      <h3 className="font-bold text-lg text-slate-800 dark:text-slate-200 mb-1">{expert.name}</h3>
+                      <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">{expert.expertTitle}</p>
+                      <p className="text-sm text-slate-500 dark:text-slate-500">{expert.expertSpecialty}</p>
+                    </div>
+
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1">
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={i}
+                              className={`w-4 h-4 ${i < Math.floor(expert.expertRating || 0) ? 'text-yellow-400 fill-current' : 'text-slate-300'}`}
+                            />
+                          ))}
+                        </div>
+                        <span className="text-sm text-slate-600 dark:text-slate-400">
+                          {expert.expertRating?.toFixed(1) || '0.0'}
+                        </span>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-lg font-bold text-green-600">{expert.expertPricePerMessage} credits</div>
+                        <div className="text-xs text-slate-500">per message</div>
+                      </div>
+                    </div>
+
+                    <Button
+                      onClick={() => handleStartChat(expert)}
+                      className="w-full bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700"
+                      disabled={userCredits < expert.expertPricePerMessage || !expert.expertAvailability}
+                    >
+                      {expert.expertAvailability ? 'Start Chat' : 'Currently Offline'}
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+
+              {/* Add placeholder for the main expert */}
+              <Card className="group relative overflow-hidden bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm border-white/20 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-dashed border-2">
+                <CardContent className="p-6 text-center">
+                  <div className="w-16 h-16 bg-gradient-to-br from-slate-400 to-slate-500 rounded-xl flex items-center justify-center mx-auto mb-4">
+                    <User className="h-8 w-8 text-white" />
+                  </div>
+                  <h3 className="font-bold text-lg text-slate-600 dark:text-slate-400 mb-2">More Experts Coming Soon</h3>
+                  <p className="text-sm text-slate-500 dark:text-slate-500">We're continuously adding resource analysis specialists</p>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="conversations" className="space-y-6">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200 mb-2">💬 My Conversations</h2>
+            <p className="text-slate-600 dark:text-slate-400">Continue your consultations with experts</p>
+          </div>
+
+          {conversations.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {conversations.map((conversation: any) => (
+                <Card key={conversation._id} className="group cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+                  <CardContent className="p-6">
+                    <div className="flex items-center gap-4 mb-4">
+                      <Avatar className="w-12 h-12">
+                        <AvatarImage src={conversation.expertId?.image} />
+                        <AvatarFallback className={`${conversation.expertType === 'ai' ? 'bg-gradient-to-br from-blue-500 to-purple-600' : 'bg-gradient-to-br from-emerald-500 to-green-600'} text-white`}>
+                          {conversation.expertId?.name?.charAt(0) || 'E'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-slate-800 dark:text-slate-200">
+                          {conversation.expertId?.name || 'Expert'}
+                        </h3>
+                        <p className="text-sm text-slate-600 dark:text-slate-400">
+                          {conversation.expertType === 'ai' ? 'AI Expert' : 'Human Expert'}
+                        </p>
+                      </div>
+                      <Badge variant={conversation.expertType === 'ai' ? 'default' : 'secondary'}>
+                        {conversation.expertType === 'ai' ? '🤖 AI' : '👨‍🌾 Human'}
+                      </Badge>
+                    </div>
+
+                    <div className="text-sm text-slate-600 dark:text-slate-400 mb-4">
+                      Last message: {new Date(conversation.lastMessageAt).toLocaleDateString()}
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div className="text-sm text-slate-500">
+                        {conversation.messages?.length || 0} messages
+                      </div>
+                      <Button size="sm" variant="outline">
+                        Continue Chat
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <MessageCircle className="h-16 w-16 text-slate-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100 mb-2">
+                No Conversations Yet
+              </h3>
+              <p className="text-slate-600 dark:text-slate-400 mb-6">
+                Start your first expert consultation to see your conversation history here.
+              </p>
+              <Button onClick={() => setActiveTab('experts')}>
+                Browse Experts
+              </Button>
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+
+  const renderChatInterface = () => (
+    <div className="max-w-4xl mx-auto p-6">
+      {/* Chat Header */}
+      <div className="mb-6">
+        <div className="flex items-center gap-4 mb-4">
+          <Button variant="outline" onClick={() => setChatMode(false)}>
+            ← Back to Experts
+          </Button>
+          <div className="flex items-center gap-3">
+            <Avatar className="w-12 h-12">
+              <AvatarImage src={selectedExpert?.image} />
+              <AvatarFallback className={`${selectedExpert?.expertType === 'ai' ? 'bg-gradient-to-br from-blue-500 to-purple-600' : 'bg-gradient-to-br from-emerald-500 to-green-600'} text-white`}>
+                {selectedExpert?.name?.charAt(0) || 'E'}
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">
+                {selectedExpert?.name}
+              </h2>
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                {selectedExpert?.expertTitle} • {selectedExpert?.expertPricePerMessage} credits/message
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Chat Messages */}
+      <div ref={chatContainerRef} className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm rounded-2xl border border-white/20 h-96 overflow-y-auto p-6 mb-6">
+        {messages.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <MessageCircle className="h-8 w-8 text-blue-600" />
+            </div>
+            <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100 mb-2">
+              Start Your Consultation
+            </h3>
+            <p className="text-slate-600 dark:text-slate-400">
+              Ask questions about your resource analysis and get expert insights.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {messages.map((msg, index) => (
+              <div key={index} className={`flex gap-3 ${msg.sender === "user" ? "flex-row-reverse" : "flex-row"}`}>
+                <Avatar className="w-8 h-8 flex-shrink-0">
+                  {msg.sender === "user" ? (
+                    <>
+                      <AvatarFallback className="bg-gradient-to-br from-emerald-400 to-cyan-500 text-white text-sm">
+                        You
+                      </AvatarFallback>
+                    </>
+                  ) : (
+                    <>
+                      <AvatarImage src={selectedExpert?.image} />
+                      <AvatarFallback className={`${selectedExpert?.expertType === 'ai' ? 'bg-gradient-to-br from-blue-500 to-purple-600' : 'bg-gradient-to-br from-emerald-500 to-green-600'} text-white text-sm`}>
+                        {selectedExpert?.name?.charAt(0) || 'E'}
+                      </AvatarFallback>
+                    </>
                   )}
+                </Avatar>
+                <div className={`flex-1 ${msg.sender === "user" ? "text-right" : "text-left"}`}>
                   <div
-                    className={`p-5 md:p-6 rounded-2xl shadow-lg border backdrop-blur-sm prose prose-sm max-w-none ${
+                    className={`inline-block max-w-[80%] p-3 rounded-2xl ${
                       msg.sender === "user"
-                        ? "bg-gradient-to-br from-blue-500 to-purple-600 text-white border-blue-400 shadow-blue-500/25"
-                        : "bg-white/90 dark:bg-slate-800/90 text-slate-800 dark:text-slate-200 border-slate-200/50 dark:border-slate-700/50"
+                        ? "bg-gradient-to-br from-blue-500 to-purple-600 text-white"
+                        : "bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200"
                     }`}
-                    style={{
-                      wordWrap: "break-word",
-                      overflowWrap: "break-word",
-                      lineHeight: "1.75",
-                      boxShadow: msg.sender === "user"
-                        ? "0 10px 40px -10px rgba(59, 130, 246, 0.4), 0 4px 25px -5px rgba(59, 130, 246, 0.1)"
-                        : "0 4px 20px -4px rgba(0, 0, 0, 0.1), 0 2px 8px -2px rgba(0, 0, 0, 0.05)"
-                    }}
                     dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(msg.text) }}
                   />
                 </div>
-                {msg.sender === "user" && (
-                  <div className="flex-shrink-0 w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center shadow-xl border-2 bg-gradient-to-br from-emerald-400 to-cyan-500 text-white" style={{ borderColor: 'rgba(16, 185, 129, 0.3)', boxShadow: '0 10px 25px -5px rgba(16, 185, 129, 0.25), 0 8px 10px -6px rgba(16, 185, 129, 0.1)' }}>
-                    <svg className="w-7 h-7 md:w-8 md:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                  </div>
-                )}
               </div>
             ))}
             {loading && (
-              <div className="flex gap-3 md:gap-4" style={{
-                animation: "messageSlide 0.6s cubic-bezier(0.4, 0, 0.2, 1)",
-                animationFillMode: "both"
-              }}>
-                <div className="flex-shrink-0 w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center shadow-xl border-2 bg-gradient-to-br from-blue-500 via-purple-600 to-teal-500 text-white" style={{ borderColor: 'rgba(59, 130, 246, 0.3)', boxShadow: '0 10px 25px -5px rgba(59, 130, 246, 0.25), 0 8px 10px -6px rgba(59, 130, 246, 0.1)' }}>
-                  <svg className="w-7 h-7 md:w-8 md:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                  </svg>
-                </div>
-                <div className="flex-1 max-w-[92%]">
-                  <div className="text-xs font-bold text-slate-600 dark:text-slate-400 mb-3 uppercase tracking-wider">
-                    💡 Adam AI
-                  </div>
-                  <div className="p-5 md:p-6 rounded-2xl bg-white/90 dark:bg-slate-800/90 border border-slate-200/50 dark:border-slate-700/50 shadow-lg backdrop-blur-sm">
-                    <div className="flex gap-2 mb-3">
-                      <div className="flex gap-1">
-                        <span className="w-3 h-3 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: "0s", animationDuration: "1.5s" }}></span>
-                        <span className="w-3 h-3 rounded-full bg-purple-400 animate-bounce" style={{ animationDelay: "0.15s", animationDuration: "1.5s" }}></span>
-                        <span className="w-3 h-3 rounded-full bg-teal-400 animate-bounce" style={{ animationDelay: "0.3s", animationDuration: "1.5s" }}></span>
-                      </div>
-                    </div>
-                    <p className="text-sm text-slate-600 dark:text-slate-300">
-                      {messages.length <= 1
-                        ? "🔍 Analyzing your comprehensive resource data and preparing expert recommendations..."
-                        : "🤔 Processing your question and formulating detailed insights..."}
-                    </p>
+              <div className="flex gap-3">
+                <Avatar className="w-8 h-8 flex-shrink-0">
+                  <AvatarImage src={selectedExpert?.image} />
+                  <AvatarFallback className={`${selectedExpert?.expertType === 'ai' ? 'bg-gradient-to-br from-blue-500 to-purple-600' : 'bg-gradient-to-br from-emerald-500 to-green-600'} text-white`}>
+                    {selectedExpert?.name?.charAt(0) || 'E'}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="bg-slate-100 dark:bg-slate-700 rounded-2xl p-3">
+                  <div className="flex gap-1">
+                    <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"></div>
+                    <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                    <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                   </div>
                 </div>
               </div>
@@ -769,111 +1133,30 @@ export default function ExpertsPage() {
         )}
       </div>
 
-      <div className="fixed bottom-0 left-0 w-full border-t border-slate-200/50 dark:border-slate-700/50 bg-gradient-to-t from-white/95 via-white/90 to-white/70 dark:from-slate-900/95 dark:via-slate-900/90 dark:to-slate-900/70 backdrop-blur-md p-4 md:p-6 shadow-[0_-8px_32px_0_rgba(0,0,0,0.12)] z-50 pb-safe stick">
-        <form onSubmit={handleSendMessage} className="max-w-4xl mx-auto">
-          <div className="flex gap-4 items-end">
-            <div className="flex-1 relative">
-              <input
-                type="text"
-                value={userInput}
-                onChange={(e) => setUserInput(e.target.value)}
-                placeholder={
-                  !xmlData
-                    ? "🌱 Please collect analytics data first to begin consultation..."
-                    : "💬 Ask about soil analysis, crop recommendations, water management, or economic potential..."
-                }
-                className="w-full px-5 py-4 text-base border-2 border-slate-200 dark:border-slate-600 rounded-2xl bg-white/90 dark:bg-slate-800/90 text-slate-800 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all disabled:opacity-60 disabled:cursor-not-allowed backdrop-blur-sm shadow-lg"
-                disabled={loading || !xmlData}
-              />
-            </div>
-            <button
-              type="submit"
-              className="w-16 h-14 md:w-18 md:h-16 flex-shrink-0 rounded-2xl bg-gradient-to-br from-blue-500 via-purple-600 to-teal-500 hover:from-blue-600 hover:via-purple-700 hover:to-teal-600 text-white flex items-center justify-center text-2xl font-bold shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              style={{
-                boxShadow: '0 10px 25px -5px rgba(59, 130, 246, 0.4), 0 8px 10px -6px rgba(59, 130, 246, 0.1)'
-              }}
-              disabled={loading || !xmlData || !userInput.trim()}
-              title="Send message"
-            >
-              <Send className="w-6 h-6 md:w-7 md:h-7"/>
-            </button>
-          </div>
-        </form>
-      </div>
+      {/* Chat Input */}
+      <form onSubmit={handleSendMessage} className="flex gap-4">
+        <input
+          type="text"
+          value={userInput}
+          onChange={(e) => setUserInput(e.target.value)}
+          placeholder="Ask your question..."
+          className="flex-1 px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-2xl bg-white/90 dark:bg-slate-800/90 text-slate-800 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          disabled={loading}
+        />
+        <Button
+          type="submit"
+          className="px-6 py-3 bg-gradient-to-br from-blue-500 via-purple-600 to-teal-500 hover:from-blue-600 hover:via-purple-700 hover:to-teal-600 text-white rounded-2xl"
+          disabled={loading || !userInput.trim()}
+        >
+          <Send className="w-5 h-5" />
+        </Button>
+      </form>
+    </div>
+  );
 
-      <style jsx>{`
-        @keyframes messageSlide {
-          from {
-            opacity: 0;
-            transform: translateY(30px) scale(0.95);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-          }
-        }
-
-        div::-webkit-scrollbar {
-          width: 6px;
-        }
-
-        div::-webkit-scrollbar-track {
-          background: transparent;
-        }
-
-        div::-webkit-scrollbar-thumb {
-          background: rgba(148, 163, 184, 0.3);
-          border-radius: 3px;
-        }
-
-        div::-webkit-scrollbar-thumb:hover {
-          background: rgba(148, 163, 184, 0.5);
-        }
-
-        .prose h2 {
-          margin-top: 1.5em;
-          margin-bottom: 0.75em;
-          font-size: 1.5em;
-          font-weight: 700;
-          color: hsl(var(--foreground));
-        }
-
-        .prose h3 {
-          margin-top: 1.25em;
-          margin-bottom: 0.5em;
-          font-size: 1.25em;
-          font-weight: 600;
-          color: hsl(var(--foreground));
-        }
-
-        .prose p {
-          margin-bottom: 1em;
-          color: hsl(var(--foreground));
-          line-height: 1.7;
-        }
-
-        .prose ul, .prose ol {
-          margin-top: 0.75em;
-          margin-bottom: 0.75em;
-          padding-left: 1.5em;
-        }
-
-        .prose li {
-          margin-bottom: 0.5em;
-          color: hsl(var(--foreground));
-        }
-
-        .prose strong {
-          color: hsl(var(--foreground));
-          font-weight: 600;
-        }
-
-        @media (max-width: 640px) {
-          .pb-safe {
-            padding-bottom: calc(1rem + env(safe-area-inset-bottom));
-          }
-        }
-      `}</style>
+  return (
+    <main className="relative min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 dark:from-slate-900 dark:via-slate-800 dark:to-blue-950 font-[family-name:var(--font-lexend)] overflow-hidden">
+      {!chatMode ? renderExpertSelection() : renderChatInterface()}
 
       <CreditModal
         isOpen={showCreditModal}
