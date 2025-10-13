@@ -146,23 +146,36 @@ export async function POST(request: NextRequest) {
         user.usageHistory = user.usageHistory.slice(0, 1000);
       }
 
-      // Save user
+      // Save user - ONLY return success if this succeeds
       try {
         await user.save();
         console.log(`✅ Successfully added ${creditAmount} credits to user ${userEmail}. Total credits: ${user.credits}`);
+
+        // Return success response AFTER database save
+        return NextResponse.json({
+          success: true,
+          orderID: orderID,
+          status: capture.status,
+          creditsAdded: creditAmount,
+          totalCredits: user.credits,
+          paymentAmount: paymentAmount,
+          dbSaved: true,
+        });
       } catch (saveError) {
         console.error(`❌ Failed to save user ${userEmail}:`, saveError);
-        throw new Error('Failed to update user credits');
+        throw new Error('Failed to update user credits in database');
       }
     }
 
+    // Return response for users not found in database (guest users)
     return NextResponse.json({
       success: true,
       orderID: orderID,
       status: capture.status,
       creditsAdded: creditAmount,
-      totalCredits: user ? user.credits : 0,
+      totalCredits: 0,
       paymentAmount: paymentAmount,
+      guestUser: true,
     });
 
   } catch (error) {

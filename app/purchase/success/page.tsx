@@ -3,6 +3,7 @@
 
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, CreditCard, Crown, Building2, Home, Receipt } from 'lucide-react';
@@ -10,20 +11,71 @@ import Link from 'next/link';
 
 export default function PurchaseSuccessPage() {
   const searchParams = useSearchParams();
+  const { data: session, update } = useSession();
   const [isLoading, setIsLoading] = useState(true);
+  const [isConfirming, setIsConfirming] = useState(false);
+  const [, setConfirmationStatus] = useState<'pending' | 'success' | 'error'>('pending');
   const [purchaseDetails, setPurchaseDetails] = useState<{
     type: 'credits' | 'subscription';
     amount?: number;
     plan?: string;
     planName?: string;
+    confirmed?: boolean;
+    dbSaved?: boolean;
   } | null>(null);
+
+  // Confirm payment with secure API
+  const confirmPayment = async () => {
+    if (!session?.user?.email || isConfirming) return;
+
+    setIsConfirming(true);
+    try {
+      const type = searchParams.get('type') as 'credits' | 'subscription';
+      const amount = searchParams.get('amount');
+      const plan = searchParams.get('plan');
+      const method = searchParams.get('method') || 'stripe';
+
+      const response = await fetch('/api/payments/confirm-payment', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          paymentId: `${method}_${Date.now()}`, // Unique payment ID
+          paymentMethod: method,
+          amount: amount,
+          type: type,
+          plan: plan,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setConfirmationStatus('success');
+
+        // Update session to refresh user data
+        await update();
+
+        console.log('✅ Payment confirmed successfully:', data);
+      } else {
+        const errorData = await response.json();
+        setConfirmationStatus('error');
+        console.error('❌ Payment confirmation failed:', errorData);
+      }
+    } catch (error) {
+      setConfirmationStatus('error');
+      console.error('❌ Error confirming payment:', error);
+    } finally {
+      setIsConfirming(false);
+    }
+  };
 
   useEffect(() => {
     const type = searchParams.get('type') as 'credits' | 'subscription';
     const amount = searchParams.get('amount');
     const plan = searchParams.get('plan');
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const method = searchParams.get('method') || 'stripe';
+    const confirmed = searchParams.get('confirmed') === 'true';
+    const dbSaved = searchParams.get('db_saved') === 'true';
 
     if (type) {
       setPurchaseDetails({
@@ -31,10 +83,18 @@ export default function PurchaseSuccessPage() {
         amount: amount ? parseInt(amount) : undefined,
         plan: plan || undefined,
         planName: plan === 'pro' ? 'Pro' : plan === 'enterprise' ? 'Enterprise' : undefined,
+        confirmed,
+        dbSaved,
       });
     }
-    setIsLoading(false);
-  }, [searchParams]);
+
+    // Auto-confirm payment if not already confirmed
+    if (type && session?.user?.email && !confirmed) {
+      confirmPayment();
+    } else {
+      setIsLoading(false);
+    }
+  }, [searchParams, session]);
 
   if (isLoading) {
     return (

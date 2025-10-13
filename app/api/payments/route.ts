@@ -81,7 +81,15 @@ export async function POST(request: NextRequest) {
     if (type === 'credits') {
       // Handle credit purchase
       const creditAmount = parseInt(credits) || 100;
-      const usdAmount = Math.ceil(creditAmount / 500); // 500 credits = 1 USD
+
+      // Limit maximum credits to prevent Stripe amount limits
+      const maxCredits = 100000; // Maximum 100k credits
+      const safeCreditAmount = Math.min(creditAmount, maxCredits);
+
+      // Calculate USD amount (500 credits = 1 USD, minimum $0.50)
+      const usdAmount = Math.max(0.50, Math.ceil(safeCreditAmount / 500));
+
+      console.log(`💰 Credit calculation: ${safeCreditAmount} credits = $${usdAmount}`);
 
       const session = await stripe.checkout.sessions.create({
         line_items: [
@@ -89,10 +97,10 @@ export async function POST(request: NextRequest) {
             price_data: {
               currency: 'usd',
               product_data: {
-                name: `${creditAmount} Credits`,
-                description: `Purchase ${creditAmount} credits for your account`,
+                name: `${safeCreditAmount} Credits`,
+                description: `Purchase ${safeCreditAmount} credits for your account`,
               },
-              unit_amount: usdAmount * 100, // Convert to cents
+              unit_amount: Math.round(usdAmount * 100), // Convert to cents
             },
             quantity: 1,
           },

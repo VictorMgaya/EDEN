@@ -285,20 +285,22 @@ async function handleSuccessfulPayment(session: Stripe.Checkout.Session) {
 
       console.log(`💾 Saving user to database...`);
 
-      // Save with retry logic for database issues
+      // Send payment success email first (don't fail if email fails)
+      await sendPaymentSuccessEmail(customerEmail, 'credits', creditsToAdd);
+
+      // Save with retry logic for database issues - ONLY mark as processed if this succeeds
       try {
         await user.save();
         console.log(`✅ Successfully added ${creditsToAdd} credits to user ${customerEmail}. Total credits: ${user.credits}`);
+
+        // Mark this webhook event as successfully processed
+        console.log(`✅ [WEBHOOK] Credit purchase fully processed for ${customerEmail}`);
+        return { success: true, creditsAdded: creditsToAdd, dbSaved: true };
       } catch (saveError) {
         console.error(`❌ Failed to save user ${customerEmail}:`, saveError);
-        // Try to save again with fresh data
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        await user.save();
-        console.log(`✅ Successfully saved user ${customerEmail} on retry`);
+        const errorMessage = saveError instanceof Error ? saveError.message : 'Unknown database error';
+        throw new Error(`Database save failed for user ${customerEmail}: ${errorMessage}`);
       }
-
-      // Send payment success email
-      await sendPaymentSuccessEmail(customerEmail, 'credits', creditsToAdd);
     }
 
     // Handle subscription purchases in checkout.session.completed
@@ -464,25 +466,24 @@ async function handleSuccessfulPayment(session: Stripe.Checkout.Session) {
 
       console.log(`💾 Saving user to database...`);
 
-      // Save with retry logic for subscription updates
+      // Send payment success email first (don't fail if email fails)
+      if (customerEmail) {
+        await sendPaymentSuccessEmail(customerEmail, 'subscription', undefined, subscriptionType);
+      }
+
+      // Save with retry logic for subscription updates - ONLY mark as processed if this succeeds
       try {
         await user.save();
         console.log(`✅ Successfully activated ${subscriptionType} subscription for user ${customerEmail}`);
         console.log(`📊 Credits updated: ${previousCredits} → ${user.credits} (guaranteed: ${guaranteedCredits})`);
+
+        // Mark this webhook event as successfully processed
+        console.log(`✅ [WEBHOOK] Subscription fully processed for ${customerEmail}`);
+        return { success: true, subscriptionType, dbSaved: true };
       } catch (saveError) {
         console.error(`❌ Failed to save subscription for user ${customerEmail}:`, saveError);
-        // Try to save again with fresh data
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        await user.save();
-        console.log(`✅ Successfully saved subscription for user ${customerEmail} on retry`);
-      }
-
-      // NextAuth session will automatically refresh on next request due to updated database values
-      console.log(`🔄 User data updated in database - session will refresh automatically on next request`);
-
-      // Send payment success email for subscription
-      if (customerEmail) {
-        await sendPaymentSuccessEmail(customerEmail, 'subscription', undefined, subscriptionType);
+        const errorMessage = saveError instanceof Error ? saveError.message : 'Unknown database error';
+        throw new Error(`Database save failed for subscription ${customerEmail}: ${errorMessage}`);
       }
     }
   } catch (error) {

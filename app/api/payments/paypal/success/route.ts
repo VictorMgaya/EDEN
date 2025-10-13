@@ -125,6 +125,121 @@ async function getPayPalSubscription(subscriptionId: string) {
   return await response.json();
 }
 
+// Enhanced payment confirmation function
+async function confirmPayment(paymentDetails: any, type: string) {
+  console.log('🔍 [PAYPAL] Confirming payment details...', {
+    type,
+    status: paymentDetails.status,
+    id: paymentDetails.id
+  });
+
+  if (type === 'credits') {
+    // For one-time payments, verify capture status
+    const capture = paymentDetails.purchase_units[0]?.payments?.captures[0];
+    if (!capture) {
+      throw new Error('No payment capture found');
+    }
+
+    if (capture.status !== 'COMPLETED') {
+      throw new Error(`Payment capture not completed. Status: ${capture.status}`);
+    }
+
+    // Verify amount is correct
+    const captureAmount = parseFloat(capture.amount.value);
+    if (captureAmount <= 0) {
+      throw new Error('Invalid payment amount');
+    }
+
+    console.log('✅ [PAYPAL] Credit payment confirmed:', {
+      amount: captureAmount,
+      currency: capture.amount.currency_code,
+      captureId: capture.id
+    });
+
+    return {
+      confirmed: true,
+      amount: captureAmount,
+      currency: capture.amount.currency_code,
+      captureId: capture.id
+    };
+  }
+
+  if (type === 'subscription') {
+    // For subscriptions, verify subscription is active
+    if (paymentDetails.status !== 'ACTIVE') {
+      throw new Error(`Subscription not active. Status: ${paymentDetails.status}`);
+    }
+
+    // Verify subscription has valid billing info
+    if (!paymentDetails.billing_info) {
+      throw new Error('No billing information found in subscription');
+    }
+
+    console.log('✅ [PAYPAL] Subscription payment confirmed:', {
+      subscriptionId: paymentDetails.id,
+      status: paymentDetails.status,
+      planId: paymentDetails.plan_id
+    });
+
+    return {
+      confirmed: true,
+      subscriptionId: paymentDetails.id,
+      status: paymentDetails.status,
+      planId: paymentDetails.plan_id
+    };
+  }
+
+  throw new Error(`Unknown payment type: ${type}`);
+}
+
+// Enhanced user status update function
+async function updateUserStatus(user: any, paymentType: string, paymentData: any, plan?: string) {
+  const timestamp = new Date();
+
+  if (paymentType === 'credits') {
+    // Update user status for credit purchase
+    user.lastCreditPurchase = timestamp;
+    user.totalCreditsPurchased = (user.totalCreditsPurchased || 0) + paymentData.credits;
+    user.paymentMethod = 'paypal';
+
+    // Update user tier based on purchase history
+    if (user.totalCreditsPurchased >= 10000) {
+      user.userTier = 'premium';
+    } else if (user.totalCreditsPurchased >= 1000) {
+      user.userTier = 'standard';
+    }
+
+    console.log('📊 [PAYPAL] Updated user status for credit purchase:', {
+      totalCreditsPurchased: user.totalCreditsPurchased,
+      userTier: user.userTier,
+      lastPurchase: timestamp
+    });
+  }
+
+  if (paymentType === 'subscription') {
+    // Update user status for subscription
+    user.lastSubscriptionActivation = timestamp;
+    user.subscriptionStatus = 'active';
+    user.paymentMethod = 'paypal';
+
+    // Update user tier based on subscription
+    if (plan === 'enterprise') {
+      user.userTier = 'enterprise';
+    } else if (plan === 'pro') {
+      user.userTier = 'pro';
+    }
+
+    console.log('📊 [PAYPAL] Updated user status for subscription:', {
+      subscriptionType: plan,
+      userTier: user.userTier,
+      subscriptionStatus: 'active',
+      activationDate: timestamp
+    });
+  }
+
+  return user;
+}
+
 export async function GET(request: NextRequest) {
   try {
     const url = new URL(request.url);
@@ -139,9 +254,15 @@ export async function GET(request: NextRequest) {
     console.log('🔄 [PAYPAL] Type:', type);
     console.log('🔄 [PAYPAL] Plan:', plan);
 
+    // Validate required parameters
     if (!token && !subscriptionId) {
       console.error('❌ [PAYPAL] No token or subscription ID provided');
-      return NextResponse.redirect(new URL('/purchase/cancelled', request.url));
+      return NextResponse.redirect(new URL('/purchase/cancelled?error=missing_parameters', request.url));
+    }
+
+    if (type !== 'credits' && type !== 'subscription') {
+      console.error('❌ [PAYPAL] Invalid payment type:', type);
+      return NextResponse.redirect(new URL('/purchase/cancelled?error=invalid_type', request.url));
     }
 
     await dbConnect();
@@ -155,9 +276,12 @@ export async function GET(request: NextRequest) {
       console.log('🔄 [PAYPAL] Processing credit payment...');
       paymentDetails = await capturePayPalOrder(token);
 
-      if (paymentDetails.status !== 'COMPLETED') {
-        console.error('❌ [PAYPAL] Payment not completed:', paymentDetails.status);
-        return NextResponse.redirect(new URL('/purchase/cancelled', request.url));
+      // Confirm payment before proceeding
+      const paymentConfirmation = await confirmPayment(paymentDetails, 'credits');
+
+      if (!paymentConfirmation.confirmed) {
+        console.error('❌ [PAYPAL] Payment confirmation failed');
+        return NextResponse.redirect(new URL('/purchase/cancelled?error=payment_not_confirmed', request.url));
       }
 
       // Extract user email from PayPal response
@@ -165,10 +289,10 @@ export async function GET(request: NextRequest) {
 
       if (!userEmail) {
         console.error('❌ [PAYPAL] No user email found in PayPal response');
-        return NextResponse.redirect(new URL('/purchase/cancelled', request.url));
+        return NextResponse.redirect(new URL('/purchase/cancelled?error=no_email', request.url));
       }
 
-      console.log(`✅ [PAYPAL] Payment completed for user: ${userEmail}`);
+      console.log(`✅ [PAYPAL] Payment confirmed for user: ${userEmail}`);
 
       // Find or create user
       let user = await User.findOne({ email: userEmail });
@@ -192,11 +316,11 @@ export async function GET(request: NextRequest) {
         console.log(`✅ Existing user found: ${user.email} (ID: ${user._id})`);
       }
 
-      // Extract credit amount from PayPal metadata or calculate from payment amount
-      const paymentAmount = parseFloat(paymentDetails.purchase_units[0]?.payments?.captures[0]?.amount?.value || '0');
+      // Calculate credits from confirmed payment amount
+      const paymentAmount = paymentConfirmation.amount || 0;
       const creditAmount = Math.floor(paymentAmount * 500); // 1 USD = 500 credits
 
-      console.log(`💰 [PAYPAL] Payment amount: $${paymentAmount}, Credits to add: ${creditAmount}`);
+      console.log(`💰 [PAYPAL] Confirmed payment: $${paymentConfirmation.amount}, Credits to add: ${creditAmount}`);
 
       // Update user credits with validation
       const previousCredits = user.credits || 0;
@@ -205,24 +329,26 @@ export async function GET(request: NextRequest) {
       // Ensure credits don't go negative and are properly calculated
       user.credits = Math.max(0, newCreditTotal);
 
-      // Update last credit purchase timestamp for balance tracking
-      user.lastCreditPurchase = new Date();
+      // Update user status with enhanced tracking
+      user = await updateUserStatus(user, 'credits', { credits: creditAmount });
 
       // Log the credit addition with comprehensive tracking
       const usageRecord = {
         action: 'credit',
         amount: creditAmount,
-        description: `Credit purchase - ${creditAmount} credits via PayPal`,
+        description: `Credit purchase - ${creditAmount} credits via PayPal (Confirmed)`,
         timestamp: new Date(),
         metadata: {
-          type: 'credit_purchase',
-          reason: 'paypal_payment_success',
+          type: 'credit_purchase_confirmed',
+          reason: 'paypal_payment_confirmed',
           paymentMethod: 'paypal',
           orderId: token,
+          captureId: paymentConfirmation.captureId,
           previousCredits: previousCredits,
           newTotalCredits: user.credits,
-          paymentAmount: paymentAmount,
-          currency: 'USD'
+          paymentAmount: paymentConfirmation.amount,
+          currency: paymentConfirmation.currency,
+          confirmed: true
         }
       };
 
@@ -237,28 +363,28 @@ export async function GET(request: NextRequest) {
         user.usageHistory = user.usageHistory.slice(0, 1000);
       }
 
-      // Save with retry logic for database issues
-      try {
-        await user.save();
-        console.log(`✅ Successfully added ${creditAmount} credits to user ${userEmail}. Total credits: ${user.credits}`);
-      } catch (saveError) {
-        console.error(`❌ Failed to save user ${userEmail}:`, saveError);
-        // Try to save again with fresh data
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        await user.save();
-        console.log(`✅ Successfully saved user ${userEmail} on retry`);
-      }
-
-      // Send success email
+      // Send success email first (don't fail if email fails)
       await sendPaymentSuccessEmail(userEmail, 'credits', creditAmount);
 
-      // Redirect to success page with credit details
-      const successUrl = new URL('/purchase/success', request.url);
-      successUrl.searchParams.set('type', 'credits');
-      successUrl.searchParams.set('amount', creditAmount.toString());
-      successUrl.searchParams.set('method', 'paypal');
+      // Save with retry logic for database issues - ONLY redirect to success if this succeeds
+      try {
+        await user.save();
+        console.log(`✅ Successfully processed confirmed payment for user ${userEmail}`);
+        console.log(`📊 Credits: ${previousCredits} → ${user.credits} (+${creditAmount})`);
 
-      return NextResponse.redirect(successUrl);
+        // ONLY redirect to success page AFTER successful database save
+        const successUrl = new URL('/purchase/success', request.url);
+        successUrl.searchParams.set('type', 'credits');
+        successUrl.searchParams.set('amount', creditAmount.toString());
+        successUrl.searchParams.set('method', 'paypal');
+        successUrl.searchParams.set('confirmed', 'true');
+        successUrl.searchParams.set('db_saved', 'true');
+
+        return NextResponse.redirect(successUrl);
+      } catch (saveError) {
+        console.error(`❌ Failed to save user ${userEmail}:`, saveError);
+        return NextResponse.redirect(new URL('/purchase/cancelled?error=database_save_failed', request.url));
+      }
     }
 
     if (subscriptionId) {
@@ -361,32 +487,27 @@ export async function GET(request: NextRequest) {
         user.usageHistory = user.usageHistory.slice(0, 1000);
       }
 
-      // Save with retry logic for subscription updates
+      // Send success email first (don't fail if email fails)
+      await sendPaymentSuccessEmail(userEmail, 'subscription', undefined, subscriptionType);
+
+      // Save with retry logic for subscription updates - ONLY redirect to success if this succeeds
       try {
         await user.save();
         console.log(`✅ Successfully activated ${subscriptionType} subscription for user ${userEmail}`);
         console.log(`📊 Credits updated: ${previousCredits} → ${user.credits} (monthly: ${monthlyCredits})`);
+
+        // ONLY redirect to success page AFTER successful database save
+        const successUrl = new URL('/purchase/success', request.url);
+        successUrl.searchParams.set('type', 'subscription');
+        successUrl.searchParams.set('plan', subscriptionType);
+        successUrl.searchParams.set('method', 'paypal');
+        successUrl.searchParams.set('db_saved', 'true');
+
+        return NextResponse.redirect(successUrl);
       } catch (saveError) {
         console.error(`❌ Failed to save subscription for user ${userEmail}:`, saveError);
-        // Try to save again with fresh data
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        await user.save();
-        console.log(`✅ Successfully saved subscription for user ${userEmail} on retry`);
+        return NextResponse.redirect(new URL('/purchase/cancelled?error=database_save_failed', request.url));
       }
-
-      // NextAuth session will automatically refresh on next request due to updated database values
-      console.log(`🔄 User data updated in database - session will refresh automatically on next request`);
-
-      // Send success email
-      await sendPaymentSuccessEmail(userEmail, 'subscription', undefined, subscriptionType);
-
-      // Redirect to success page with subscription details
-      const successUrl = new URL('/purchase/success', request.url);
-      successUrl.searchParams.set('type', 'subscription');
-      successUrl.searchParams.set('plan', subscriptionType);
-      successUrl.searchParams.set('method', 'paypal');
-
-      return NextResponse.redirect(successUrl);
     }
 
     console.error('❌ [PAYPAL] Invalid payment type or missing parameters');
