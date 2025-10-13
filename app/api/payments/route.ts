@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { rateLimit } from '@/lib/rateLimit';
+import dbConnect from '@/app/lib/dbConnect';
+import User from '@/app/model/user';
 
 // Initialize Stripe (you'll need to add your secret key to environment variables)
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
@@ -45,7 +47,37 @@ export async function POST(request: NextRequest) {
       'X-RateLimit-Reset': rateLimitResult.resetTime.toString()
     };
 
-    const { type, credits, plan } = await request.json();
+    const { type, credits, plan, userEmail } = await request.json();
+
+    // Validate that user exists in database before creating checkout session
+    console.log('🔍 [PAYMENT] Validating user exists in database...');
+    console.log('📧 [PAYMENT] User email:', userEmail);
+
+    if (!userEmail) {
+      console.error('❌ [PAYMENT] No user email provided');
+      return NextResponse.json({
+        error: 'User authentication required',
+        message: 'Please log in to make a purchase'
+      }, { status: 401 });
+    }
+
+    // Connect to database and verify user exists
+    await dbConnect();
+    console.log('✅ [PAYMENT] Database connected for user validation');
+
+    const user = await User.findOne({ email: userEmail });
+    if (!user) {
+      console.error(`❌ [PAYMENT] User not found in database: ${userEmail}`);
+      console.error('❌ [PAYMENT] Cannot create checkout session for non-existent user');
+      return NextResponse.json({
+        error: 'User not found',
+        message: 'Please create an account before making a purchase'
+      }, { status: 404 });
+    }
+
+    console.log(`✅ [PAYMENT] User validated: ${user.email} (ID: ${user._id})`);
+    console.log(`📊 [PAYMENT] Current user credits: ${user.credits || 0}`);
+    console.log(`🔒 [PAYMENT] Current subscription: ${user.subscription?.type || 'freemium'}`);
 
     if (type === 'credits') {
       // Handle credit purchase
@@ -70,9 +102,11 @@ export async function POST(request: NextRequest) {
         mode: 'payment',
         success_url: `${request.headers.get('origin')}/purchase/success?type=credits&amount=${creditAmount}`,
         cancel_url: `${request.headers.get('origin')}/purchase/cancelled`,
+        customer_email: userEmail,
         metadata: {
           type: 'credits',
           creditAmount: creditAmount.toString(),
+          userEmail: userEmail,
         },
       });
 
@@ -111,9 +145,11 @@ export async function POST(request: NextRequest) {
         mode: 'subscription',
         success_url: `${request.headers.get('origin')}/purchase/success?type=subscription&plan=${plan}`,
         cancel_url: `${request.headers.get('origin')}/purchase/cancelled`,
+        customer_email: userEmail,
         metadata: {
           type: 'subscription',
           plan: plan,
+          userEmail: userEmail,
         },
       });
 

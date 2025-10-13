@@ -167,7 +167,7 @@ const Header = () => {
   return (
     <>
       <header
-        className="header flex justify-between rounded-br-2xl bg-gradient-to-r from-blue-50 to-green-50 dark:from-gray-800 dark:to-gray-900 border-b border-blue-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 xsm:h-20 sm:h-20 md:h-16 lg:h-16 xl:h-16 fixed top-0 left-0 right-0 z-50 font-primary animate-accordion-down lazyloaded ease-in-out shadow-lg"
+        className="header flex justify-between rounded-b-2xl bg-gradient-to-r from-blue-50 to-green-50 dark:from-gray-800 dark:to-gray-900 border-b border-blue-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 xsm:h-20 sm:h-20 md:h-16 lg:h-16 xl:h-16 fixed top-0 left-0 right-0 z-50 font-primary animate-accordion-down lazyloaded ease-in-out shadow-lg"
       >
         <meta name="google-adsense-account" content="ca-pub-9431888211578782" />
         <meta name="google-site-verification" content="xhS9AxO9_lnZW5qXS9B3tCziTO-v0E0pAv8OicFMsd4" />

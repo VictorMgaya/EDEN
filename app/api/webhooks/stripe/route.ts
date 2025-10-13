@@ -128,10 +128,13 @@ async function handleSuccessfulPayment(session: Stripe.Checkout.Session) {
     // Handle credit purchases
     if (type === 'credits' && creditAmount) {
       // Find user by customer email or customer ID
-      const customerEmail = session.customer_details?.email || session.customer_email;
+      const customerEmail = session.customer_details?.email || session.customer_email || session.metadata?.userEmail;
 
       if (!customerEmail) {
-        console.error('No customer email found for credit purchase');
+        console.error('❌ CRITICAL: No customer email found for credit purchase');
+        console.error('❌ Session ID:', session.id);
+        console.error('❌ Session metadata:', session.metadata);
+        console.error('❌ Customer details:', session.customer_details);
         return;
       }
 
@@ -140,7 +143,15 @@ async function handleSuccessfulPayment(session: Stripe.Checkout.Session) {
 
       if (!user) {
         console.error(`❌ CRITICAL: User not found in database: ${customerEmail}`);
-        console.error(`This means the user exists in your app but not in the database, or email mismatch`);
+        console.error(`❌ This means the user was not validated before creating the checkout session`);
+        console.error(`❌ Session ID: ${session.id}`);
+        console.error(`❌ Customer Email: ${customerEmail}`);
+        console.error(`❌ Metadata:`, session.metadata);
+
+        // Log total users in database for debugging
+        const totalUsers = await User.countDocuments();
+        console.error(`❌ Total users in database: ${totalUsers}`);
+
         return;
       }
 
@@ -204,7 +215,7 @@ async function handleSuccessfulPayment(session: Stripe.Checkout.Session) {
 
       // Try multiple methods to find the user
       let user = null;
-      const customerEmail = session.customer_details?.email || session.customer_email;
+      const customerEmail = session.customer_details?.email || session.customer_email || session.metadata?.userEmail;
 
       // Method 1: Try to find by Stripe customer ID if available
       if (session.customer) {
@@ -224,12 +235,13 @@ async function handleSuccessfulPayment(session: Stripe.Checkout.Session) {
         }
       }
 
-      // Method 3: If no user found, try to find any user and log the issue
+      // Method 3: If no user found, log the issue with detailed information
       if (!user) {
-        console.error(`❌ CRITICAL: No user found for this purchase`);
+        console.error(`❌ CRITICAL: No user found for subscription purchase`);
         console.error(`   - Session Customer ID: ${session.customer}`);
         console.error(`   - Session Email: ${customerEmail}`);
         console.error(`   - Subscription Customer ID: ${subscription.customer}`);
+        console.error(`   - Session Metadata:`, session.metadata);
 
         // Log all users with similar emails to help debug
         if (customerEmail) {
