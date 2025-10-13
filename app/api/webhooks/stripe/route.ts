@@ -48,7 +48,17 @@ export async function POST(request: NextRequest) {
       case 'invoice.payment_failed':
         const failedInvoice = event.data.object as Stripe.Invoice;
         console.error('Subscription payment failed:', failedInvoice.id);
-        // Handle failed subscription payment
+        await handleFailedSubscriptionPayment(failedInvoice);
+        break;
+
+      case 'customer.subscription.deleted':
+        const deletedSubscription = event.data.object as Stripe.Subscription;
+        await handleSubscriptionCancellation(deletedSubscription);
+        break;
+
+      case 'customer.subscription.updated':
+        const updatedSubscription = event.data.object as Stripe.Subscription;
+        await handleSubscriptionUpdate(updatedSubscription);
         break;
 
       default:
@@ -86,17 +96,23 @@ async function handleSuccessfulPayment(session: Stripe.Checkout.Session) {
 
       // Add credits to user account
       const creditsToAdd = parseInt(creditAmount);
-      user.credits = (user.credits || 0) + creditsToAdd;
+      const previousCredits = user.credits || 0;
+      user.credits = previousCredits + creditsToAdd;
 
-      // Log the credit addition
+      // Log the credit addition with detailed information
       const usageRecord = {
         action: 'credit',
         amount: creditsToAdd,
-        description: `Credit purchase - ${creditsToAdd} credits`,
+        description: `Credit purchase - ${creditsToAdd} credits via Stripe`,
+        timestamp: new Date(),
         metadata: {
-          type: 'purchase',
+          type: 'credit_purchase',
+          reason: 'payment_success',
+          subscription: user.subscription?.type || 'freemium',
           paymentIntent: session.payment_intent,
-          sessionId: session.id
+          sessionId: session.id,
+          previousCredits: previousCredits,
+          newTotalCredits: user.credits
         }
       };
 
@@ -113,10 +129,11 @@ async function handleSuccessfulPayment(session: Stripe.Checkout.Session) {
 
       await user.save();
 
-      console.log(`Added ${creditsToAdd} credits to user ${customerEmail}`);
+      console.log(`✅ Successfully added ${creditsToAdd} credits to user ${customerEmail}. Total credits: ${user.credits}`);
     }
   } catch (error) {
-    console.error('Error handling successful payment:', error);
+    console.error('❌ Error handling successful payment:', error);
+    throw error; // Re-throw to ensure webhook knows about the failure
   }
 }
 
@@ -164,24 +181,39 @@ async function handleSubscriptionPayment(invoice: Stripe.Invoice) {
       subscriptionType = priceMapping[priceId] || 'freemium';
     }
 
-    // Update user subscription
+    // Calculate subscription expiration date
+    const subscriptionStartDate = new Date(subscription.current_period_start * 1000);
+    const subscriptionEndDate = new Date(subscription.current_period_end * 1000);
+
+    // Update user subscription with comprehensive details
+    const previousSubscriptionType = user.subscription?.type || 'freemium';
+
     user.subscription = {
       type: subscriptionType,
+      stripeCustomerId: invoice.customer as string,
       stripeSubscriptionId: subscription.id,
-      currentPeriodEnd: new Date(subscription.current_period_end * 1000),
-      cancelAtPeriodEnd: false
+      currentPeriodEnd: subscriptionEndDate,
+      cancelAtPeriodEnd: subscription.cancel_at_period_end || false
     };
 
-    // Log subscription update
+    // Log subscription activation/update with detailed information
     const usageRecord = {
       action: 'credit',
       amount: 0,
-      description: `Subscription activated - ${subscriptionType} plan`,
+      description: `Subscription ${subscriptionType === previousSubscriptionType ? 'renewed' : 'upgraded'} - ${subscriptionType} plan`,
+      timestamp: new Date(),
       metadata: {
-        type: 'subscription_activated',
-        subscriptionType: subscriptionType,
+        type: 'subscription_payment',
+        reason: 'subscription_activated',
+        subscription: subscriptionType,
+        previousSubscription: previousSubscriptionType,
         invoiceId: invoice.id,
-        subscriptionId: subscription.id
+        subscriptionId: subscription.id,
+        subscriptionStartDate: subscriptionStartDate.toISOString(),
+        subscriptionEndDate: subscriptionEndDate.toISOString(),
+        amountPaid: invoice.amount_paid,
+        currency: invoice.currency,
+        status: subscription.status
       }
     };
 
@@ -198,8 +230,203 @@ async function handleSubscriptionPayment(invoice: Stripe.Invoice) {
 
     await user.save();
 
-    console.log(`Updated subscription for user ${customerEmail} to ${subscriptionType}`);
+    console.log(`✅ Successfully updated subscription for user ${customerEmail}:`);
+    console.log(`   - Previous: ${previousSubscriptionType} → Current: ${subscriptionType}`);
+    console.log(`   - Expires: ${subscriptionEndDate.toISOString()}`);
+    console.log(`   - Stripe Subscription ID: ${subscription.id}`);
   } catch (error) {
-    console.error('Error handling subscription payment:', error);
+    console.error('❌ Error handling subscription payment:', error);
+    throw error; // Re-throw to ensure webhook knows about the failure
+  }
+}
+
+async function handleFailedSubscriptionPayment(invoice: Stripe.Invoice) {
+  try {
+    await dbConnect();
+
+    const customerEmail = invoice.customer_email;
+
+    if (!customerEmail) {
+      console.error('No customer email found for failed subscription payment');
+      return;
+    }
+
+    const user = await User.findOne({ email: customerEmail });
+
+    if (!user) {
+      console.error(`User not found: ${customerEmail}`);
+      return;
+    }
+
+    // Log the failed payment
+    const usageRecord = {
+      action: 'debit',
+      amount: 0,
+      description: `Subscription payment failed - ${invoice.id}`,
+      timestamp: new Date(),
+      metadata: {
+        type: 'payment_failed',
+        reason: 'subscription_payment_failed',
+        invoiceId: invoice.id,
+        amountDue: invoice.amount_due,
+        currency: invoice.currency,
+        attemptCount: invoice.attempt_count
+      }
+    };
+
+    if (!user.usageHistory) {
+      user.usageHistory = [];
+    }
+
+    user.usageHistory.unshift(usageRecord);
+
+    // Keep only last 1000 records
+    if (user.usageHistory.length > 1000) {
+      user.usageHistory = user.usageHistory.slice(0, 1000);
+    }
+
+    await user.save();
+
+    console.log(`⚠️ Logged failed subscription payment for user ${customerEmail}`);
+  } catch (error) {
+    console.error('❌ Error handling failed subscription payment:', error);
+  }
+}
+
+async function handleSubscriptionCancellation(subscription: Stripe.Subscription) {
+  try {
+    await dbConnect();
+
+    // Find user by Stripe customer ID
+    const user = await User.findOne({ 'subscription.stripeCustomerId': subscription.customer });
+
+    if (!user) {
+      console.error(`User not found for subscription cancellation. Customer ID: ${subscription.customer}`);
+      return;
+    }
+
+    const previousSubscriptionType = user.subscription?.type || 'freemium';
+    const cancellationDate = new Date();
+
+    // Update subscription to cancelled status
+    user.subscription = {
+      type: 'freemium', // Downgrade to freemium
+      stripeCustomerId: subscription.customer as string,
+      stripeSubscriptionId: subscription.id,
+      currentPeriodEnd: cancellationDate, // Set expiry to cancellation date
+      cancelAtPeriodEnd: true
+    };
+
+    // Log the cancellation
+    const usageRecord = {
+      action: 'debit',
+      amount: 0,
+      description: `Subscription cancelled - ${previousSubscriptionType} plan`,
+      timestamp: cancellationDate,
+      metadata: {
+        type: 'subscription_cancelled',
+        reason: 'user_cancelled',
+        previousSubscription: previousSubscriptionType,
+        subscriptionId: subscription.id,
+        cancelledAt: cancellationDate.toISOString(),
+        cancelReason: subscription.cancellation_details?.reason || 'unknown'
+      }
+    };
+
+    if (!user.usageHistory) {
+      user.usageHistory = [];
+    }
+
+    user.usageHistory.unshift(usageRecord);
+
+    // Keep only last 1000 records
+    if (user.usageHistory.length > 1000) {
+      user.usageHistory = user.usageHistory.slice(0, 1000);
+    }
+
+    await user.save();
+
+    console.log(`✅ Successfully cancelled subscription for user ${user.email}:`);
+    console.log(`   - Previous: ${previousSubscriptionType} → Current: freemium`);
+    console.log(`   - Cancelled at: ${cancellationDate.toISOString()}`);
+  } catch (error) {
+    console.error('❌ Error handling subscription cancellation:', error);
+  }
+}
+
+async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
+  try {
+    await dbConnect();
+
+    // Find user by Stripe customer ID
+    const user = await User.findOne({ 'subscription.stripeCustomerId': subscription.customer });
+
+    if (!user) {
+      console.error(`User not found for subscription update. Customer ID: ${subscription.customer}`);
+      return;
+    }
+
+    // Map Stripe subscription to our subscription types
+    let subscriptionType = 'freemium';
+
+    if (subscription.items?.data.length > 0) {
+      const priceId = subscription.items.data[0].price?.id;
+
+      // Map actual price IDs to subscription types
+      const priceMapping: { [key: string]: string } = {
+        [process.env.STRIPE_PRO_PRICE_ID || '']: 'pro',
+        [process.env.STRIPE_ENTERPRISE_PRICE_ID || '']: 'enterprise',
+      };
+
+      subscriptionType = priceMapping[priceId] || 'freemium';
+    }
+
+    const previousSubscriptionType = user.subscription?.type || 'freemium';
+
+    // Update subscription details
+    user.subscription = {
+      type: subscriptionType,
+      stripeCustomerId: subscription.customer as string,
+      stripeSubscriptionId: subscription.id,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      currentPeriodEnd: new Date((subscription as Stripe.Subscription & { current_period_end: number }).current_period_end * 1000),
+      cancelAtPeriodEnd: subscription.cancel_at_period_end || false
+    };
+
+    // Log the update
+    const usageRecord = {
+      action: 'credit',
+      amount: 0,
+      description: `Subscription updated - ${subscriptionType} plan`,
+      timestamp: new Date(),
+      metadata: {
+        type: 'subscription_updated',
+        reason: 'subscription_modified',
+        subscription: subscriptionType,
+        previousSubscription: previousSubscriptionType,
+        subscriptionId: subscription.id,
+        status: subscription.status,
+        currentPeriodEnd: user.subscription.currentPeriodEnd?.toISOString()
+      }
+    };
+
+    if (!user.usageHistory) {
+      user.usageHistory = [];
+    }
+
+    user.usageHistory.unshift(usageRecord);
+
+    // Keep only last 1000 records
+    if (user.usageHistory.length > 1000) {
+      user.usageHistory = user.usageHistory.slice(0, 1000);
+    }
+
+    await user.save();
+
+    console.log(`✅ Successfully updated subscription for user ${user.email}:`);
+    console.log(`   - Previous: ${previousSubscriptionType} → Current: ${subscriptionType}`);
+    console.log(`   - Status: ${subscription.status}`);
+  } catch (error) {
+    console.error('❌ Error handling subscription update:', error);
   }
 }
