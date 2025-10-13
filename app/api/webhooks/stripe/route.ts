@@ -477,6 +477,9 @@ async function handleSuccessfulPayment(session: Stripe.Checkout.Session) {
         console.log(`✅ Successfully saved subscription for user ${customerEmail} on retry`);
       }
 
+      // NextAuth session will automatically refresh on next request due to updated database values
+      console.log(`🔄 User data updated in database - session will refresh automatically on next request`);
+
       // Send payment success email for subscription
       if (customerEmail) {
         await sendPaymentSuccessEmail(customerEmail, 'subscription', undefined, subscriptionType);

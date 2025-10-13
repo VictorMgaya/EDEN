@@ -360,6 +360,9 @@ export async function GET(request: NextRequest) {
         console.log(`✅ Successfully saved subscription for user ${userEmail} on retry`);
       }
 
+      // NextAuth session will automatically refresh on next request due to updated database values
+      console.log(`🔄 User data updated in database - session will refresh automatically on next request`);
+
       // Send success email
       await sendPaymentSuccessEmail(userEmail, 'subscription', undefined, subscriptionType);
 

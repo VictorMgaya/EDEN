@@ -37,7 +37,25 @@ import {
   Leaf,
   Cloud,
   MapPin,
-  Droplets
+  Droplets,
+  Wheat,
+  Sprout,
+  Thermometer,
+  Gauge,
+  TrendingDown,
+  Filter,
+  Settings,
+  Calendar,
+  AlertTriangle,
+  Sun,
+  FileText,
+  Beaker,
+  Microscope,
+  Calculator,
+  Download,
+  Upload,
+  Workflow,
+  Network
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -357,50 +375,50 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 relative overflow-hidden">
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-emerald-200/30 to-green-200/30 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-tr from-teal-200/20 to-cyan-200/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-to-r from-green-200/20 to-emerald-200/20 rounded-full blur-2xl animate-pulse delay-500"></div>
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-blue-200/30 to-purple-200/30 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-tr from-indigo-200/20 to-blue-200/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-to-r from-purple-200/20 to-indigo-200/20 rounded-full blur-2xl animate-pulse delay-500"></div>
       </div>
 
       <div className="container mx-auto px-4 max-w-7xl relative z-10 py-8">
-        {/* Epic Header Section */}
+        {/* New Resource Analysis Engine Header */}
         <div className="mb-12 text-center relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-emerald-600/10 via-green-600/10 to-teal-600/10 rounded-3xl blur-xl"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 via-purple-600/10 to-indigo-600/10 rounded-3xl blur-xl"></div>
           <div className="relative bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-3xl p-8 border border-white/20 shadow-2xl">
             <div className="flex items-center justify-center mb-6">
               <div className="relative">
-                <div className="w-20 h-20 bg-gradient-to-br from-emerald-500 to-green-600 rounded-2xl flex items-center justify-center shadow-lg">
-                  <Leaf className="h-10 w-10 text-white" />
+                <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+                  <Microscope className="h-10 w-10 text-white" />
                 </div>
-                <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
-                  <Sparkles className="h-3 w-3 text-white" />
+                <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center">
+                  <Workflow className="h-3 w-3 text-white" />
                 </div>
               </div>
             </div>
 
-            <h1 className="text-5xl font-bold bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 bg-clip-text text-transparent mb-4">
-              🌱 EDEN Dashboard
+            <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent mb-4">
+              🔬 Resource Analysis Engine
             </h1>
             <p className="text-xl text-slate-600 dark:text-slate-300 mb-6 max-w-2xl mx-auto">
-              Your intelligent agricultural companion for soil analysis, crop optimization, and sustainable farming insights
+              Advanced analytical platform for comprehensive resource assessment, performance optimization, and data-driven decision making
             </p>
 
-            {/* Live Status Indicators */}
+            {/* Status Indicators */}
             <div className="flex items-center justify-center gap-6 text-sm">
               <div className="flex items-center gap-2 px-3 py-1 bg-green-100 dark:bg-green-900/30 rounded-full">
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <span className="text-green-700 dark:text-green-300">System Online</span>
+                <span className="text-green-700 dark:text-green-300">Engine Active</span>
               </div>
               <div className="flex items-center gap-2 px-3 py-1 bg-blue-100 dark:bg-blue-900/30 rounded-full">
-                <Cloud className="h-4 w-4 text-blue-600" />
-                <span className="text-blue-700 dark:text-blue-300">Weather Sync</span>
+                <Gauge className="h-4 w-4 text-blue-600" />
+                <span className="text-blue-700 dark:text-blue-300">High Performance</span>
               </div>
               <div className="flex items-center gap-2 px-3 py-1 bg-purple-100 dark:bg-purple-900/30 rounded-full">
-                <Zap className="h-4 w-4 text-purple-600" />
-                <span className="text-purple-700 dark:text-purple-300">AI Active</span>
+                <Beaker className="h-4 w-4 text-purple-600" />
+                <span className="text-purple-700 dark:text-purple-300">AI-Powered</span>
               </div>
             </div>
           </div>
@@ -529,24 +547,66 @@ export default function DashboardPage() {
           </div>
         )}
 
+        {/* Analysis Tools Navigation */}
+        <div className="mb-8">
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <Beaker className="h-5 w-5 text-blue-600" />
+            <span className="text-lg font-semibold text-slate-700 dark:text-slate-300">Analysis Modules</span>
+            <Workflow className="h-5 w-5 text-blue-600" />
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <Card className="group cursor-pointer bg-gradient-to-br from-blue-500/10 to-indigo-500/10 hover:from-blue-500/20 hover:to-indigo-500/20 border-blue-200/50 transition-all duration-300 hover:scale-105" onClick={() => router.push('/analytics')}>
+              <CardContent className="p-4 text-center">
+                <Microscope className="h-8 w-8 mx-auto mb-2 text-blue-600" />
+                <h4 className="font-semibold text-blue-800 dark:text-blue-200 mb-1">Soil Analysis</h4>
+                <p className="text-xs text-blue-600 dark:text-blue-400">Comprehensive soil parameter assessment</p>
+              </CardContent>
+            </Card>
+
+            <Card className="group cursor-pointer bg-gradient-to-br from-purple-500/10 to-pink-500/10 hover:from-purple-500/20 hover:to-pink-500/20 border-purple-200/50 transition-all duration-300 hover:scale-105" onClick={() => router.push('/weather')}>
+              <CardContent className="p-4 text-center">
+                <Thermometer className="h-8 w-8 mx-auto mb-2 text-purple-600" />
+                <h4 className="font-semibold text-purple-800 dark:text-purple-200 mb-1">Weather Modeling</h4>
+                <p className="text-xs text-purple-600 dark:text-purple-400">Advanced climate impact analysis</p>
+              </CardContent>
+            </Card>
+
+            <Card className="group cursor-pointer bg-gradient-to-br from-green-500/10 to-emerald-500/10 hover:from-green-500/20 hover:to-emerald-500/20 border-green-200/50 transition-all duration-300 hover:scale-105" onClick={() => router.push('/Experts')}>
+              <CardContent className="p-4 text-center">
+                <Brain className="h-8 w-8 mx-auto mb-2 text-green-600" />
+                <h4 className="font-semibold text-green-800 dark:text-green-200 mb-1">AI Insights</h4>
+                <p className="text-xs text-green-600 dark:text-green-400">Machine learning recommendations</p>
+              </CardContent>
+            </Card>
+
+            <Card className="group cursor-pointer bg-gradient-to-br from-amber-500/10 to-yellow-500/10 hover:from-amber-500/20 hover:to-yellow-500/20 border-amber-200/50 transition-all duration-300 hover:scale-105" onClick={() => router.push('/dashboard')}>
+              <CardContent className="p-4 text-center">
+                <Calculator className="h-8 w-8 mx-auto mb-2 text-amber-600" />
+                <h4 className="font-semibold text-amber-800 dark:text-amber-200 mb-1">Yield Optimization</h4>
+                <p className="text-xs text-amber-600 dark:text-amber-400">Predictive modeling & ROI analysis</p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
         {/* Main Dashboard Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-4 mb-8 h-14 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm border border-white/20">
-            <TabsTrigger value="overview" className="flex items-center gap-2 data-[state=active]:bg-emerald-500 data-[state=active]:text-white">
-              <Activity className="h-4 w-4" />
-              <span className="hidden sm:inline">Overview</span>
+            <TabsTrigger value="overview" className="flex items-center gap-2 data-[state=active]:bg-blue-500 data-[state=active]:text-white">
+              <Gauge className="h-4 w-4" />
+              <span className="hidden sm:inline">Performance</span>
             </TabsTrigger>
-            <TabsTrigger value="analytics" className="flex items-center gap-2 data-[state=active]:bg-emerald-500 data-[state=active]:text-white">
+            <TabsTrigger value="analytics" className="flex items-center gap-2 data-[state=active]:bg-blue-500 data-[state=active]:text-white">
               <BarChart3 className="h-4 w-4" />
-              <span className="hidden sm:inline">Analytics</span>
+              <span className="hidden sm:inline">Reports</span>
             </TabsTrigger>
-            <TabsTrigger value="weather" className="flex items-center gap-2 data-[state=active]:bg-emerald-500 data-[state=active]:text-white">
-              <Cloud className="h-4 w-4" />
-              <span className="hidden sm:inline">Weather</span>
+            <TabsTrigger value="models" className="flex items-center gap-2 data-[state=active]:bg-blue-500 data-[state=active]:text-white">
+              <Network className="h-4 w-4" />
+              <span className="hidden sm:inline">Models</span>
             </TabsTrigger>
-            <TabsTrigger value="sessions" className="flex items-center gap-2 data-[state=active]:bg-emerald-500 data-[state=active]:text-white">
+            <TabsTrigger value="history" className="flex items-center gap-2 data-[state=active]:bg-blue-500 data-[state=active]:text-white">
               <History className="h-4 w-4" />
-              <span className="hidden sm:inline">Sessions</span>
+              <span className="hidden sm:inline">History</span>
             </TabsTrigger>
           </TabsList>
 
