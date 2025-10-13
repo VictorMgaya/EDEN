@@ -79,7 +79,13 @@ export async function POST(request: NextRequest) {
 
 async function handleSuccessfulPayment(session: Stripe.Checkout.Session) {
   try {
+    console.log('🔄 [WEBHOOK] Processing successful payment...');
+    console.log('Session ID:', session.id);
+    console.log('Session mode:', session.mode);
+    console.log('Customer email:', session.customer_details?.email || session.customer_email);
+
     await dbConnect();
+    console.log('✅ [WEBHOOK] Database connected for successful payment');
 
     const { type, creditAmount } = session.metadata || {};
 
@@ -93,12 +99,18 @@ async function handleSuccessfulPayment(session: Stripe.Checkout.Session) {
         return;
       }
 
+      console.log(`🔍 Looking for user with email: ${customerEmail}`);
       const user = await User.findOne({ email: customerEmail });
 
       if (!user) {
-        console.error(`User not found: ${customerEmail}`);
+        console.error(`❌ CRITICAL: User not found in database: ${customerEmail}`);
+        console.error(`This means the user exists in your app but not in the database, or email mismatch`);
         return;
       }
+
+      console.log(`✅ Found user: ${user.email} (ID: ${user._id})`);
+      console.log(`Current subscription: ${user.subscription?.type || 'none'}`);
+      console.log(`Current credits: ${user.credits || 0}`);
 
       // Add credits to user account
       const creditsToAdd = parseInt(creditAmount);
@@ -133,35 +145,77 @@ async function handleSuccessfulPayment(session: Stripe.Checkout.Session) {
         user.usageHistory = user.usageHistory.slice(0, 1000);
       }
 
+      console.log(`💾 Saving user to database...`);
       await user.save();
-
       console.log(`✅ Successfully added ${creditsToAdd} credits to user ${customerEmail}. Total credits: ${user.credits}`);
+      console.log(`✅ User saved with new credits: ${user.credits}`);
     }
 
     // Handle subscription purchases in checkout.session.completed
     if (session.mode === 'subscription' && session.subscription) {
       console.log(`🔍 Processing subscription checkout session: ${session.id}`);
       console.log(`   - Customer Email: ${session.customer_details?.email || session.customer_email}`);
+      console.log(`   - Customer ID: ${session.customer}`);
       console.log(`   - Subscription ID: ${session.subscription}`);
 
       // Get subscription details from Stripe
       const subscriptionResponse = await stripe.subscriptions.retrieve(session.subscription as string);
       const subscription = subscriptionResponse as unknown as ExtendedSubscription;
 
-      // Find user by customer email
+      console.log(`🔍 Subscription details:`);
+      console.log(`   - Subscription Customer ID: ${subscription.customer}`);
+      console.log(`   - Subscription Status: ${subscription.status}`);
+
+      // Try multiple methods to find the user
+      let user = null;
       const customerEmail = session.customer_details?.email || session.customer_email;
 
-      if (!customerEmail) {
-        console.error('No customer email found for subscription purchase');
-        return;
+      // Method 1: Try to find by Stripe customer ID if available
+      if (session.customer) {
+        console.log(`🔍 Looking for user by Stripe customer ID: ${session.customer}`);
+        user = await User.findOne({ 'subscription.stripeCustomerId': session.customer });
+        if (user) {
+          console.log(`✅ Found user by Stripe customer ID: ${user.email}`);
+        }
       }
 
-      const user = await User.findOne({ email: customerEmail });
+      // Method 2: Try email if customer ID didn't work
+      if (!user && customerEmail) {
+        console.log(`🔍 Looking for user by email: ${customerEmail}`);
+        user = await User.findOne({ email: customerEmail });
+        if (user) {
+          console.log(`✅ Found user by email: ${user.email}`);
+        }
+      }
 
+      // Method 3: If no user found, try to find any user and log the issue
       if (!user) {
-        console.error(`User not found: ${customerEmail}`);
+        console.error(`❌ CRITICAL: No user found for this purchase`);
+        console.error(`   - Session Customer ID: ${session.customer}`);
+        console.error(`   - Session Email: ${customerEmail}`);
+        console.error(`   - Subscription Customer ID: ${subscription.customer}`);
+
+        // Log all users with similar emails to help debug
+        if (customerEmail) {
+          const similarUsers = await User.find({
+            email: { $regex: customerEmail.split('@')[0], $options: 'i' }
+          }).limit(5);
+          if (similarUsers.length > 0) {
+            console.error(`❌ Found users with similar emails:`);
+            similarUsers.forEach(u => console.error(`   - ${u.email} (ID: ${u._id})`));
+          }
+        }
+
+        // Log total user count to see if database is empty
+        const totalUsers = await User.countDocuments();
+        console.error(`❌ Total users in database: ${totalUsers}`);
+
         return;
       }
+
+      console.log(`✅ Found user: ${user.email} (ID: ${user._id})`);
+      console.log(`Current subscription: ${user.subscription?.type || 'none'}`);
+      console.log(`Current credits: ${user.credits || 0}`);
 
       // Map Stripe subscription to our subscription types
       let subscriptionType = 'freemium';
@@ -229,12 +283,14 @@ async function handleSuccessfulPayment(session: Stripe.Checkout.Session) {
         user.usageHistory = user.usageHistory.slice(0, 1000);
       }
 
+      console.log(`💾 Saving user to database...`);
       await user.save();
-
       console.log(`✅ Successfully activated subscription for user ${customerEmail}:`);
       console.log(`   - Previous: ${previousSubscriptionType} → Current: ${subscriptionType}`);
       console.log(`   - Expires: ${subscriptionEndDate.toISOString()}`);
       console.log(`   - Stripe Subscription ID: ${subscription.id}`);
+      console.log(`   - New credits: ${user.credits}`);
+      console.log(`✅ User saved with subscription type: ${user.subscription.type}`);
     }
   } catch (error) {
     console.error('❌ Error handling successful payment:', error);
@@ -244,7 +300,9 @@ async function handleSuccessfulPayment(session: Stripe.Checkout.Session) {
 
 async function handleSubscriptionPayment(invoice: Stripe.Invoice) {
   try {
+    console.log('🔄 Connecting to database for subscription payment...');
     await dbConnect();
+    console.log('✅ Database connected for subscription payment');
 
     const customerEmail = invoice.customer_email;
     const customerId = invoice.customer as string;
@@ -371,7 +429,9 @@ async function handleSubscriptionPayment(invoice: Stripe.Invoice) {
 
 async function handleFailedSubscriptionPayment(invoice: Stripe.Invoice) {
   try {
+    console.log('🔄 Connecting to database for failed subscription payment...');
     await dbConnect();
+    console.log('✅ Database connected for failed subscription payment');
 
     const customerEmail = invoice.customer_email;
 
@@ -424,7 +484,9 @@ async function handleFailedSubscriptionPayment(invoice: Stripe.Invoice) {
 
 async function handleSubscriptionCancellation(subscription: Stripe.Subscription) {
   try {
+    console.log('🔄 Connecting to database for subscription cancellation...');
     await dbConnect();
+    console.log('✅ Database connected for subscription cancellation');
 
     // Find user by Stripe customer ID
     const user = await User.findOne({ 'subscription.stripeCustomerId': subscription.customer });
@@ -485,7 +547,9 @@ async function handleSubscriptionCancellation(subscription: Stripe.Subscription)
 
 async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
   try {
+    console.log('🔄 Connecting to database for subscription update...');
     await dbConnect();
+    console.log('✅ Database connected for subscription update');
 
     // Find user by Stripe customer ID
     const user = await User.findOne({ 'subscription.stripeCustomerId': subscription.customer });
@@ -560,7 +624,9 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
 
 async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
   try {
+    console.log('🔄 Connecting to database for subscription creation...');
     await dbConnect();
+    console.log('✅ Database connected for subscription creation');
 
     console.log(`🔍 Processing subscription creation: ${subscription.id}`);
     console.log(`   - Customer ID: ${subscription.customer}`);
