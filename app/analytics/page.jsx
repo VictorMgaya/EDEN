@@ -342,13 +342,12 @@ function AnalyticsPage() {
         </>
       )}
       {!cacheSaved && (
-        (!locationDetailsLoaded || !populationLoaded || !weatherLoaded || !oceanDepthLoaded || !soilLoaded || !soilPropertiesLoaded) ? (
+        (!locationDetailsLoaded || !populationLoaded || !weatherLoaded || !soilLoaded || !soilPropertiesLoaded) ? (
           <div className='mt-8 text-center text-yellow-700 font-semibold'>
             {`please Waiting for: `}
             {(!locationDetailsLoaded ? 'Location Details ' : '')}
             {(!populationLoaded ? 'Population ' : '')}
             {(!weatherLoaded ? 'Weather ' : '')}
-            {(!oceanDepthLoaded ? 'Ocean Depth ' : '')}
             {(!soilLoaded ? 'Soil Classification ' : '')}
             {(!soilPropertiesLoaded ? 'Soil Properties ' : '')}
             {`Data to be collected and loaded...`}

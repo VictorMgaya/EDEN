@@ -83,6 +83,7 @@ async function handleSuccessfulPayment(session: Stripe.Checkout.Session) {
 
     const { type, creditAmount } = session.metadata || {};
 
+    // Handle credit purchases
     if (type === 'credits' && creditAmount) {
       // Find user by customer email or customer ID
       const customerEmail = session.customer_details?.email || session.customer_email;
@@ -135,6 +136,105 @@ async function handleSuccessfulPayment(session: Stripe.Checkout.Session) {
       await user.save();
 
       console.log(`✅ Successfully added ${creditsToAdd} credits to user ${customerEmail}. Total credits: ${user.credits}`);
+    }
+
+    // Handle subscription purchases in checkout.session.completed
+    if (session.mode === 'subscription' && session.subscription) {
+      console.log(`🔍 Processing subscription checkout session: ${session.id}`);
+      console.log(`   - Customer Email: ${session.customer_details?.email || session.customer_email}`);
+      console.log(`   - Subscription ID: ${session.subscription}`);
+
+      // Get subscription details from Stripe
+      const subscriptionResponse = await stripe.subscriptions.retrieve(session.subscription as string);
+      const subscription = subscriptionResponse as unknown as ExtendedSubscription;
+
+      // Find user by customer email
+      const customerEmail = session.customer_details?.email || session.customer_email;
+
+      if (!customerEmail) {
+        console.error('No customer email found for subscription purchase');
+        return;
+      }
+
+      const user = await User.findOne({ email: customerEmail });
+
+      if (!user) {
+        console.error(`User not found: ${customerEmail}`);
+        return;
+      }
+
+      // Map Stripe subscription to our subscription types
+      let subscriptionType = 'freemium';
+
+      if (subscription.items?.data.length > 0) {
+        const priceId = subscription.items.data[0].price?.id;
+
+        // Map actual price IDs to subscription types
+        const priceMapping: { [key: string]: string } = {
+          [process.env.STRIPE_PRO_PRICE_ID || '']: 'pro',
+          [process.env.STRIPE_ENTERPRISE_PRICE_ID || '']: 'enterprise',
+        };
+
+        subscriptionType = priceMapping[priceId] || 'freemium';
+      }
+
+      // Calculate subscription expiration date
+      const subscriptionEndDate = new Date(subscription.current_period_end * 1000);
+
+      // Update user subscription with comprehensive details
+      const previousSubscriptionType = user.subscription?.type || 'freemium';
+
+      user.subscription = {
+        type: subscriptionType,
+        stripeCustomerId: subscription.customer as string,
+        stripeSubscriptionId: subscription.id,
+        currentPeriodEnd: subscriptionEndDate,
+        cancelAtPeriodEnd: false
+      };
+
+      // Update additional user fields based on subscription
+      if (subscriptionType === 'pro') {
+        user.credits = Math.max(user.credits || 0, 100); // Ensure at least 100 credits for pro
+      } else if (subscriptionType === 'enterprise') {
+        user.credits = Math.max(user.credits || 0, 500); // Ensure at least 500 credits for enterprise
+      }
+
+      // Log subscription activation with detailed information
+      const usageRecord = {
+        action: 'credit',
+        amount: 0,
+        description: `Subscription activated - ${subscriptionType} plan via checkout`,
+        timestamp: new Date(),
+        metadata: {
+          type: 'subscription_activated',
+          reason: 'checkout_completed',
+          subscription: subscriptionType,
+          previousSubscription: previousSubscriptionType,
+          sessionId: session.id,
+          subscriptionId: subscription.id,
+          amountPaid: session.amount_total,
+          currency: session.currency,
+          status: subscription.status
+        }
+      };
+
+      if (!user.usageHistory) {
+        user.usageHistory = [];
+      }
+
+      user.usageHistory.unshift(usageRecord);
+
+      // Keep only last 1000 records
+      if (user.usageHistory.length > 1000) {
+        user.usageHistory = user.usageHistory.slice(0, 1000);
+      }
+
+      await user.save();
+
+      console.log(`✅ Successfully activated subscription for user ${customerEmail}:`);
+      console.log(`   - Previous: ${previousSubscriptionType} → Current: ${subscriptionType}`);
+      console.log(`   - Expires: ${subscriptionEndDate.toISOString()}`);
+      console.log(`   - Stripe Subscription ID: ${subscription.id}`);
     }
   } catch (error) {
     console.error('❌ Error handling successful payment:', error);
@@ -217,6 +317,13 @@ async function handleSubscriptionPayment(invoice: Stripe.Invoice) {
       currentPeriodEnd: subscriptionEndDate,
       cancelAtPeriodEnd: subscription.cancel_at_period_end || false
     };
+
+    // Update user credits based on subscription type
+    if (subscriptionType === 'pro') {
+      user.credits = Math.max(user.credits || 0, 100); // Ensure at least 100 credits for pro
+    } else if (subscriptionType === 'enterprise') {
+      user.credits = Math.max(user.credits || 0, 500); // Ensure at least 500 credits for enterprise
+    }
 
     // Log subscription activation/update with detailed information
     const usageRecord = {
@@ -501,6 +608,13 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
       currentPeriodEnd: new Date((subscription as Stripe.Subscription & { current_period_end: number }).current_period_end * 1000),
       cancelAtPeriodEnd: false
     };
+
+    // Update user credits based on subscription type
+    if (subscriptionType === 'pro') {
+      user.credits = Math.max(user.credits || 0, 100); // Ensure at least 100 credits for pro
+    } else if (subscriptionType === 'enterprise') {
+      user.credits = Math.max(user.credits || 0, 500); // Ensure at least 500 credits for enterprise
+    }
 
     // Log subscription creation
     const usageRecord = {
