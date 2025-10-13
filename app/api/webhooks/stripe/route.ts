@@ -214,20 +214,28 @@ async function handleSuccessfulPayment(session: Stripe.Checkout.Session) {
       }
 
       console.log(`🔍 Looking for user with email: ${customerEmail}`);
-      const user = await User.findOne({ email: customerEmail });
+      let user = await User.findOne({ email: customerEmail });
 
+      // Create user if they don't exist
       if (!user) {
-        console.error(`❌ CRITICAL: User not found in database: ${customerEmail}`);
-        console.error(`❌ This means the user was not validated before creating the checkout session`);
-        console.error(`❌ Session ID: ${session.id}`);
-        console.error(`❌ Customer Email: ${customerEmail}`);
-        console.error(`❌ Metadata:`, session.metadata);
+        console.log(`🆕 Creating new user account for: ${customerEmail}`);
+        user = new User({
+          email: customerEmail,
+          name: session.customer_details?.name || customerEmail.split('@')[0],
+          credits: 0,
+          subscription: {
+            type: 'freemium',
+            stripeCustomerId: session.customer,
+            currentPeriodEnd: new Date(),
+            cancelAtPeriodEnd: false
+          },
+          usageHistory: []
+        });
 
-        // Log total users in database for debugging
-        const totalUsers = await User.countDocuments();
-        console.error(`❌ Total users in database: ${totalUsers}`);
-
-        return;
+        await user.save();
+        console.log(`✅ New user created successfully: ${user.email} (ID: ${user._id})`);
+      } else {
+        console.log(`✅ Existing user found: ${user.email} (ID: ${user._id})`);
       }
 
       console.log(`✅ Found user: ${user.email} (ID: ${user._id})`);
@@ -313,29 +321,47 @@ async function handleSuccessfulPayment(session: Stripe.Checkout.Session) {
         }
       }
 
-      // Method 3: If no user found, log the issue with detailed information
-      if (!user) {
-        console.error(`❌ CRITICAL: No user found for subscription purchase`);
-        console.error(`   - Session Customer ID: ${session.customer}`);
-        console.error(`   - Session Email: ${customerEmail}`);
-        console.error(`   - Subscription Customer ID: ${subscription.customer}`);
-        console.error(`   - Session Metadata:`, session.metadata);
+      // Method 3: If no user found, create new user account
+      if (!user && customerEmail) {
+        // Map Stripe subscription to our subscription types first
+        let subscriptionType = 'freemium';
 
-        // Log all users with similar emails to help debug
-        if (customerEmail) {
-          const similarUsers = await User.find({
-            email: { $regex: customerEmail.split('@')[0], $options: 'i' }
-          }).limit(5);
-          if (similarUsers.length > 0) {
-            console.error(`❌ Found users with similar emails:`);
-            similarUsers.forEach(u => console.error(`   - ${u.email} (ID: ${u._id})`));
-          }
+        if (subscription.items?.data.length > 0) {
+          const priceId = subscription.items.data[0].price?.id;
+
+          // Map actual price IDs to subscription types
+          const priceMapping: { [key: string]: string } = {
+            [process.env.STRIPE_PRO_PRICE_ID || '']: 'pro',
+            [process.env.STRIPE_ENTERPRISE_PRICE_ID || '']: 'enterprise',
+          };
+
+          subscriptionType = priceMapping[priceId] || 'freemium';
         }
 
-        // Log total user count to see if database is empty
-        const totalUsers = await User.countDocuments();
-        console.error(`❌ Total users in database: ${totalUsers}`);
+        // Calculate subscription expiration date
+        const subscriptionEndDate = new Date(subscription.current_period_end * 1000);
 
+        console.log(`🆕 Creating new user account for subscription: ${customerEmail}`);
+        user = new User({
+          email: customerEmail,
+          name: session.customer_details?.name || customerEmail.split('@')[0],
+          credits: subscriptionType === 'pro' ? 100 : 500, // Give appropriate credits based on plan
+          subscription: {
+            type: subscriptionType,
+            stripeCustomerId: subscription.customer as string,
+            stripeSubscriptionId: subscription.id,
+            currentPeriodEnd: subscriptionEndDate,
+            cancelAtPeriodEnd: false
+          },
+          usageHistory: []
+        });
+
+        await user.save();
+        console.log(`✅ New user created successfully: ${user.email} (ID: ${user._id})`);
+      }
+
+      if (!user || !customerEmail) {
+        console.error('❌ No user found or customer email missing for subscription processing');
         return;
       }
 

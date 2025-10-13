@@ -29,10 +29,7 @@ export default function CreditModal({ isOpen, onClose, credits, subscription }: 
 
             if (data.url) {
                 window.location.href = data.url;
-            } else {
-                alert('Subscription setup failed. Please try again.');
-                setIsLoading(false);
-            }
+            } 
         } catch (error) {
             console.error('Payment error:', error);
             alert('Payment failed. Please try again.');

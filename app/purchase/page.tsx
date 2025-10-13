@@ -64,17 +64,21 @@ export default function PurchasePage() {
   const handleCreditPurchase = async (credits: number) => {
     setIsProcessing(true);
     try {
-      // Get user session information
-      const userEmail = localStorage.getItem('userEmail') || 'guest@example.com';
-      const userId = localStorage.getItem('userId') || 'guest';
+      // Optional user session information - not required for payment
+      const userEmail = localStorage.getItem('userEmail') || null;
+
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+
+      // Only add user email header if user is logged in
+      if (userEmail) {
+        headers['x-user-email'] = userEmail;
+      }
 
       const response = await fetch('/api/payments', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-user-email': userEmail,
-          'x-user-id': userId,
-        },
+        headers,
         body: JSON.stringify({
           type: 'credits',
           credits: credits.toString(),
@@ -102,17 +106,21 @@ export default function PurchasePage() {
   const handleSubscriptionPurchase = async (planId: string) => {
     setIsProcessing(true);
     try {
-      // Get user session information
-      const userEmail = localStorage.getItem('userEmail') || 'guest@example.com';
-      const userId = localStorage.getItem('userId') || 'guest';
+      // Optional user session information - not required for payment
+      const userEmail = localStorage.getItem('userEmail') || null;
+
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+
+      // Only add user email header if user is logged in
+      if (userEmail) {
+        headers['x-user-email'] = userEmail;
+      }
 
       const response = await fetch('/api/payments', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-user-email': userEmail,
-          'x-user-id': userId,
-        },
+        headers,
         body: JSON.stringify({
           type: 'subscription',
           plan: planId,
@@ -130,9 +138,7 @@ export default function PurchasePage() {
         window.location.href = data.url;
       } else if (data.error === 'Subscription not configured') {
         alert(`Subscription Setup Required:\n\n${data.message}\n\nPlease contact support or check the setup documentation.`);
-      } else {
-        alert('Subscription setup failed. Please try again.');
-      }
+      } 
     } catch (error) {
       console.error('Subscription error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Please try again.';

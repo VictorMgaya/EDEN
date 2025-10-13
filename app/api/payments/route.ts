@@ -49,39 +49,29 @@ export async function POST(request: NextRequest) {
 
     const { type, credits, plan } = await request.json();
 
-    // Get user session for authentication
-    console.log('🔍 [PAYMENT] Validating user session...');
+    // Get optional user session for existing users
+    console.log('🔍 [PAYMENT] Checking for existing user session...');
 
-    // For now, we'll use a simple approach - in production you should use proper session management
-    // This is a temporary fix until proper NextAuth integration is implemented
+    // Optional user identification - not required for payment
     const userEmail = request.headers.get('x-user-email');
-    const userId = request.headers.get('x-user-id');
 
-    if (!userEmail || !userId) {
-      console.error('❌ [PAYMENT] No user authentication provided');
-      return NextResponse.json({
-        error: 'User authentication required',
-        message: 'Please log in to make a purchase'
-      }, { status: 401 });
+    let user = null;
+    if (userEmail) {
+      // Connect to database and check if user exists (optional)
+      await dbConnect();
+      console.log('✅ [PAYMENT] Database connected for optional user check');
+
+      user = await User.findOne({ email: userEmail });
+      if (user) {
+        console.log(`✅ [PAYMENT] Existing user found: ${user.email} (ID: ${user._id})`);
+        console.log(`📊 [PAYMENT] Current user credits: ${user.credits || 0}`);
+        console.log(`🔒 [PAYMENT] Current subscription: ${user.subscription?.type || 'freemium'}`);
+      } else {
+        console.log(`ℹ️ [PAYMENT] New user - will be created after successful payment`);
+      }
+    } else {
+      console.log(`ℹ️ [PAYMENT] No user email provided - guest checkout`);
     }
-
-    // Connect to database and verify user exists
-    await dbConnect();
-    console.log('✅ [PAYMENT] Database connected for user validation');
-
-    const user = await User.findOne({ email: userEmail });
-    if (!user) {
-      console.error(`❌ [PAYMENT] User not found in database: ${userEmail}`);
-      console.error('❌ [PAYMENT] Cannot create checkout session for non-existent user');
-      return NextResponse.json({
-        error: 'User not found',
-        message: 'Please create an account before making a purchase'
-      }, { status: 404 });
-    }
-
-    console.log(`✅ [PAYMENT] User validated: ${user.email} (ID: ${user._id})`);
-    console.log(`📊 [PAYMENT] Current user credits: ${user.credits || 0}`);
-    console.log(`🔒 [PAYMENT] Current subscription: ${user.subscription?.type || 'freemium'}`);
 
     if (type === 'credits') {
       // Handle credit purchase
@@ -89,7 +79,6 @@ export async function POST(request: NextRequest) {
       const usdAmount = Math.ceil(creditAmount / 500); // 500 credits = 1 USD
 
       const session = await stripe.checkout.sessions.create({
-        payment_method_types: ['card'],
         line_items: [
           {
             price_data: {
@@ -104,13 +93,14 @@ export async function POST(request: NextRequest) {
           },
         ],
         mode: 'payment',
+        payment_method_types: ['card'],
         success_url: `${request.headers.get('origin')}/purchase/success?type=credits&amount=${creditAmount}`,
         cancel_url: `${request.headers.get('origin')}/purchase/cancelled`,
-        customer_email: userEmail,
+        customer_email: userEmail || undefined,
         metadata: {
           type: 'credits',
           creditAmount: creditAmount.toString(),
-          userEmail: userEmail,
+          userEmail: userEmail || '',
         },
       });
 
@@ -139,7 +129,6 @@ export async function POST(request: NextRequest) {
       }
 
       const session = await stripe.checkout.sessions.create({
-        payment_method_types: ['card'],
         line_items: [
           {
             price: selectedPlan.id,
@@ -147,13 +136,14 @@ export async function POST(request: NextRequest) {
           },
         ],
         mode: 'subscription',
+        payment_method_types: ['card'],
         success_url: `${request.headers.get('origin')}/purchase/success?type=subscription&plan=${plan}`,
         cancel_url: `${request.headers.get('origin')}/purchase/cancelled`,
-        customer_email: userEmail,
+        customer_email: userEmail || undefined,
         metadata: {
           type: 'subscription',
           plan: plan,
-          userEmail: userEmail,
+          userEmail: userEmail || '',
         },
       });
 
