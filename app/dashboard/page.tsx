@@ -39,29 +39,27 @@ interface UsageRecord {
   };
 }
 
-interface UsageHistory {
-  history: UsageRecord[];
-  pagination: {
-    currentPage: number;
-    totalPages: number;
-    totalItems: number;
-    itemsPerPage: number;
-  };
+interface Activity {
+  page: string;
+  timestamp?: string;
+  duration?: number;
+  [key: string]: unknown;
 }
 
-interface SessionData {
+interface Session {
   id: string;
   startTime: string;
-  records: UsageRecord[];
-  locationData?: {
-    lat: number;
-    lng: number;
+  endTime?: string;
+  activities?: Activity[];
+  metadata?: {
+    totalDuration?: number;
     [key: string]: unknown;
   };
+  [key: string]: unknown;
 }
 
-interface SessionsResponse {
-  sessions: SessionData[];
+interface UsageHistory {
+  history: UsageRecord[];
   pagination: {
     currentPage: number;
     totalPages: number;
@@ -182,16 +180,16 @@ export default function DashboardPage() {
 
   // Session History Tab Component
   const SessionHistoryTab = () => {
-    const [sessions, setSessions] = useState<SessionData[]>([]);
+    const [sessions, setSessions] = useState<Session[]>([]);
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
       const loadSessions = async () => {
         setLoading(true);
         try {
-          const response = await fetch('/api/users/sessions?page=1&limit=20');
+          const response = await fetch('/api/users/sessions?limit=20');
           if (response.ok) {
-            const data: SessionsResponse = await response.json();
+            const data = await response.json();
             setSessions(data.sessions || []);
           }
         } catch (error) {
@@ -204,15 +202,16 @@ export default function DashboardPage() {
       loadSessions();
     }, []);
 
-    const handleViewAnalysis = (session: SessionData) => {
-      if (session.locationData) {
-        // Redirect to analytics page with the session's location
-        const { lat, lng } = session.locationData;
-        router.push(`/analytics?lat=${lat}&lon=${lng}`);
-      }
+    const handleViewSession = (session: Session) => {
+      // Store session data for navigation
+      localStorage.setItem('selectedSession', JSON.stringify(session));
+      console.log('📋 [DASHBOARD] Selected session:', session.id);
+
+      // Navigate to analytics with session context
+      router.push('/analytics');
     };
 
-    const handleChatAboutSession = (session: SessionData) => {
+    const handleChatAboutSession = (session: Session) => {
       // Store session data for Experts page to reference
       localStorage.setItem('selectedSession', JSON.stringify(session));
       router.push('/Experts');
@@ -232,13 +231,13 @@ export default function DashboardPage() {
         <div className="text-center py-12">
           <History className="h-12 w-12 text-slate-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100 mb-2">
-            No Analysis Sessions
+            No Sessions Yet
           </h3>
           <p className="text-slate-600 dark:text-slate-400 mb-4">
-            Start analyzing locations to see your session history here.
+            Your browsing sessions will appear here as you navigate the app.
           </p>
           <Button onClick={() => router.push('/analytics')}>
-            Go to Analytics
+            Start Exploring
           </Button>
         </div>
       );
@@ -251,31 +250,46 @@ export default function DashboardPage() {
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
-                  <MapPin className="h-5 w-5 text-blue-600" />
+                  <Clock className="h-5 w-5 text-blue-600" />
                 </div>
                 <div>
                   <h4 className="font-medium text-slate-900 dark:text-slate-100">
-                    Analysis Session
+                    Session {String(session.id || 'unknown').substring(0, 8)}...
                   </h4>
                   <p className="text-sm text-slate-500 dark:text-slate-400">
-                    {formatDate(session.startTime)}
+                    {formatDate(String(session.startTime || ''))}
+                    {session.endTime && ` - ${formatDate(String(session.endTime))}`}
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 <Badge variant="outline">
-                  {session.records.length} interactions
+                  {session.activities?.length || 0} activities
                 </Badge>
+                {session.metadata?.totalDuration && (
+                  <Badge variant="secondary">
+                    {Math.round(session.metadata.totalDuration / 1000)}s
+                  </Badge>
+                )}
               </div>
             </div>
 
-            {session.locationData && (
-              <div className="mb-4 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
-                <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-                  <MapPin className="h-4 w-4" />
-                  <span>
-                    Location: {session.locationData.lat.toFixed(4)}, {session.locationData.lng.toFixed(4)}
-                  </span>
+            {session.activities && session.activities.length > 0 && (
+              <div className="mb-4">
+                <div className="text-sm text-slate-600 dark:text-slate-400 mb-2">
+                  Recent pages:
+                </div>
+                <div className="flex flex-wrap gap-1">
+                  {session.activities?.slice(0, 5).map((activity: Activity, idx: number) => (
+                    <Badge key={idx} variant="outline" className="text-xs">
+                      {activity.page || 'unknown'}
+                    </Badge>
+                  ))}
+                  {session.activities && Array.isArray(session.activities) && session.activities.length > 5 && (
+                    <Badge variant="outline" className="text-xs">
+                      +{session.activities.length - 5} more
+                    </Badge>
+                  )}
                 </div>
               </div>
             )}
@@ -284,11 +298,11 @@ export default function DashboardPage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => handleViewAnalysis(session)}
+                onClick={() => handleViewSession(session)}
                 className="flex items-center gap-2"
               >
                 <Eye className="h-4 w-4" />
-                View Analysis
+                View Session
               </Button>
               <Button
                 variant="outline"
