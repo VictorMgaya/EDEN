@@ -42,7 +42,7 @@ const BottomNav = () => {
 
     return (
         <nav
-            className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-blue-200 dark:border-gray-700 h-16 flex items-center justify-around rounded-t-2xl z-50 shadow-lg"
+            className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-blue-200 dark:border-gray-700 h-16 flex items-center justify-around rounded-t-2xl z-100 shadow-lg"
             role="navigation"
             aria-label="Bottom navigation"
         >

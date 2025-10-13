@@ -13,6 +13,7 @@ import LoadingProgressBar from "@/components/LoadingProgressBar"; // Import the 
 import { NextAuthProvider } from "./providers";
 import { LanguageProvider } from '@/context/LanguageContext';
 import { languageMetadata, seoByRegion } from '@/config/languages';
+import SidebarComponent from "@/components/SidebarComponent";
 
 const Lexend = LexendFont({
   weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
@@ -318,16 +319,18 @@ export default function RootLayout({ children }) {
               enableSystem
               disableTransitionOnChange
             >
-              {pathname !== "/auth" && pathname !== "/" && <Header />}
-              <div
-                style={{
-                  filter: `blur(${pageBlurAmount}px)`,
-                  transition: 'filter 0.5s ease-in-out', // Changed to ease-in-out
-                }}
-              >
-                {loading ? <Loading /> : <>{children}</>}
-              </div>
-              {pathname !== '/auth' && pathname !== '/Experts' && <Footer />}
+              <SidebarComponent>
+                {pathname !== "/auth" && pathname !== "/" && <Header />}
+                <div
+                  style={{
+                    filter: `blur(${pageBlurAmount}px)`,
+                    transition: 'filter 0.5s ease-in-out', // Changed to ease-in-out
+                  }}
+                >
+                  {loading ? <Loading /> : <>{children}</>}
+                </div>
+                {pathname !== '/auth' && pathname !== '/Experts' && <Footer />}
+              </SidebarComponent>
             </ThemeProvider>
           </LanguageProvider>
         </NextAuthProvider>

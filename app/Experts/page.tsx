@@ -376,10 +376,10 @@ export default function ExpertsPage() {
     // Check authentication
     if (status === 'loading') return;
 
-    if (status === 'unauthenticated') {
-      router.push('/');
-      return;
-    }
+    //if (status === 'unauthenticated') {
+      //router.push('/');
+      //return;
+    //}
 
     const rawXML = getRawXMLCache();
     setXmlData(rawXML || "");
@@ -657,7 +657,7 @@ export default function ExpertsPage() {
         )}
       </div>
 
-      <div className="fixed bottom-0 left-0 w-full border-t border-slate-200/50 dark:border-slate-700/50 bg-gradient-to-t from-white/95 via-white/90 to-white/70 dark:from-slate-900/95 dark:via-slate-900/90 dark:to-slate-900/70 backdrop-blur-md p-4 md:p-6 shadow-[0_-8px_32px_0_rgba(0,0,0,0.12)] z-50 pb-safe">
+      <div className="fixed bottom-8 left-0 w-full border-t border-slate-200/50 dark:border-slate-700/50 bg-gradient-to-t from-white/95 via-white/90 to-white/70 dark:from-slate-900/95 dark:via-slate-900/90 dark:to-slate-900/70 backdrop-blur-md p-4 md:p-6 shadow-[0_-8px_32px_0_rgba(0,0,0,0.12)] z-50 pb-safe">
         <form onSubmit={handleSendMessage} className="max-w-4xl mx-auto">
           <div className="flex gap-4 items-end">
             <div className="flex-1 relative">

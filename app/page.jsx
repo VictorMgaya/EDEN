@@ -5,15 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 
 export default function Home() {
-  const [isMounted, setIsMounted] = useState(false);
   const router = useRouter();
   const { data: session, status } = useSession();
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  if (!isMounted) return null;
 
   // If user is authenticated, redirect to analytics
   if (status === 'authenticated') {
