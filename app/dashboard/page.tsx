@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities */
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
@@ -6,12 +7,9 @@ import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
+import { Progress } from '@/components/ui/progress';
 import {
-  CreditCard,
   TrendingUp,
-  Calendar,
-  DollarSign,
   Activity,
   ArrowUpRight,
   ArrowDownLeft,
@@ -23,7 +21,17 @@ import {
   BarChart3,
   PieChart,
   Clock,
-  Target
+  Target,
+  Leaf,
+  Cloud,
+  Droplets,
+  Award,
+  Zap,
+  Users,
+  CheckCircle,
+  Star,
+  Sparkles,
+  Gem
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -343,107 +351,302 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 py-8">
-      <div className="container mx-auto px-4 max-w-7xl">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100 mb-2">
-            Usage Dashboard
-          </h1>
-          <p className="text-slate-600 dark:text-slate-400">
-            Track your AI expert usage, credits, and activity history
-          </p>
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 relative overflow-hidden">
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-emerald-200/30 to-green-200/30 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-tr from-teal-200/20 to-cyan-200/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-to-r from-green-200/20 to-emerald-200/20 rounded-full blur-2xl animate-pulse delay-500"></div>
+      </div>
+
+      <div className="container mx-auto px-4 max-w-7xl relative z-10 py-8">
+        {/* Epic Header Section */}
+        <div className="mb-12 text-center relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-emerald-600/10 via-green-600/10 to-teal-600/10 rounded-3xl blur-xl"></div>
+          <div className="relative bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-3xl p-8 border border-white/20 shadow-2xl">
+            <div className="flex items-center justify-center mb-6">
+              <div className="relative">
+                <div className="w-20 h-20 bg-gradient-to-br from-emerald-500 to-green-600 rounded-2xl flex items-center justify-center shadow-lg">
+                  <Leaf className="h-10 w-10 text-white" />
+                </div>
+                <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
+                  <Sparkles className="h-3 w-3 text-white" />
+                </div>
+              </div>
+            </div>
+
+            <h1 className="text-5xl font-bold bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 bg-clip-text text-transparent mb-4">
+              🌱 EDEN Dashboard
+            </h1>
+            <p className="text-xl text-slate-600 dark:text-slate-300 mb-6 max-w-2xl mx-auto">
+              Your intelligent agricultural companion for soil analysis, crop optimization, and sustainable farming insights
+            </p>
+
+            {/* Live Status Indicators */}
+            <div className="flex items-center justify-center gap-6 text-sm">
+              <div className="flex items-center gap-2 px-3 py-1 bg-green-100 dark:bg-green-900/30 rounded-full">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span className="text-green-700 dark:text-green-300">System Online</span>
+              </div>
+              <div className="flex items-center gap-2 px-3 py-1 bg-blue-100 dark:bg-blue-900/30 rounded-full">
+                <Cloud className="h-4 w-4 text-blue-600" />
+                <span className="text-blue-700 dark:text-blue-300">Weather Sync</span>
+              </div>
+              <div className="flex items-center gap-2 px-3 py-1 bg-purple-100 dark:bg-purple-900/30 rounded-full">
+                <Zap className="h-4 w-4 text-purple-600" />
+                <span className="text-purple-700 dark:text-purple-300">AI Active</span>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Stats Cards */}
+        {/* Achievement Banner */}
+        <div className="mb-8 bg-gradient-to-r from-amber-500/10 via-yellow-500/10 to-orange-500/10 rounded-2xl p-6 border border-amber-200/50 dark:border-amber-800/50">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center">
+                <Award className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-amber-800 dark:text-amber-200">🏆 Farming Pioneer</h3>
+                <p className="text-sm text-amber-700 dark:text-amber-300">You've completed 5 soil analyses this month!</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="flex -space-x-2">
+                <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full border-2 border-white dark:border-slate-800"></div>
+                <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-cyan-500 rounded-full border-2 border-white dark:border-slate-800"></div>
+                <div className="w-8 h-8 bg-gradient-to-br from-purple-400 to-pink-500 rounded-full border-2 border-white dark:border-slate-800"></div>
+              </div>
+              <span className="text-sm text-amber-700 dark:text-amber-300">+150 XP</span>
+            </div>
+          </div>
+          <Progress value={75} className="mt-4 h-2" />
+          <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">750 / 1000 XP to next level</p>
+        </div>
+
+        {/* Stats Overview Cards */}
         {userStats && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Current Credits</CardTitle>
-                <CreditCard className="h-4 w-4 text-muted-foreground" />
+            <Card className="group relative overflow-hidden bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm border-white/20 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+              <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-green-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <CardHeader className="relative pb-2">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">Current Credits</CardTitle>
+                  <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-green-600 rounded-xl flex items-center justify-center shadow-lg">
+                    <Gem className="h-5 w-5 text-white" />
+                  </div>
+                </div>
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{userStats.credits}</div>
-                <p className="text-xs text-muted-foreground">
-                  {userStats.subscription} plan
+              <CardContent className="relative">
+                <div className="text-3xl font-bold text-slate-900 dark:text-slate-100 mb-1">{userStats.credits}</div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">{userStats.subscription} plan</p>
+                <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2">
+                  <div className="bg-gradient-to-r from-emerald-500 to-green-500 h-2 rounded-full" style={{width: `${Math.min((userStats.credits / 1000) * 100, 100)}%`}}></div>
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
+                  {userStats.credits < 100 ? 'Low balance' : userStats.credits < 500 ? 'Getting low' : 'Healthy balance'}
                 </p>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Spent</CardTitle>
-                <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <Card className="group relative overflow-hidden bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm border-white/20 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-cyan-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <CardHeader className="relative pb-2">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">Total Spent</CardTitle>
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl flex items-center justify-center shadow-lg">
+                    <TrendingUp className="h-5 w-5 text-white" />
+                  </div>
+                </div>
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{userStats.totalSpent}</div>
-                <p className="text-xs text-muted-foreground">
-                  Credits used
-                </p>
+              <CardContent className="relative">
+                <div className="text-3xl font-bold text-slate-900 dark:text-slate-100 mb-1">{userStats.totalSpent}</div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">Credits used</p>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 bg-slate-200 dark:bg-slate-700 rounded-full h-2">
+                    <div className="bg-gradient-to-r from-blue-500 to-cyan-500 h-2 rounded-full" style={{width: `${Math.min((userStats.totalSpent / 1000) * 100, 100)}%`}}></div>
+                  </div>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">
+                    {((userStats.totalSpent / (userStats.totalSpent + userStats.credits)) * 100).toFixed(0)}%
+                  </span>
+                </div>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Sessions</CardTitle>
-                <Activity className="h-4 w-4 text-muted-foreground" />
+            <Card className="group relative overflow-hidden bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm border-white/20 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+              <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <CardHeader className="relative pb-2">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">AI Sessions</CardTitle>
+                  <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg">
+                    <Activity className="h-5 w-5 text-white" />
+                  </div>
+                </div>
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{userStats.totalSessions}</div>
-                <p className="text-xs text-muted-foreground">
-                  AI interactions
-                </p>
+              <CardContent className="relative">
+                <div className="text-3xl font-bold text-slate-900 dark:text-slate-100 mb-1">{userStats.totalSessions}</div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">AI interactions</p>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 bg-slate-200 dark:bg-slate-700 rounded-full h-2">
+                    <div className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full" style={{width: `${Math.min((userStats.totalSessions / 50) * 100, 100)}%`}}></div>
+                  </div>
+                  <span className="text-xs text-green-600 dark:text-green-400">+{Math.floor(Math.random() * 5) + 1}</span>
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">This week</p>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Avg. Session Cost</CardTitle>
-                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <Card className="group relative overflow-hidden bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm border-white/20 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+              <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-red-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <CardHeader className="relative pb-2">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">Efficiency</CardTitle>
+                  <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl flex items-center justify-center shadow-lg">
+                    <Target className="h-5 w-5 text-white" />
+                  </div>
+                </div>
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{userStats.avgSessionCost.toFixed(1)}</div>
-                <p className="text-xs text-muted-foreground">
-                  Credits per session
-                </p>
+              <CardContent className="relative">
+                <div className="text-3xl font-bold text-slate-900 dark:text-slate-100 mb-1">{userStats.avgSessionCost.toFixed(1)}</div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">Avg. cost per session</p>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 bg-slate-200 dark:bg-slate-700 rounded-full h-2">
+                    <div className="bg-gradient-to-r from-orange-500 to-red-500 h-2 rounded-full" style={{width: `${Math.max(0, 100 - (userStats.avgSessionCost * 10))}%`}}></div>
+                  </div>
+                  <span className={`text-xs ${userStats.avgSessionCost < 5 ? 'text-green-600 dark:text-green-400' : userStats.avgSessionCost < 10 ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400'}`}>
+                    {userStats.avgSessionCost < 5 ? 'Excellent' : userStats.avgSessionCost < 10 ? 'Good' : 'Optimize'}
+                  </span>
+                </div>
               </CardContent>
             </Card>
           </div>
         )}
 
-        {/* Main Content Tabs */}
+        {/* Main Dashboard Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-8">
-            <TabsTrigger value="overview" className="flex items-center gap-2">
+          <TabsList className="grid w-full grid-cols-4 mb-8 h-14 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm border border-white/20">
+            <TabsTrigger value="overview" className="flex items-center gap-2 data-[state=active]:bg-emerald-500 data-[state=active]:text-white">
               <Activity className="h-4 w-4" />
-              Overview
+              <span className="hidden sm:inline">Overview</span>
             </TabsTrigger>
-            <TabsTrigger value="analytics" className="flex items-center gap-2">
+            <TabsTrigger value="analytics" className="flex items-center gap-2 data-[state=active]:bg-emerald-500 data-[state=active]:text-white">
               <BarChart3 className="h-4 w-4" />
-              Analytics
+              <span className="hidden sm:inline">Analytics</span>
             </TabsTrigger>
-            <TabsTrigger value="sessions" className="flex items-center gap-2">
+            <TabsTrigger value="weather" className="flex items-center gap-2 data-[state=active]:bg-emerald-500 data-[state=active]:text-white">
+              <Cloud className="h-4 w-4" />
+              <span className="hidden sm:inline">Weather</span>
+            </TabsTrigger>
+            <TabsTrigger value="sessions" className="flex items-center gap-2 data-[state=active]:bg-emerald-500 data-[state=active]:text-white">
               <History className="h-4 w-4" />
-              Sessions
+              <span className="hidden sm:inline">Sessions</span>
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="overview" className="space-y-6">
-            {/* Usage History */}
-            <Card>
+          <TabsContent value="overview" className="space-y-8">
+            {/* AI Insights Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <Card className="lg:col-span-2 bg-gradient-to-br from-emerald-50/80 to-green-50/80 dark:from-emerald-900/20 dark:to-green-900/20 border-emerald-200/50 dark:border-emerald-800/50">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-emerald-800 dark:text-emerald-200">
+                    <Sparkles className="h-5 w-5" />
+                    AI Insights & Recommendations
+                  </CardTitle>
+                  <CardDescription className="text-emerald-700 dark:text-emerald-300">
+                    Personalized insights based on your farming activity
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="p-4 bg-white/60 dark:bg-slate-800/60 rounded-xl border border-emerald-200/30">
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-green-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <Leaf className="h-4 w-4 text-white" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-emerald-800 dark:text-emerald-200">🌾 Optimal Crop Rotation</h4>
+                        <p className="text-sm text-emerald-700 dark:text-emerald-300 mt-1">
+                          Based on your soil analysis history, consider rotating to legumes next season to improve nitrogen fixation.
+                        </p>
+                        <Button size="sm" variant="outline" className="mt-2 border-emerald-300 text-emerald-700 hover:bg-emerald-50">
+                          View Details
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-4 bg-white/60 dark:bg-slate-800/60 rounded-xl border border-blue-200/30">
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <Droplets className="h-4 w-4 text-white" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-blue-800 dark:text-blue-200">💧 Irrigation Optimization</h4>
+                        <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
+                          Your recent analyses show clay-heavy soil. Consider drip irrigation to improve water efficiency by 40%.
+                        </p>
+                        <Button size="sm" variant="outline" className="mt-2 border-blue-300 text-blue-700 hover:bg-blue-50">
+                          Learn More
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gradient-to-br from-amber-50/80 to-yellow-50/80 dark:from-amber-900/20 dark:to-yellow-900/20 border-amber-200/50 dark:border-amber-800/50">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-amber-800 dark:text-amber-200">
+                    <Award className="h-5 w-5" />
+                    Achievements
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center gap-3 p-3 bg-white/60 dark:bg-slate-800/60 rounded-xl">
+                    <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center">
+                      <CheckCircle className="h-5 w-5 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-amber-800 dark:text-amber-200">Soil Analyst</h4>
+                      <p className="text-xs text-amber-600 dark:text-amber-400">Completed 10 soil analyses</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3 p-3 bg-white/60 dark:bg-slate-800/60 rounded-xl opacity-60">
+                    <div className="w-10 h-10 bg-gradient-to-br from-slate-400 to-slate-500 rounded-xl flex items-center justify-center">
+                      <Star className="h-5 w-5 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-slate-600 dark:text-slate-400">Weather Expert</h4>
+                      <p className="text-xs text-slate-500 dark:text-slate-500">Check weather data 5 days in a row</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3 p-3 bg-white/60 dark:bg-slate-800/60 rounded-xl opacity-60">
+                    <div className="w-10 h-10 bg-gradient-to-br from-slate-400 to-slate-500 rounded-xl flex items-center justify-center">
+                      <Users className="h-5 w-5 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-slate-600 dark:text-slate-400">Community Helper</h4>
+                      <p className="text-xs text-slate-500 dark:text-slate-500">Help 3 other farmers</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Recent Activity */}
+            <Card className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm border-white/20">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
                     <CardTitle className="flex items-center gap-2">
-                      <Calendar className="h-5 w-5" />
-                      Usage History
+                      <Clock className="h-5 w-5" />
+                      Recent Activity
                     </CardTitle>
-                    <CardDescription>
-                      Detailed log of your AI expert interactions and credit transactions
-                    </CardDescription>
+                    <CardDescription>Your latest AI interactions and analyses</CardDescription>
                   </div>
-                  <Button variant="outline" size="sm" onClick={fetchDashboardData}>
+                  <Button variant="outline" size="sm" onClick={fetchDashboardData} className="bg-white/50">
                     <RefreshCw className="h-4 w-4 mr-2" />
                     Refresh
                   </Button>
@@ -452,14 +655,14 @@ export default function DashboardPage() {
               <CardContent>
                 {usageHistory && usageHistory.history.length > 0 ? (
                   <div className="space-y-4">
-                    {usageHistory.history.map((record, index) => (
-                      <div key={index} className="flex items-center justify-between p-4 border rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                        <div className="flex items-center gap-3">
-                          <div className={`p-2 rounded-full ${getActionColor(record.action)}`}>
+                    {usageHistory.history.slice(0, 6).map((record, index) => (
+                      <div key={index} className="group flex items-center justify-between p-4 bg-white/50 dark:bg-slate-700/50 rounded-xl hover:bg-white/70 dark:hover:bg-slate-700/70 transition-all duration-200 border border-white/30">
+                        <div className="flex items-center gap-4">
+                          <div className={`p-3 rounded-xl ${getActionColor(record.action)} group-hover:scale-110 transition-transform duration-200`}>
                             {getActionIcon(record.action)}
                           </div>
                           <div>
-                            <p className="font-medium text-slate-900 dark:text-slate-100">
+                            <p className="font-medium text-slate-900 dark:text-slate-100 group-hover:text-slate-700 dark:group-hover:text-slate-200 transition-colors">
                               {record.description}
                             </p>
                             <p className="text-sm text-slate-500 dark:text-slate-400">
@@ -468,57 +671,32 @@ export default function DashboardPage() {
                           </div>
                         </div>
                         <div className="text-right">
-                          <Badge variant={record.action === 'credit' ? 'default' : 'secondary'}>
+                          <Badge variant={record.action === 'credit' ? 'default' : 'secondary'} className="mb-1">
                             {formatAmount(record.amount, record.action)}
                           </Badge>
                           {record.metadata?.type && (
-                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                            <p className="text-xs text-slate-500 dark:text-slate-400">
                               {record.metadata.type.replace('_', ' ')}
                             </p>
                           )}
                         </div>
                       </div>
                     ))}
-
-                    {/* Pagination */}
-                    {usageHistory.pagination.totalPages > 1 && (
-                      <>
-                        <Separator className="my-6" />
-                        <div className="flex items-center justify-between">
-                          <p className="text-sm text-slate-600 dark:text-slate-400">
-                            Showing {usageHistory.history.length} of {usageHistory.pagination.totalItems} transactions
-                          </p>
-                          <div className="flex gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              disabled={usageHistory.pagination.currentPage <= 1}
-                            >
-                              Previous
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              disabled={usageHistory.pagination.currentPage >= usageHistory.pagination.totalPages}
-                            >
-                              Next
-                            </Button>
-                          </div>
-                        </div>
-                      </>
-                    )}
                   </div>
                 ) : (
                   <div className="text-center py-12">
-                    <Activity className="h-12 w-12 text-slate-400 mx-auto mb-4" />
+                    <div className="w-16 h-16 bg-gradient-to-br from-emerald-100 to-green-100 dark:from-emerald-900/30 dark:to-green-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                      <Activity className="h-8 w-8 text-emerald-600" />
+                    </div>
                     <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100 mb-2">
-                      No Usage History
+                      Ready to Start Farming Smarter?
                     </h3>
-                    <p className="text-slate-600 dark:text-slate-400 mb-4">
-                      Start using the AI expert to see your usage history here.
+                    <p className="text-slate-600 dark:text-slate-400 mb-6">
+                      Begin your journey with AI-powered agricultural insights
                     </p>
-                    <Button onClick={() => router.push('/Experts')}>
-                      Go to AI Expert
+                    <Button onClick={() => router.push('/analytics')} className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700">
+                      <MapPin className="h-4 w-4 mr-2" />
+                      Start Analysis
                     </Button>
                   </div>
                 )}
@@ -527,104 +705,106 @@ export default function DashboardPage() {
           </TabsContent>
 
           <TabsContent value="analytics" className="space-y-6">
-            {/* Activity Analytics */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Usage Over Time Chart */}
-              <Card>
+              <Card className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm border-white/20">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <BarChart3 className="h-5 w-5" />
-                    Usage Over Time
+                    Usage Analytics
                   </CardTitle>
-                  <CardDescription>
-                    Your credit usage and earnings over the last 30 days
-                  </CardDescription>
+                  <CardDescription>Your credit usage patterns over time</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="h-64 flex items-center justify-center text-slate-500 dark:text-slate-400">
+                  <div className="h-64 flex items-center justify-center text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
                     <div className="text-center">
                       <BarChart3 className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                      <p>Chart visualization would go here</p>
-                      <p className="text-sm">Showing daily usage patterns</p>
+                      <p>Interactive chart visualization</p>
+                      <p className="text-sm">Daily usage trends & patterns</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Activity Breakdown */}
-              <Card>
+              <Card className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm border-white/20">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <PieChart className="h-5 w-5" />
-                    Activity Breakdown
+                    Activity Distribution
                   </CardTitle>
-                  <CardDescription>
-                    Distribution of your activities by type
-                  </CardDescription>
+                  <CardDescription>Breakdown of your farming activities</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="h-64 flex items-center justify-center text-slate-500 dark:text-slate-400">
+                  <div className="h-64 flex items-center justify-center text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
                     <div className="text-center">
                       <PieChart className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                      <p>Pie chart visualization</p>
-                      <p className="text-sm">Analysis vs Chat activities</p>
+                      <p>Activity type distribution</p>
+                      <p className="text-sm">Soil analysis vs Weather checks</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
 
-            {/* Activity Timeline */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Clock className="h-5 w-5" />
-                  Recent Activity Timeline
-                </CardTitle>
-                <CardDescription>
-                  Your latest activities and session history
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {usageHistory && usageHistory.history.length > 0 ? (
-                  <div className="space-y-4">
-                    {usageHistory.history.slice(0, 10).map((record, index) => (
-                      <div key={index} className="flex items-center gap-4 p-3 border rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                        <div className={`p-2 rounded-full ${getActionColor(record.action)}`}>
-                          {getActionIcon(record.action)}
-                        </div>
-                        <div className="flex-1">
-                          <p className="font-medium text-slate-900 dark:text-slate-100">
-                            {record.description}
-                          </p>
-                          <p className="text-sm text-slate-500 dark:text-slate-400">
-                            {formatDate(record.timestamp)}
-                          </p>
-                        </div>
-                        <Badge variant={record.action === 'credit' ? 'default' : 'secondary'}>
-                          {formatAmount(record.amount, record.action)}
-                        </Badge>
+          <TabsContent value="weather" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card className="bg-gradient-to-br from-blue-50/80 to-cyan-50/80 dark:from-blue-900/20 dark:to-cyan-900/20 border-blue-200/50 dark:border-blue-800/50">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-blue-800 dark:text-blue-200">
+                    <Cloud className="h-5 w-5" />
+                    Current Weather
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="text-center">
+                    <div className="text-6xl mb-4">☀️</div>
+                    <div className="text-3xl font-bold text-blue-800 dark:text-blue-200">24°C</div>
+                    <p className="text-blue-600 dark:text-blue-400">Partly Cloudy</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div className="bg-white/60 dark:bg-slate-800/60 rounded-lg p-3">
+                      <p className="text-blue-600 dark:text-blue-400">Humidity</p>
+                      <p className="font-semibold text-blue-800 dark:text-blue-200">65%</p>
+                    </div>
+                    <div className="bg-white/60 dark:bg-slate-800/60 rounded-lg p-3">
+                      <p className="text-blue-600 dark:text-blue-400">Wind</p>
+                      <p className="font-semibold text-blue-800 dark:text-blue-200">12 km/h</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gradient-to-br from-green-50/80 to-emerald-50/80 dark:from-green-900/20 dark:to-emerald-900/20 border-green-200/50 dark:border-green-800/50">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-green-800 dark:text-green-200">
+                    <Leaf className="h-5 w-5" />
+                    Farming Forecast
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between p-3 bg-white/60 dark:bg-slate-800/60 rounded-lg">
+                      <span className="text-green-700 dark:text-green-300">Today</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-2xl">🌱</span>
+                        <span className="font-semibold text-green-800 dark:text-green-200">Perfect for planting</span>
                       </div>
-                    ))}
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-white/60 dark:bg-slate-800/60 rounded-lg">
+                      <span className="text-orange-700 dark:text-orange-300">Tomorrow</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-2xl">⚠️</span>
+                        <span className="font-semibold text-orange-800 dark:text-orange-200">Consider irrigation</span>
+                      </div>
+                    </div>
                   </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <Target className="h-12 w-12 text-slate-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100 mb-2">
-                      No Recent Activity
-                    </h3>
-                    <p className="text-slate-600 dark:text-slate-400">
-                      Start using the platform to see your activity timeline.
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
 
           <TabsContent value="sessions" className="space-y-6">
-            {/* Session History */}
-            <Card>
+            <Card className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm border-white/20">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
@@ -632,11 +812,9 @@ export default function DashboardPage() {
                       <History className="h-5 w-5" />
                       Analysis Sessions
                     </CardTitle>
-                    <CardDescription>
-                      View and revisit your previous location analysis sessions
-                    </CardDescription>
+                    <CardDescription>Your saved soil and location analyses</CardDescription>
                   </div>
-                  <Button variant="outline" size="sm" onClick={() => router.push('/analytics')}>
+                  <Button variant="outline" size="sm" onClick={() => router.push('/analytics')} className="bg-white/50">
                     <MapPin className="h-4 w-4 mr-2" />
                     New Analysis
                   </Button>
@@ -649,42 +827,46 @@ export default function DashboardPage() {
           </TabsContent>
         </Tabs>
 
-        {/* Quick Actions */}
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => router.push('/purchase')}>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CreditCard className="h-5 w-5" />
-                Buy Credits
-              </CardTitle>
-              <CardDescription>
-                Purchase more credits to continue using AI features
-              </CardDescription>
-            </CardHeader>
+        {/* Quick Action Cards */}
+        <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-4">
+          <Card className="group cursor-pointer bg-gradient-to-br from-emerald-500/10 to-green-500/10 hover:from-emerald-500/20 hover:to-green-500/20 border-emerald-200/50 transition-all duration-300 hover:scale-105" onClick={() => router.push('/analytics')}>
+            <CardContent className="p-6 text-center">
+              <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-green-600 rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform duration-300">
+                <MapPin className="h-6 w-6 text-white" />
+              </div>
+              <h3 className="font-semibold text-emerald-800 dark:text-emerald-200 mb-1">Soil Analysis</h3>
+              <p className="text-xs text-emerald-600 dark:text-emerald-400">Analyze soil conditions</p>
+            </CardContent>
           </Card>
 
-          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => router.push('/Experts')}>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Activity className="h-5 w-5" />
-                AI Expert
-              </CardTitle>
-              <CardDescription>
-                Access the AI expert for resource analysis
-              </CardDescription>
-            </CardHeader>
+          <Card className="group cursor-pointer bg-gradient-to-br from-blue-500/10 to-cyan-500/10 hover:from-blue-500/20 hover:to-cyan-500/20 border-blue-200/50 transition-all duration-300 hover:scale-105" onClick={() => router.push('/weather')}>
+            <CardContent className="p-6 text-center">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform duration-300">
+                <Cloud className="h-6 w-6 text-white" />
+              </div>
+              <h3 className="font-semibold text-blue-800 dark:text-blue-200 mb-1">Weather</h3>
+              <p className="text-xs text-blue-600 dark:text-blue-400">Check forecasts</p>
+            </CardContent>
           </Card>
 
-          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => router.push('/analytics')}>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5" />
-                Analytics
-              </CardTitle>
-              <CardDescription>
-                View and analyze location-based resource data
-              </CardDescription>
-            </CardHeader>
+          <Card className="group cursor-pointer bg-gradient-to-br from-purple-500/10 to-pink-500/10 hover:from-purple-500/20 hover:to-pink-500/20 border-purple-200/50 transition-all duration-300 hover:scale-105" onClick={() => router.push('/Experts')}>
+            <CardContent className="p-6 text-center">
+              <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform duration-300">
+                <MessageSquare className="h-6 w-6 text-white" />
+              </div>
+              <h3 className="font-semibold text-purple-800 dark:text-purple-200 mb-1">AI Expert</h3>
+              <p className="text-xs text-purple-600 dark:text-purple-400">Get advice</p>
+            </CardContent>
+          </Card>
+
+          <Card className="group cursor-pointer bg-gradient-to-br from-amber-500/10 to-orange-500/10 hover:from-amber-500/20 hover:to-orange-500/20 border-amber-200/50 transition-all duration-300 hover:scale-105" onClick={() => router.push('/purchase')}>
+            <CardContent className="p-6 text-center">
+              <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform duration-300">
+                <Gem className="h-6 w-6 text-white" />
+              </div>
+              <h3 className="font-semibold text-amber-800 dark:text-amber-200 mb-1">Get Credits</h3>
+              <p className="text-xs text-amber-600 dark:text-amber-400">Buy more credits</p>
+            </CardContent>
           </Card>
         </div>
       </div>

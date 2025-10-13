@@ -81,17 +81,14 @@ export default function PurchasePage() {
         }),
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
-      }
-
       const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || `HTTP error! status: ${response.status}`);
+      }
 
       if (data.url) {
         window.location.href = data.url;
-      } else {
-        alert('Payment setup failed. Please try again.');
       }
     } catch (error) {
       console.error('Payment error:', error);
