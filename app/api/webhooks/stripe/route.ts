@@ -20,18 +20,36 @@ const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('🎯 [WEBHOOK] ========== WEBHOOK RECEIVED ==========');
+    console.log('Timestamp:', new Date().toISOString());
+    console.log('Headers:', Object.fromEntries(request.headers.entries()));
+
     const body = await request.text();
     const headersList = await headers();
     const sig = headersList.get('stripe-signature') || '';
+
+    console.log('📦 [WEBHOOK] Body length:', body.length);
+    console.log('🔐 [WEBHOOK] Signature present:', !!sig);
+    console.log('🔑 [WEBHOOK] Webhook secret configured:', !!endpointSecret);
+
+    if (!endpointSecret) {
+      console.error('❌ [WEBHOOK] STRIPE_WEBHOOK_SECRET not configured!');
+      return NextResponse.json({ error: 'Webhook secret not configured' }, { status: 500 });
+    }
 
     let event: Stripe.Event;
 
     try {
       event = stripe.webhooks.constructEvent(body, sig, endpointSecret);
+      console.log('✅ [WEBHOOK] Signature verified successfully');
     } catch (err) {
-      console.error(`Webhook signature verification failed:`, err);
+      console.error(`❌ [WEBHOOK] Signature verification failed:`, err);
       return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
     }
+
+    console.log('📋 [WEBHOOK] Event type:', event.type);
+    console.log('🆔 [WEBHOOK] Event ID:', event.id);
+    console.log('🎯 [WEBHOOK] ======================================');
 
     // Handle the event
     switch (event.type) {
