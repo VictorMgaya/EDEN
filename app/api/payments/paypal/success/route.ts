@@ -303,30 +303,29 @@ export async function GET(request: NextRequest) {
         console.log(`✅ Existing user found: ${user.email} (ID: ${user._id})`);
       }
 
-      // Map subscription plan
+      // Map subscription plan to credits (monthly credit allocation)
       const subscriptionType = plan === 'pro' ? 'pro' : 'enterprise';
-      const subscriptionEndDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days from now
 
       // Update user subscription with comprehensive data
       const previousSubscriptionType = user.subscription?.type || 'freemium';
       const previousCredits = user.credits || 0;
 
-      // Set subscription details
+      // Set subscription details for tracking
       user.subscription = {
         type: subscriptionType,
         paypalSubscriptionId: subscriptionId,
-        currentPeriodEnd: subscriptionEndDate,
+        currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
         cancelAtPeriodEnd: false
       };
 
-      // Update credits based on subscription type with minimum guarantees
-      const creditAmounts = {
-        pro: 100,
-        enterprise: 500
+      // Add monthly credits based on subscription type
+      const monthlyCreditAmounts = {
+        pro: 1000,      // Pro: 1000 credits per month
+        enterprise: 5000 // Enterprise: 5000 credits per month
       };
 
-      const guaranteedCredits = creditAmounts[subscriptionType as keyof typeof creditAmounts] || 100;
-      user.credits = Math.max(user.credits || 0, guaranteedCredits);
+      const monthlyCredits = monthlyCreditAmounts[subscriptionType as keyof typeof monthlyCreditAmounts] || 1000;
+      user.credits = (user.credits || 0) + monthlyCredits;
 
       // Update subscription activation timestamp
       user.lastSubscriptionActivation = new Date();
@@ -334,20 +333,20 @@ export async function GET(request: NextRequest) {
       // Log subscription activation with detailed tracking
       const usageRecord = {
         action: 'credit',
-        amount: user.credits - previousCredits, // Show actual credits added
-        description: `Subscription activated - ${subscriptionType} plan via PayPal`,
+        amount: monthlyCredits, // Show monthly credits added
+        description: `Monthly subscription credits - ${subscriptionType} plan via PayPal (${monthlyCredits} credits)`,
         timestamp: new Date(),
         metadata: {
-          type: 'subscription_activated',
-          reason: 'paypal_subscription_success',
+          type: 'subscription_monthly_credits',
+          reason: 'paypal_subscription_monthly_credits',
           subscription: subscriptionType,
           previousSubscription: previousSubscriptionType,
           paymentMethod: 'paypal',
           subscriptionId: subscriptionId,
-          subscriptionEndDate: subscriptionEndDate.toISOString(),
+          monthlyCredits: monthlyCredits,
           previousCredits: previousCredits,
-          newCredits: user.credits,
-          guaranteedCredits: guaranteedCredits
+          newTotalCredits: user.credits,
+          nextCreditDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // Next month
         }
       };
 
@@ -366,7 +365,7 @@ export async function GET(request: NextRequest) {
       try {
         await user.save();
         console.log(`✅ Successfully activated ${subscriptionType} subscription for user ${userEmail}`);
-        console.log(`📊 Credits updated: ${previousCredits} → ${user.credits} (guaranteed: ${guaranteedCredits})`);
+        console.log(`📊 Credits updated: ${previousCredits} → ${user.credits} (monthly: ${monthlyCredits})`);
       } catch (saveError) {
         console.error(`❌ Failed to save subscription for user ${userEmail}:`, saveError);
         // Try to save again with fresh data
