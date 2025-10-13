@@ -247,7 +247,7 @@ async function handleSuccessfulPayment(session: Stripe.Checkout.Session) {
       const previousCredits = user.credits || 0;
       const newCreditTotal = previousCredits + creditsToAdd;
 
-      // Ensure credits are properly calculated and don't go negative
+      // Ensure credits don't go negative and are properly calculated
       user.credits = Math.max(0, newCreditTotal);
 
       // Update last credit purchase timestamp for balance tracking

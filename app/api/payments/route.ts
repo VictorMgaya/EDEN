@@ -190,7 +190,28 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid payment type' }, { status: 400 });
   } catch (error) {
     console.error('Payment error:', error);
-    return NextResponse.json({ error: 'Payment failed' }, { status: 500 });
+
+    // Provide more specific error messages for common issues
+    let errorMessage = 'Payment failed';
+    let statusCode = 500;
+
+    if (error instanceof Error) {
+      if (error.message.includes('PayPal plan ID not configured')) {
+        errorMessage = error.message;
+        statusCode = 500;
+      } else if (error.message.includes('PayPal auth failed')) {
+        errorMessage = 'PayPal authentication failed. Please check your PayPal credentials.';
+        statusCode = 500;
+      } else if (error.message.includes('PayPal order creation failed')) {
+        errorMessage = 'Failed to create PayPal payment. Please try again.';
+        statusCode = 500;
+      } else if (error.message.includes('PayPal subscription creation failed')) {
+        errorMessage = 'Failed to create PayPal subscription. Please check your plan configuration.';
+        statusCode = 500;
+      }
+    }
+
+    return NextResponse.json({ error: errorMessage }, { status: statusCode });
   }
 }
 
@@ -312,7 +333,13 @@ function getPayPalPlanId(plan: string): string {
     enterprise: process.env.PAYPAL_ENTERPRISE_PLAN_ID || '',
   };
 
-  return planIds[plan as keyof typeof planIds] || '';
+  const planId = planIds[plan as keyof typeof planIds] || '';
+
+  if (!planId || planId.includes('your_paypal_')) {
+    throw new Error(`PayPal plan ID not configured for ${plan} plan. Please set PAYPAL_${plan.toUpperCase()}_PLAN_ID in environment variables.`);
+  }
+
+  return planId;
 }
 
 export async function GET() {

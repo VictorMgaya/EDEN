@@ -53,6 +53,15 @@ async function sendPaymentSuccessEmail(userEmail: string, paymentType: string, a
 }
 
 async function getPayPalAccessToken() {
+  // Validate PayPal configuration
+  if (!PAYPAL_CLIENT_ID || PAYPAL_CLIENT_ID === 'your_paypal_client_id_here') {
+    throw new Error('PayPal Client ID not configured. Please set PAYPAL_CLIENT_ID in environment variables.');
+  }
+
+  if (!PAYPAL_CLIENT_SECRET || PAYPAL_CLIENT_SECRET === 'your_paypal_client_secret_here') {
+    throw new Error('PayPal Client Secret not configured. Please set PAYPAL_CLIENT_SECRET in environment variables.');
+  }
+
   const auth = Buffer.from(`${PAYPAL_CLIENT_ID}:${PAYPAL_CLIENT_SECRET}`).toString('base64');
 
   const response = await fetch(`${PAYPAL_MODE === 'live' ? 'https://api-m.paypal.com' : 'https://api-m.sandbox.paypal.com'}/v1/oauth2/token`, {
@@ -67,7 +76,13 @@ async function getPayPalAccessToken() {
   });
 
   if (!response.ok) {
-    throw new Error(`PayPal auth failed: ${response.statusText}`);
+    const errorText = await response.text();
+    console.error('PayPal auth failed:', {
+      status: response.status,
+      statusText: response.statusText,
+      body: errorText
+    });
+    throw new Error(`PayPal authentication failed: ${response.status} ${response.statusText}. Please check your PayPal credentials.`);
   }
 
   const data = await response.json();
