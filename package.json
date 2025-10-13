@@ -27,6 +27,7 @@
     "@radix-ui/react-slot": "^1.1.1",
     "@radix-ui/react-tabs": "^1.1.2",
     "@radix-ui/react-tooltip": "^1.1.6",
+    "@types/stripe": "^8.0.416",
     "atlas": "^1.0.0-alpha.0",
     "axios": "^1.7.9",
     "bcrypt": "^5.1.1",
@@ -72,9 +73,9 @@
     "shadcn": "^2.1.8",
     "site": "^2.60.4",
     "sitemap": "^8.0.0",
+    "stripe": "^19.1.0",
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
-    "ui": "github:shadcn/ui",
     "zustand": "^5.0.2"
   },
   "devDependencies": {

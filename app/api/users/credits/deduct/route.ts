@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import dbConnect from "@/app/lib/dbConnect";
@@ -45,24 +44,64 @@ export async function POST() {
         });
     }
 
-    // Freemium users: deduct 10 credits
-    if (user.credits < 10) {
+    // Determine credits needed based on whether this is the first analyzed data call
+    const isFirstCall = user.firstAnalyzedDataCall;
+    const creditsNeeded = isFirstCall ? 12 : 10;
+
+    // Check if user has enough credits
+    if (user.credits < creditsNeeded) {
         return NextResponse.json({
-            error: "Insufficient credits. You need 10 credits to send messages.",
+            error: `Insufficient credits. You need ${creditsNeeded} credits for ${isFirstCall ? 'analyzed data' : 'messages'}.`,
             credits: user.credits,
-            needed: 10
+            needed: creditsNeeded,
+            isFirstCall: isFirstCall
         }, { status: 402 });
     }
 
-    user.credits -= 10;
+    // Deduct credits and update first call status
+    user.credits -= creditsNeeded;
+    if (isFirstCall) {
+        user.firstAnalyzedDataCall = false;
+    }
     await user.save();
+
+    // Log usage history
+    try {
+        const usageRecord = {
+            action: 'debit',
+            amount: creditsNeeded,
+            description: `AI Expert ${isFirstCall ? 'initial analysis' : 'follow-up message'}`,
+            metadata: {
+                type: isFirstCall ? 'initial_analysis' : 'follow_up_message',
+                subscription: subscriptionType
+            }
+        };
+
+        if (!user.usageHistory) {
+            user.usageHistory = [];
+        }
+
+        user.usageHistory.unshift(usageRecord);
+
+        // Keep only last 1000 records
+        if (user.usageHistory.length > 1000) {
+            user.usageHistory = user.usageHistory.slice(0, 1000);
+        }
+
+        await user.save();
+    } catch (historyError) {
+        console.error("Failed to log usage history:", historyError);
+        // Don't fail the request if history logging fails
+    }
 
     return NextResponse.json({
         credits: user.credits,
-        subscription: subscriptionType
+        subscription: subscriptionType,
+        charged: creditsNeeded,
+        isFirstCall: isFirstCall
     });
-    } catch (error: any) {
-        console.error("Error in POST /api/users/credits/deduct:", error.message);
+    } catch (error: unknown) {
+        console.error("Error in POST /api/users/credits/deduct:", error instanceof Error ? error.message : String(error));
         return NextResponse.json(
             { error: "An error occurred while deducting credits" },
             { status: 500 }

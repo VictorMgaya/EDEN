@@ -30,13 +30,26 @@ const userSchema = new mongoose.Schema({
     // Credit system
     credits: { type: Number, default: 50 }, // Starting credits
     lastCreditReset: { type: Date, default: Date.now },
+    firstAnalyzedDataCall: { type: Boolean, default: true }, // Track first API call for analyzed data
     subscription: {
         type: { type: String, enum: ['freemium', 'pro', 'enterprise'], default: 'freemium' },
         stripeCustomerId: { type: String },
         stripeSubscriptionId: { type: String },
         currentPeriodEnd: { type: Date },
         cancelAtPeriodEnd: { type: Boolean, default: false }
-    }
+    },
+    // Usage tracking
+    usageHistory: [{
+        action: { type: String, enum: ['credit', 'debit'], required: true },
+        amount: { type: Number, required: true },
+        description: { type: String, required: true },
+        timestamp: { type: Date, default: Date.now },
+        metadata: {
+            type: { type: String },
+            reason: { type: String },
+            subscription: { type: String }
+        }
+    }]
 }, {
     timestamps: true,
 });

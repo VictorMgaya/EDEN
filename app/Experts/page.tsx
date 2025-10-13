@@ -376,10 +376,10 @@ export default function ExpertsPage() {
     // Check authentication
     if (status === 'loading') return;
 
-    //if (status === 'unauthenticated') {
-      //router.push('/');
-      //return;
-    //}
+    if (status === 'unauthenticated') {
+      router.push('/');
+      return;
+    }
 
     const rawXML = getRawXMLCache();
     setXmlData(rawXML || "");
@@ -444,15 +444,46 @@ export default function ExpertsPage() {
   async function fetchInitialReport(data: string) {
     setLoading(true);
     setError("");
+
+    let creditData: {
+      credits: number;
+      subscription: string;
+      charged?: number;
+      isFirstCall?: boolean;
+      error?: string;
+    } | null = null;
+
     try {
+      // Deduct credits for initial report
+      const creditResponse = await fetch('/api/users/credits/deduct', {
+        method: 'POST',
+      });
+
+      creditData = await creditResponse.json();
+
+      if (!creditResponse.ok) {
+        if (creditResponse.status === 402) {
+          // Insufficient credits - show modal
+          setShowCreditModal(true);
+          setLoading(false);
+          return;
+        }
+        throw new Error(creditData?.error || 'Credit deduction failed');
+      }
+
+      // Update credits
+      if (creditData) {
+        setUserCredits(creditData.credits);
+      }
+
       const prompt = createInitialPrompt(data);
       let text = await fetchGeminiAPI([{ parts: [{ text: prompt }] }]);
-      
+
       if (text) {
         // Clean up any markdown artifacts that might slip through
         text = text.replace(/```html\n?/g, '').replace(/```\n?/g, '');
         text = text.trim();
-        
+
         // Process image placeholders
         text = await processImagesInText(text);
         setMessages(prev => [...prev, { sender: "ai", text }]);
@@ -464,6 +495,19 @@ export default function ExpertsPage() {
       const errorMessage = "<p>⚠️ Error retrieving expert analysis. Please try again.</p>";
       setError(errorMessage);
       setMessages(prev => [...prev, { sender: "ai", text: errorMessage }]);
+
+      // Try to refund credits on error (refund the amount that was charged)
+      try {
+        const refundAmount = creditData?.charged || 10;
+        await fetch('/api/users/credits/refund', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ amount: refundAmount })
+        });
+        setUserCredits(prev => prev + refundAmount);
+      } catch (refundError) {
+        console.error("Failed to refund credits:", refundError);
+      }
     } finally {
       setLoading(false);
     }
@@ -473,39 +517,43 @@ export default function ExpertsPage() {
     e.preventDefault();
     if (!userInput.trim() || loading) return;
 
-    // Check credits before sending message
-    if (userSubscription === 'freemium' && userCredits < 10) {
-      setShowCreditModal(true);
-      return;
-    }
-
     const newUserMessage = { sender: "user", text: userInput };
     const currentMessages = [...messages, newUserMessage];
     setMessages(currentMessages);
     setUserInput("");
     setLoading(true);
 
-    try {
-      // Deduct credits first
-      const creditResponse = await fetch('/api/users/credits/deduct', {
-        method: 'POST',
-      });
+      let creditData: {
+        credits: number;
+        subscription: string;
+        charged?: number;
+        isFirstCall?: boolean;
+        error?: string;
+      } | null = null;
 
-      const creditData = await creditResponse.json();
+      try {
+        // Deduct credits first
+        const creditResponse = await fetch('/api/users/credits/deduct', {
+          method: 'POST',
+        });
 
-      if (!creditResponse.ok) {
-        if (creditResponse.status === 402) {
-          // Insufficient credits
-          setShowCreditModal(true);
-          setMessages((prev) => prev.slice(0, -1)); // Remove the message
-          setLoading(false);
-          return;
+        creditData = await creditResponse.json();
+
+        if (!creditResponse.ok) {
+          if (creditResponse.status === 402) {
+            // Insufficient credits - show modal with specific message
+            setShowCreditModal(true);
+            setMessages((prev) => prev.slice(0, -1)); // Remove the message
+            setLoading(false);
+            return;
+          }
+          throw new Error(creditData?.error || 'Credit deduction failed');
         }
-        throw new Error(creditData.error || 'Credit deduction failed');
-      }
 
-      // Update credits
-      setUserCredits(creditData.credits);
+        // Update credits
+        if (creditData) {
+          setUserCredits(creditData.credits);
+        }
 
       // Build conversation history with system prompt
       const conversationHistory: GeminiContent[] = [
@@ -540,10 +588,15 @@ export default function ExpertsPage() {
         { sender: "ai", text: "<p>⚠️ Error communicating with the expert. Please try again.</p>" },
       ]);
 
-      // Try to refund credits on error
+      // Try to refund credits on error (refund the amount that was charged)
       try {
-        await fetch('/api/users/credits/refund', { method: 'POST' });
-        setUserCredits(prev => prev + 10);
+        const refundAmount = creditData?.charged || 10;
+        await fetch('/api/users/credits/refund', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ amount: refundAmount })
+        });
+        setUserCredits(prev => prev + refundAmount);
       } catch (refundError) {
         console.error("Failed to refund credits:", refundError);
       }
@@ -657,7 +710,7 @@ export default function ExpertsPage() {
         )}
       </div>
 
-      <div className="fixed bottom-8 left-0 w-full border-t border-slate-200/50 dark:border-slate-700/50 bg-gradient-to-t from-white/95 via-white/90 to-white/70 dark:from-slate-900/95 dark:via-slate-900/90 dark:to-slate-900/70 backdrop-blur-md p-4 md:p-6 shadow-[0_-8px_32px_0_rgba(0,0,0,0.12)] z-50 pb-safe">
+      <div className="fixed bottom-0 left-0 w-full border-t border-slate-200/50 dark:border-slate-700/50 bg-gradient-to-t from-white/95 via-white/90 to-white/70 dark:from-slate-900/95 dark:via-slate-900/90 dark:to-slate-900/70 backdrop-blur-md p-4 md:p-6 shadow-[0_-8px_32px_0_rgba(0,0,0,0.12)] z-50 pb-safe stick">
         <form onSubmit={handleSendMessage} className="max-w-4xl mx-auto">
           <div className="flex gap-4 items-end">
             <div className="flex-1 relative">

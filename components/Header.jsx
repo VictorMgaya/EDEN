@@ -321,7 +321,7 @@ const Header = () => {
                 // Dispatch custom event to trigger mobile sidebar
                 window.dispatchEvent(new CustomEvent('toggleMobileSidebar'));
               }}>
-                <Avatar className="cursor-pointer">
+                <Avatar className="cursor-pointer" placeholder="Menu">
                   <AvatarImage src={session?.user.image || 'edenlogo.svg'} />
                   <AvatarFallback><User2Icon /></AvatarFallback>
                 </Avatar>
