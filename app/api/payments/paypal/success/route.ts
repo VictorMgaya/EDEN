@@ -380,7 +380,11 @@ export async function GET(request: NextRequest) {
         successUrl.searchParams.set('confirmed', 'true');
         successUrl.searchParams.set('db_saved', 'true');
 
-        return NextResponse.redirect(successUrl);
+        // Add a header to indicate this came from PayPal (will be handled by client-side)
+        const response = NextResponse.redirect(successUrl);
+        response.headers.set('X-PayPal-Confirmation', 'true');
+
+        return response;
       } catch (saveError) {
         console.error(`❌ Failed to save user ${userEmail}:`, saveError);
         return NextResponse.redirect(new URL('/purchase/cancelled?error=database_save_failed', request.url));

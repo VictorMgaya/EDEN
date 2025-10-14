@@ -14,7 +14,8 @@ export default function PurchaseSuccessPage() {
   const { data: session, update } = useSession();
   const [isLoading, setIsLoading] = useState(true);
   const [isConfirming, setIsConfirming] = useState(false);
-  const [, setConfirmationStatus] = useState<'pending' | 'success' | 'error'>('pending');
+  const [confirmationStatus, setConfirmationStatus] = useState<'pending' | 'success' | 'error'>('pending');
+  const [showRetryButton, setShowRetryButton] = useState(false);
   const [purchaseDetails, setPurchaseDetails] = useState<{
     type: 'credits' | 'subscription';
     amount?: number;
@@ -25,23 +26,38 @@ export default function PurchaseSuccessPage() {
   } | null>(null);
 
   // Confirm payment with secure API
-  const confirmPayment = async () => {
+  const confirmPayment = async (force = false) => {
     if (!session?.user?.email || isConfirming) return;
+
+    // Generate a stable payment session ID based on payment details
+    const type = searchParams.get('type') as 'credits' | 'subscription';
+    const amount = searchParams.get('amount');
+    const plan = searchParams.get('plan');
+    const method = searchParams.get('method') || 'stripe';
+
+    // Create a stable payment session ID that persists across reloads
+    const paymentSessionId = `${session.user.email}_${method}_${type}_${amount || plan}`;
+
+    // Check if this payment session was already confirmed
+    const alreadyConfirmedKey = `payment_confirmed_${paymentSessionId}`;
+    const alreadyConfirmed = sessionStorage.getItem(alreadyConfirmedKey);
+
+    if (alreadyConfirmed && !force) {
+      console.log('✅ Payment already confirmed for this session, skipping duplicate confirmation');
+      setConfirmationStatus('success');
+      setIsLoading(false);
+      return;
+    }
 
     setIsConfirming(true);
     try {
-      const type = searchParams.get('type') as 'credits' | 'subscription';
-      const amount = searchParams.get('amount');
-      const plan = searchParams.get('plan');
-      const method = searchParams.get('method') || 'stripe';
-
       const response = await fetch('/api/payments/confirm-payment', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          paymentId: `${method}_${Date.now()}`, // Unique payment ID
+          paymentId: paymentSessionId, // Use stable session ID instead of timestamp
           paymentMethod: method,
           amount: amount,
           type: type,
@@ -52,6 +68,9 @@ export default function PurchaseSuccessPage() {
       if (response.ok) {
         const data = await response.json();
         setConfirmationStatus('success');
+
+        // Mark this payment session as confirmed to prevent future duplicate calls
+        sessionStorage.setItem(alreadyConfirmedKey, 'true');
 
         // Update session to refresh user data
         await update();
@@ -64,6 +83,7 @@ export default function PurchaseSuccessPage() {
       }
     } catch (error) {
       setConfirmationStatus('error');
+      setShowRetryButton(true);
       console.error('❌ Error confirming payment:', error);
     } finally {
       setIsConfirming(false);
@@ -88,8 +108,22 @@ export default function PurchaseSuccessPage() {
       });
     }
 
-    // Auto-confirm payment if not already confirmed
-    if (type && session?.user?.email && !confirmed) {
+    // Check if this request came from PayPal server-side processing
+    const isFromPayPal = document.referrer?.includes('paypal.com') ||
+                         searchParams.get('method') === 'paypal';
+
+    // If payment is already confirmed via PayPal backend or marked as confirmed, skip auto-confirmation
+    if (confirmed || dbSaved || isFromPayPal) {
+      setIsLoading(false);
+      setConfirmationStatus('success');
+
+      // Mark as confirmed in session storage to prevent future auto-confirmations
+      if (session?.user?.email && (confirmed || dbSaved || isFromPayPal)) {
+        const paymentSessionId = `${session.user.email}_${searchParams.get('method') || 'stripe'}_${type}_${amount || plan}`;
+        sessionStorage.setItem(`payment_confirmed_${paymentSessionId}`, 'true');
+      }
+    } else if (type && session?.user?.email) {
+      // Only auto-confirm if not already handled by backend
       confirmPayment();
     } else {
       setIsLoading(false);
@@ -186,6 +220,32 @@ export default function PurchaseSuccessPage() {
                 </div>
               )}
             </div>
+
+            {/* Confirmation Status */}
+            {confirmationStatus === 'error' && (
+              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-semibold text-red-800 dark:text-red-200 mb-2">
+                      Confirmation Issue
+                    </h3>
+                    <p className="text-sm text-red-700 dark:text-red-300">
+                      There was an issue confirming your payment. This doesn't affect your purchase, but please confirm to ensure your account is updated correctly.
+                    </p>
+                  </div>
+                  {showRetryButton && (
+                    <Button
+                      onClick={() => confirmPayment(true)}
+                      disabled={isConfirming}
+                      variant="destructive"
+                      size="sm"
+                    >
+                      {isConfirming ? 'Confirming...' : 'Retry Confirmation'}
+                    </Button>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* What's Next */}
             <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-6">

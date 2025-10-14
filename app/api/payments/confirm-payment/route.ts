@@ -41,12 +41,15 @@ export async function POST(request: NextRequest) {
 
     console.log(`✅ [SECURE] Found user: ${user.email} (ID: ${user._id})`);
 
-    // Verify payment hasn't already been processed
+    // Verify payment hasn't already been processed for this session
     const existingPayment = user.usageHistory?.find(
       (record: any) =>
         record.metadata?.paymentId === paymentId ||
         record.metadata?.orderId === paymentId ||
-        record.metadata?.sessionId === paymentId
+        record.metadata?.sessionId === paymentId ||
+        // Also check for recent similar payments to prevent duplicates
+        (record.metadata?.type === (type === 'credits' ? 'credit_purchase_confirmed' : 'subscription_confirmed') &&
+         record.timestamp > new Date(Date.now() - 24 * 60 * 60 * 1000)) // Within last 24 hours
     );
 
     if (existingPayment) {
