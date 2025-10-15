@@ -282,10 +282,7 @@ function AnalyticsPage() {
       setShowLocationPrompt(false);
     } else {
       // Initial request location permission on component mount
-      // This will trigger the watchPosition logic if permission is granted
-      if (!isCheckingLocation) {
-        handleTrackLocationClick();
-      }
+      setShowLocationRequiredModal(true);
     }
 
     // Listen for location updates from header search
