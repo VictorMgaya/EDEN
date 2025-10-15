@@ -212,16 +212,16 @@ export default function EditProfilePage() {
                                 disabled={isLoading}
                                 className="w-full pl-10 p-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 outline-none resize-none disabled:opacity-50"
                             />
-                            <div className={`text-xs mt-1 ${bio.trim().split(/\s+/).filter((word: string) => word.length > 0).length >= 50 ? 'text-green-600 dark:text-green-400' : 'text-orange-600 dark:text-orange-400'}`}>
-                                {bio.trim().split(/\s+/).filter((word: string) => word.length > 0).length} / 50 words minimum {bio.trim().split(/\s+/).filter((word: string) => word.length > 0).length >= 50 && '✓'}
+                            <div className={`text-xs mt-1 ${bio.trim().split(/\s+/).filter((word: string) => word.length > 0).length >= 15 ? 'text-green-600 dark:text-green-400' : 'text-orange-600 dark:text-orange-400'}`}>
+                                {bio.trim().split(/\s+/).filter((word: string) => word.length > 0).length} / 15 words minimum {bio.trim().split(/\s+/).filter((word: string) => word.length > 0).length >= 15 && '✓'}
                             </div>
                         </div>
 
                         <button
                             type="submit"
-                            disabled={!name.trim() || !email.trim() || !bio.trim() || bio.trim().split(/\s+/).filter(word => word.length > 0).length < 50 || isLoading}
+                            disabled={!name.trim() || !email.trim() || !bio.trim() || bio.trim().split(/\s+/).filter(word => word.length > 0).length < 15 || isLoading}
                             className={`w-full p-3 rounded-xl bg-gradient-to-r from-blue-500 to-green-500 text-white font-medium ${
-                                (isLoading || !name.trim() || !email.trim() || !bio.trim() || bio.trim().split(/\s+/).filter(word => word.length > 0).length < 50)
+                                (isLoading || !name.trim() || !email.trim() || !bio.trim() || bio.trim().split(/\s+/).filter(word => word.length > 0).length < 15)
                                     ? 'opacity-50 cursor-not-allowed'
                                     : 'hover:from-blue-600 hover:to-green-600'
                             }`}
