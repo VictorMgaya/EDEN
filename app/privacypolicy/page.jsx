@@ -2,9 +2,9 @@ import React from 'react';
 
 const PrivacyPolicy = () => {
   return (
-    <div className="bg-green-500/20 justify-center items-center backdrop-blur-md font-primary px-4 py-16 rounded-lg shadow-lg">
+    <div className="bg-green-500/20 justify-center items-center backdrop-blur-md font-primary mt-8 px-4 py-16 rounded-lg shadow-lg">
       <h1 className="text-center">PRIVACY POLICY</h1>
-      <p>Effective Date: 06/01/2025</p>
+      <p>Effective Date: 21/01/2025</p>
 
       <p>
         Welcome to Eden! We value your privacy and are committed to protecting
