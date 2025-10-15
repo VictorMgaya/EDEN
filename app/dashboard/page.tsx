@@ -260,7 +260,7 @@ export default function DashboardPage() {
 
     if (sessions.length === 0) {
       return (
-        <div className="text-center py-12">
+        <div className="text-center mt-8 py-12">
           <History className="h-12 w-12 text-slate-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100 mb-2">
             No Sessions Yet
