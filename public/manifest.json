@@ -1,14 +1,19 @@
 {
   "name": "Eden - Resource Analysis Engine",
   "short_name": "Eden",
-  "description": "Advanced resource analysis and management platform",
+  "description": "Advanced resource analysis and management platform for natural resources, providing expert insights and analytics.",
+  "id": "/",
   "start_url": "/dashboard",
+  "scope": "/",
   "display": "standalone",
+  "display_override": ["standalone", "fullscreen", "minimal-ui"],
+  "orientation": "portrait-primary",
   "background_color": "#ffffff",
   "theme_color": "#0D120A",
-  "orientation": "portrait-primary",
-  "scope": "/",
-  "id": "/",
+  "categories": ["productivity", "utilities", "business", "science", "technology"],
+  "lang": "en",
+  "dir": "ltr",
+
   "icons": [
     {
       "src": "/eden.svg",
@@ -17,20 +22,19 @@
       "purpose": "any maskable"
     },
     {
-      "src": "/eden.svg",
+      "src": "/eden-192x192.png",
       "sizes": "192x192",
-      "type": "image/svg+xml",
+      "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/eden.svg",
+      "src": "/eden-512x512.png",
       "sizes": "512x512",
-      "type": "image/svg+xml",
+      "type": "image/png",
       "purpose": "any maskable"
     }
   ],
-  "categories": ["productivity", "utilities", "business"],
-  "lang": "en",
+
   "screenshots": [
     {
       "src": "/screenshot1.png",
@@ -45,32 +49,31 @@
       "form_factor": "narrow"
     }
   ],
+
   "shortcuts": [
     {
       "name": "Home",
       "short_name": "Home",
-      "description": "Go to home page",
+      "description": "Go to the home page",
       "url": "/dashboard",
       "icons": [{ "src": "/eden.svg", "sizes": "96x96", "type": "image/svg+xml" }]
     },
     {
       "name": "Analytics",
       "short_name": "Analytics",
-      "description": "View analytics dashboard",
+      "description": "View resource analytics dashboard",
       "url": "/analytics",
       "icons": [{ "src": "/globe.svg", "sizes": "96x96", "type": "image/svg+xml" }]
     },
     {
       "name": "Experts",
       "short_name": "Experts",
-      "description": "Browse expert information",
+      "description": "Browse expert information and insights",
       "url": "/experts",
       "icons": [{ "src": "/location-icon-png-28.png", "sizes": "96x96", "type": "image/png" }]
     }
   ],
-  "edge_side_panel": {
-    "preferred_width": 400
-  },
+
   "share_target": {
     "action": "/share",
     "method": "POST",
@@ -80,5 +83,69 @@
       "text": "text",
       "title": "title"
     }
-  }
+  },
+
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
+
+  "file_handlers": [
+    {
+      "action": "/open-resource",
+      "accept": {
+        "application/json": [".json"],
+        "text/csv": [".csv"]
+      }
+    }
+  ],
+
+  "launch_handler": {
+    "client_mode": ["navigate-existing", "focus-existing"]
+  },
+
+  "protocol_handlers": [
+    {
+      "protocol": "web+eden",
+      "url": "/?resource=%s"
+    }
+  ],
+
+  "related_applications": [
+    {
+      "platform": "play",
+      "url": "https://play.google.com/store/apps/details?id=com.google.earth",
+      "id": "com.google.earth"
+    },
+    {
+      "platform": "itunes",
+      "url": "https://apps.apple.com/app/id1234567890"
+    }
+  ],
+
+  "prefer_related_applications": true,
+
+  "iarc_rating_id": "e4a7f8c3-1234-4aab-8d09-5678f1a9b001",
+
+  "widgets": [
+    {
+      "name": "Eden Quick Access",
+      "description": "Quickly open analytics or resource maps",
+      "url": "/dashboard",
+      "icons": [{ "src": "/eden-192x192.png", "sizes": "192x192", "type": "image/png" }]
+    }
+  ],
+
+  "note_taking": {
+    "new_note_url": "/notes/new",
+    "start_in": "window"
+  },
+
+  "scope_extensions": [
+    {
+      "origin": "https://api.edenapp.site"
+    },
+    {
+      "origin": "https://cdn.edenapp.site"
+    }
+  ]
 }
