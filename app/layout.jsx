@@ -214,17 +214,17 @@ export default function RootLayout({ children }) {
             key={lang}
             rel="alternate"
             hrefLang={lang}
-            href={`${typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000'}${pathname}?lang=${lang}`}
+            href={`${typeof window !== 'undefined' ? window.location.origin : 'https://edenapp.site'}${pathname}?lang=${lang}`}
           />
         ))}
-        <link rel="alternate" hrefLang="x-default" href={`${typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000'}${pathname}`} />
+        <link rel="alternate" hrefLang="x-default" href={`${typeof window !== 'undefined' ? window.location.origin : 'https://edenapp.site'}${pathname}`} />
 
         {/* Structured data for international targeting */}
         <script type="application/ld+json" dangerouslySetInnerHTML={{
           __html: JSON.stringify({
             "@context": "https://schema.org",
             "@type": "WebSite",
-            "url": `${typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000'}${pathname}`,
+            "url": `${typeof window !== 'undefined' ? window.location.origin : 'https://edenapp.site'}${pathname}`,
             "name": seoTranslations[currentLang]?.title,
             "description": seoTranslations[currentLang]?.description,
             "inLanguage": currentLang,
@@ -248,7 +248,7 @@ export default function RootLayout({ children }) {
         {/* Existing meta tags and scripts */}
         <link
           rel="canonical"
-          href={`${typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000'}${pathname}`}
+          href={`${typeof window !== 'undefined' ? window.location.origin : 'https://edenapp.site'}${pathname}`}
         />
         <meta property="og:title" content={pageMetadata.title} />
         <meta property="og:description" content={pageMetadata.description} />
@@ -287,10 +287,10 @@ export default function RootLayout({ children }) {
         <meta name="msapplication-config" content="/browserconfig.xml" />
 
         {/* PWA Icons for Apple */}
-        <link rel="apple-touch-icon" sizes="180x180" href="/edenlogo.svg" />
-        <link rel="apple-touch-icon" sizes="152x152" href="/edenlogo.svg" />
-        <link rel="apple-touch-icon" sizes="120x120" href="/edenlogo.svg" />
-        <link rel="apple-touch-icon" sizes="76x76" href="/edenlogo.svg" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/eden.svg" />
+        <link rel="apple-touch-icon" sizes="152x152" href="/eden.svg" />
+        <link rel="apple-touch-icon" sizes="120x120" href="/eden.svg" />
+        <link rel="apple-touch-icon" sizes="76x76" href="/eden.svg" />
 
         {/* Web App Manifest */}
         <link rel="manifest" href="/manifest.json" />
