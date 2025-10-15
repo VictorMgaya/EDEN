@@ -276,14 +276,14 @@ export default function RootLayout({ children }) {
         <meta name="yandex-verification" content="ccf10bbb05eec883" />
 
         {/* PWA Meta Tags */}
-        <meta name="theme-color" content="#3b82f6" />
+        <meta name="theme-color" content="#0D120A" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="Eden" />
         <meta name="application-name" content="Eden" />
-        <meta name="msapplication-TileColor" content="#3b82f6" />
+        <meta name="msapplication-TileColor" content="#0D120A" />
         <meta name="msapplication-config" content="/browserconfig.xml" />
 
         {/* PWA Icons for Apple */}
