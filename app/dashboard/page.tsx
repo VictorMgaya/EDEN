@@ -158,10 +158,10 @@ export default function DashboardPage() {
   useEffect(() => {
     if (status === 'loading') return;
 
-    //if (status === 'unauthenticated') {
-      //router.push('/');
-      //return;
-    //}
+    if (status === 'unauthenticated') {
+      router.push('/');
+       return;
+    }
 
     fetchDashboardData();
   }, [status, router, fetchDashboardData]);
