@@ -5,7 +5,7 @@ import LanguageSelector from '@/components/LanguageSelector';
 
 const Footer = () => {
   return (
-    <footer className='footer mt-5 shadow-2xl bg-white dark:bg-gray-800 border-t border-blue-200 dark:border-gray-700 text-center font-primary px-4 py-16 rounded-t-2xl'>
+    <footer className='footer mt-2 shadow-2xl bg-white dark:bg-gray-800 border-t border-blue-200 dark:border-gray-700 text-center font-primary px-4 py-16 rounded-t-2xl'>
       <div className="max-w-4xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
           <div>
