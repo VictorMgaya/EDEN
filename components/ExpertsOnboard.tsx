@@ -4,12 +4,12 @@ import React, { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 
 const ExpertsOnboard = ({ onStart }: { onStart: () => void }) => {
-  const { data } = useSession();
-  const [selectedData, setSelectedData] = useState({ weather: true, population: true, soil: true, location: true });
+  useSession();
+  const [selectedData, setSelectedData] = useState<Record<string, boolean>>({ weather: true, population: true, soil: true, location: true });
   const [expertType, setExpertType] = useState('ai');
-  const [selectedExpert, setSelectedExpert] = useState(null);
+  const [selectedExpert, setSelectedExpert] = useState<{ _id?: string; name?: string; email?: string } | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [results, setResults] = useState([]);
+  const [results, setResults] = useState<Array<{ _id?: string; name?: string; email?: string; bio?: string; skills?: string; location?: string }>>([]);
 
   useEffect(() => {
     // noop
@@ -74,7 +74,7 @@ const ExpertsOnboard = ({ onStart }: { onStart: () => void }) => {
           </div>
           <div className="mt-3 space-y-2">
             {results.map(r => (
-              <div key={r._id} className={`p-2 border rounded ${selectedExpert && selectedExpert._id === r._id ? 'bg-blue-50' : ''}`} onClick={() => setSelectedExpert(r)}>
+              <div key={r._id ?? r.email} className={`p-2 border rounded ${selectedExpert && selectedExpert._id === r._id ? 'bg-blue-50' : ''}`} onClick={() => setSelectedExpert(r)}>
                 <div className="font-semibold">{r.name || r.email}</div>
                 <div className="text-sm text-gray-500">{r.bio || r.skills || r.location}</div>
               </div>

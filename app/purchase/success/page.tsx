@@ -1,7 +1,7 @@
 /* eslint-disable react/no-unescaped-entities */
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -26,7 +26,7 @@ export default function PurchaseSuccessPage() {
   } | null>(null);
 
   // Confirm payment with secure API
-  const confirmPayment = async (force = false) => {
+  const confirmPayment = useCallback(async (force = false) => {
     if (!session?.user?.email || isConfirming) return;
 
     // Generate a stable payment session ID based on payment details
@@ -88,7 +88,7 @@ export default function PurchaseSuccessPage() {
     } finally {
       setIsConfirming(false);
     }
-  };
+  }, [session, isConfirming, searchParams, update]);
 
   useEffect(() => {
     const type = searchParams.get('type') as 'credits' | 'subscription';

@@ -1,13 +1,14 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import DOMPurify from 'dompurify';
 import { useSession } from 'next-auth/react';
 import { Conversation, Message } from '@/app/types/conversation';
 
-export default function ChatPage({ params }: { params: { id: string } }) {
-  const { id } = params;
+export default function ChatPage() {
+  const params = useParams();
+  const id = params?.id as string;
   const { status } = useSession();
   const router = useRouter();
   const [conversation, setConversation] = useState<Conversation | null>(null);
