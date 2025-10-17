@@ -128,7 +128,7 @@ export default function PurchaseSuccessPage() {
     } else {
       setIsLoading(false);
     }
-  }, [searchParams, session]);
+  }, [searchParams, session, confirmPayment]);
 
   if (isLoading) {
     return (

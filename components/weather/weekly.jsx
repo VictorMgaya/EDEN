@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { saveCache, loadCache } from '@/utils/dataCache/cacheUtils';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
 const WeatherForecast = (props) => {
@@ -24,6 +25,15 @@ const WeatherForecast = (props) => {
 
                 if (!lat || !lon) {
                     throw new Error('Location coordinates are required');
+                }
+
+                // Try to load from cache first
+                const cacheKey = `weather_${lat}_${lon}`;
+                const cached = loadCache(cacheKey);
+                if (cached) {
+                    setForecastData(cached);
+                    setIsLoading(false);
+                    return;
                 }
 
                 // Single API call using One Call API 3.0 for comprehensive weather data
@@ -163,6 +173,7 @@ const WeatherForecast = (props) => {
                 }
 
                 setForecastData(extendedForecast);
+                saveCache(cacheKey, extendedForecast);
             } catch (err) {
                 setError(err.message);
             } finally {

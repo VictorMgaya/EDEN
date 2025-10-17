@@ -18,6 +18,7 @@ const SoilPropertiesChart = dynamic(() => import('@/components/soil/properties')
 const WeeklyWeather = dynamic(() => import('@/components/weather/weekly'), { ssr: false });
 const PopulationDetailsComponent = dynamic(() => import('@/components/Population/100msq'), { ssr: false });
 const LocationDetails = dynamic(() => import('@/components/LocationDetails.jsx'), { ssr: false });
+const AnalyticsCachePreview = dynamic(() => import('@/components/AnalyticsCachePreview'), { ssr: false });
 
 function AnalyticsPage() {
   const [center, setCenter] = useState({ lat: 51.9, lng: -0.09 });
@@ -314,6 +315,9 @@ function AnalyticsPage() {
           icon={icon}
           onLocationSelect={handleLocationSelect}
         />
+        <div className="mt-4">
+          <AnalyticsCachePreview />
+        </div>
         <Button className='mt-4'
           onClick={() => (
             window.location.reload()

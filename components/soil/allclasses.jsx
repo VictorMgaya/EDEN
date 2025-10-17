@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { saveCache, loadCache } from '@/utils/dataCache/cacheUtils';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 import { useMediaQuery } from 'react-responsive';
@@ -29,6 +30,15 @@ const SoilClassificationChart = (props) => {
                     throw new Error('Location coordinates are required');
                 }
 
+                // Try to load from cache first
+                const cacheKey = `soil_${lat}_${lon}_${isMobile ? 'mobile' : 'desktop'}`;
+                const cached = loadCache(cacheKey);
+                if (cached) {
+                    setSoilClasses(cached);
+                    setIsLoading(false);
+                    return;
+                }
+
                 // Number of classes based on device type
                 const numberOfClasses = isMobile ? 10 : 30;
 
@@ -50,6 +60,7 @@ const SoilClassificationChart = (props) => {
                 }));
 
                 setSoilClasses(formattedData);
+                saveCache(cacheKey, formattedData);
             } catch (err) {
                 setError(err.message);
             } finally {

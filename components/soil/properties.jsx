@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { saveCache, loadCache } from '@/utils/dataCache/cacheUtils';
 import {
   ComposedChart,
   Line,
@@ -48,6 +49,15 @@ const SoilPropertiesChart = ({ onLoaded }) => {
 
         if (!lat || !lon) throw new Error('Location coordinates are required');
 
+        // Try to load from cache first
+        const cacheKey = `soilprops_${lat}_${lon}`;
+        const cached = loadCache(cacheKey);
+        if (cached) {
+          setSoilProperties(cached);
+          setIsLoading(false);
+          return;
+        }
+
         // ISRIC SoilGrids API is available but may return null values for some locations
         const response = await fetch(
           `https://rest.isric.org/soilgrids/v2.0/properties/query?lon=${lon}&lat=${lat}&property=bdod&property=cec&property=cfvo&property=clay&property=nitrogen&property=ocd&property=ocs&property=phh2o&property=sand&property=silt&property=soc&property=wv0010&property=wv0033&property=wv1500&depth=0-5cm&depth=0-30cm&depth=5-15cm&depth=15-30cm&depth=30-60cm&depth=60-100cm&depth=100-200cm&value=Q0.05&value=Q0.5&value=Q0.95&value=mean&value=uncertainty`
@@ -94,9 +104,7 @@ const SoilPropertiesChart = ({ onLoaded }) => {
         }
 
         setSoilProperties(formattedData);
-
-
-
+        saveCache(cacheKey, formattedData);
       } catch (err) {
         setError(err.message);
       } finally {

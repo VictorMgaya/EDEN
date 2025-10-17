@@ -2,6 +2,7 @@
 'use client';
 
 import { useState, useEffect } from "react";
+import { saveCache, loadCache } from '@/utils/dataCache/cacheUtils';
 import { Bar, BarChart, CartesianGrid, Cell, LabelList, Pie, PieChart, XAxis, YAxis } from "recharts";
 import {
   Card,
@@ -227,6 +228,16 @@ const PopulationDetailsComponent = (props: { onLoaded: unknown; }) => {
     setCoordinates({ lat, lon });
     getLocationName(lat, lon).then(setLocationName);
 
+    // Try to load from cache first
+    const cacheKey = `population_${lat}_${lon}`;
+    const cached = loadCache(cacheKey);
+    if (cached) {
+      setPopulationHistory(cached.populationHistory || []);
+      setAgeGenderData(cached.ageGenderData || null);
+      setLoading(false);
+      return;
+    }
+
     const fetchAllData = async () => {
       try {
         setLoading(true);
@@ -263,6 +274,12 @@ const PopulationDetailsComponent = (props: { onLoaded: unknown; }) => {
         const latestYear = Math.max(...validPopulationData.map(d => d.year));
         const ageData = await getPopulationData(lat, lon, latestYear, 'wpgpas', 1.0);
         if (ageData && 'ageData' in ageData) setAgeGenderData(ageData);
+
+        // Save to cache
+        saveCache(cacheKey, {
+          populationHistory: historyWithGrowth,
+          ageGenderData: ageData && 'ageData' in ageData ? ageData : null
+        });
         
       } catch (err) {
         setError(err instanceof Error ? err.message : String(err));
