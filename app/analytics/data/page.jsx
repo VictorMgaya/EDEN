@@ -35,31 +35,46 @@ const AnalyticsDataVisualization = () => {
       
       // Handle different data types
       if (Array.isArray(value)) {
-        // For arrays, show count and brief overview
-        content = `${value.length} items`;
-        if (value.length > 0 && typeof value[0] === 'object') {
-          const firstItem = value[0];
-          const keys = Object.keys(firstItem).slice(0, 3);
-          content += ` - Sample fields: ${keys.join(', ')}`;
+        // For weather array
+        if (key.toLowerCase().includes('weather')) {
+          const temps = value.map(d => d.main?.temp).filter(Boolean);
+          const avgTemp = (temps.reduce((a, b) => a + b, 0) / temps.length).toFixed(1);
+          const conditions = value.map(d => d.weather?.[0]?.main).filter(Boolean);
+          const uniqueConditions = [...new Set(conditions)];
+          content = `${value.length} forecasts | Average temp: ${avgTemp}°C | Conditions: ${uniqueConditions.join(', ')}`;
         }
-      } else if (typeof value === 'object' && value !== null) {
-        // For objects, show key properties
-        const entries = Object.entries(value).slice(0, 5);
-        const parts = entries.map(([k, v]) => {
-          const label = k.replace(/([A-Z_])/g, ' $1').trim().replace(/_/g, ' ');
-          if (Array.isArray(v)) {
-            return `${label}: ${v.length} items`;
-          } else if (typeof v === 'object' && v !== null) {
-            return `${label}: ${Object.keys(v).length} properties`;
-          } else {
-            return `${label}: ${v}`;
-          }
-        });
-        content = parts.join(' | ');
-        if (Object.keys(value).length > 5) {
-          content += ` | ... and ${Object.keys(value).length - 5} more`;
+        // For soil classification array
+        else if (key.toLowerCase().includes('soil') && value[0]?.soilClass) {
+          const topSoils = value.slice(0, 3).map(s => `${s.soilClass} (${s.probability}%)`);
+          content = `Top soil types: ${topSoils.join(', ')}`;
         }
-      } else {
+        // For soil properties array
+        else if (value[0]?.name && value[0]?.depths) {
+          const properties = value.map(p => p.name);
+          content = `${value.length} soil properties measured: ${properties.slice(0, 5).join(', ')}${properties.length > 5 ? '...' : ''}`;
+        }
+        // Generic array
+        else {
+          content = `${value.length} data points`;
+        }
+      } 
+      else if (typeof value === 'object' && value !== null) {
+        // For population data
+        if (value.populationHistory && value.ageGenderData) {
+          const latestPop = value.populationHistory[value.populationHistory.length - 1];
+          const year = latestPop?.year || 'N/A';
+          const population = latestPop?.population || 'N/A';
+          const growthRate = latestPop?.growthRate?.toFixed(2) || 'N/A';
+          const ageGroups = value.ageGenderData?.ageData?.length || 0;
+          content = `Latest (${year}): ${population} people per 100m² | Growth rate: ${growthRate}% | ${ageGroups} age groups tracked`;
+        }
+        // Generic object
+        else {
+          const keys = Object.keys(value).slice(0, 3);
+          content = `Contains: ${keys.join(', ')}${Object.keys(value).length > 3 ? '...' : ''}`;
+        }
+      } 
+      else {
         content = String(value);
       }
       
@@ -70,20 +85,20 @@ const AnalyticsDataVisualization = () => {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Text Summary Section - Display on top */}
       {textSummary.length > 0 && (
-        <div className="bg-blue-50 rounded-xl p-6 border border-blue-200">
-          <h2 className="text-xl font-bold text-gray-900 mb-6 pb-3 border-b-2 border-blue-300">
+        <div className="bg-blue-50 rounded-2xl p-6 border border-blue-200">
+          <h2 className="text-xl font-bold text-gray-900 mb-4 pb-3 border-b-2 border-blue-300">
             Analytics Summary
           </h2>
           <div className="space-y-4">
             {textSummary.map((item, index) => (
-              <div key={index} className="space-y-2">
-                <h3 className="text-base font-semibold text-gray-900">
+              <div key={index} className="bg-white rounded-lg p-4 border border-blue-100">
+                <h3 className="text-base font-semibold text-gray-900 mb-2">
                   {item.heading}
                 </h3>
-                <p className="text-sm text-gray-700 leading-relaxed pl-4">
+                <p className="text-sm text-gray-700 leading-relaxed">
                   {item.content}
                 </p>
               </div>
@@ -93,9 +108,7 @@ const AnalyticsDataVisualization = () => {
       )}
 
       {/* Original Component - Actual Data View */}
-      <div className="mt-6">
-        <AnalyticsCachePreview />
-      </div>
+      <AnalyticsCachePreview />
     </div>
   );
 };
