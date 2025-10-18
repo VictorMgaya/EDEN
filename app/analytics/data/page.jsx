@@ -6,12 +6,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Download, MapPin, Users, Cloud, Sprout, BarChart3, Calendar } from 'lucide-react';
+import { Download, MapPin, Users, Cloud, Sprout, BarChart3, Calendar, Expand } from 'lucide-react';
 
 const AnalyticsDataVisualization = () => {
   const [overview, setOverview] = useState({});
   const [textSummary, setTextSummary] = useState([]);
   const [activeTab, setActiveTab] = useState('summary');
+  const [expandedCards, setExpandedCards] = useState({});
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -26,6 +27,13 @@ const AnalyticsDataVisualization = () => {
     const summary = extractDetailedTextSummary(data);
     setTextSummary(summary);
   }, []);
+
+  const toggleCardExpansion = (index) => {
+    setExpandedCards(prev => ({
+      ...prev,
+      [index]: !prev[index]
+    }));
+  };
 
   const extractDetailedTextSummary = (data) => {
     const summaryItems = [];
@@ -226,33 +234,48 @@ const AnalyticsDataVisualization = () => {
 
           {/* Detailed Summary Tab */}
           <TabsContent value="summary" className="space-y-6">
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-6">
               {textSummary.map((item, index) => {
                 const IconComponent = item.icon;
+                const isExpanded = expandedCards[index];
+                
                 return (
                   <Card 
                     key={index} 
                     className="group hover:shadow-lg transition-all duration-300 border-blue-100 dark:border-blue-900 hover:border-blue-300 dark:hover:border-blue-600 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm"
                   >
                     <CardHeader className="pb-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                          <div className={`p-2 rounded-lg bg-blue-50 dark:bg-blue-900/30 ${getCategoryColor(item.key)}`}>
-                            <IconComponent className="w-4 h-4" />
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div className="flex items-center space-x-3">
+                          <div className={`p-3 rounded-xl bg-blue-50 dark:bg-blue-900/30 ${getCategoryColor(item.key)}`}>
+                            <IconComponent className="w-6 h-6" />
                           </div>
-                          <CardTitle className="text-sm font-semibold text-gray-900 dark:text-white line-clamp-1">
-                            {item.heading}
-                          </CardTitle>
+                          <div>
+                            <CardTitle className="text-xl font-bold text-gray-900 dark:text-white">
+                              {item.heading}
+                            </CardTitle>
+                            <Badge variant={item.badgeVariant} className="mt-1 text-sm">
+                              {item.key.split(/(?=[A-Z])/).length} data points
+                            </Badge>
+                          </div>
                         </div>
-                        <Badge variant={item.badgeVariant} className="text-xs">
-                          {item.key.split(/(?=[A-Z])/).length} items
-                        </Badge>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => toggleCardExpansion(index)}
+                          className="flex items-center gap-2"
+                        >
+                          <Expand className="w-4 h-4" />
+                          {isExpanded ? 'Collapse' : 'Expand'}
+                        </Button>
                       </div>
                     </CardHeader>
                     <CardContent>
-                      <pre className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed whitespace-pre-wrap font-sans max-h-48 overflow-y-auto p-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                        {item.content}
-                      </pre>
+                      <div className={`bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4 ${isExpanded ? '' : 'max-h-96'} overflow-y-auto`}>
+                        <pre className="text-base leading-relaxed whitespace-pre-wrap font-sans text-gray-800 dark:text-gray-200">
+                          {item.content}
+                        </pre>
+                      </div>
                     </CardContent>
                   </Card>
                 );
@@ -264,17 +287,17 @@ const AnalyticsDataVisualization = () => {
           <TabsContent value="raw">
             <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-blue-200 dark:border-blue-800">
               <CardHeader>
-                <CardTitle className="text-xl font-bold text-gray-900 dark:text-white flex items-center">
-                  <BarChart3 className="w-5 h-5 mr-2" />
+                <CardTitle className="text-2xl font-bold text-gray-900 dark:text-white flex items-center">
+                  <BarChart3 className="w-6 h-6 mr-3" />
                   Raw Analytics Data
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-lg">
                   Complete JSON representation of all cached analytics data
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="bg-gray-900 rounded-lg p-4 overflow-auto max-h-96">
-                  <pre className="text-sm text-green-400 font-mono">
+                <div className="bg-gray-900 rounded-xl p-6 overflow-auto max-h-[600px] border border-gray-700">
+                  <pre className="text-lg leading-relaxed text-green-400 font-mono">
                     {JSON.stringify(overview, null, 2)}
                   </pre>
                 </div>
@@ -285,28 +308,28 @@ const AnalyticsDataVisualization = () => {
 
         {/* Quick Stats Bar */}
         <Card className="max-w-7xl mx-auto mt-8 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-blue-200 dark:border-blue-800">
-          <CardContent className="p-4">
-            <div className="flex flex-wrap justify-center gap-6 text-center">
+          <CardContent className="p-6">
+            <div className="flex flex-wrap justify-center gap-8 text-center">
               <div className="flex flex-col items-center">
-                <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">
                   {textSummary.length}
                 </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">Data Categories</div>
+                <div className="text-base text-gray-600 dark:text-gray-400">Data Categories</div>
               </div>
               <div className="flex flex-col items-center">
-                <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                <div className="text-3xl font-bold text-green-600 dark:text-green-400">
                   {Object.keys(overview).reduce((acc, key) => {
                     const val = overview[key];
                     return acc + (Array.isArray(val) ? val.length : 1);
                   }, 0)}
                 </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">Data Points</div>
+                <div className="text-base text-gray-600 dark:text-gray-400">Data Points</div>
               </div>
               <div className="flex flex-col items-center">
-                <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                <div className="text-3xl font-bold text-purple-600 dark:text-purple-400">
                   {new Date().toLocaleDateString()}
                 </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">Last Updated</div>
+                <div className="text-base text-gray-600 dark:text-gray-400">Last Updated</div>
               </div>
             </div>
           </CardContent>
