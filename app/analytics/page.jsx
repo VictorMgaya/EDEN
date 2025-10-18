@@ -339,12 +339,12 @@ function AnalyticsPage() {
       )}
 
       {cacheSaved && (
-        <div className='mt-8 text-center space-y-3'>
-          <Button onClick={handleViewAnalyticsData} className="mr-3">
+        <div className='mt-8 flex flex-col sm:flex-row gap-3 justify-center items-center'>
+          <Button onClick={handleViewAnalyticsData} className="w-full sm:w-auto">
             <Database className="w-4 h-4 mr-2" />
             View Analytics Data
           </Button>
-          <Button onClick={() => window.location.href = '/Experts'}>
+          <Button onClick={() => window.location.href = '/Experts'} className="w-full sm:w-auto">
             Get Expert Advice
           </Button>
         </div>
