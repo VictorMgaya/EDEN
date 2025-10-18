@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { saveCache, loadCache } from '@/utils/dataCache/cacheUtils';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 import { useMediaQuery } from 'react-responsive';
@@ -29,6 +30,16 @@ const SoilClassificationChart = (props) => {
                     throw new Error('Location coordinates are required');
                 }
 
+                // Try to load from cache first
+                const cacheKey = `soil_${lat}_${lon}_${isMobile ? 'mobile' : 'desktop'}`;
+                const cached = loadCache(cacheKey);
+                if (cached) {
+                    setSoilClasses(cached);
+                    setIsLoading(false);
+                    return;
+                }
+
+                // Number of classes based on device type
                 const numberOfClasses = isMobile ? 10 : 30;
 
                 const response = await fetch(
@@ -41,6 +52,7 @@ const SoilClassificationChart = (props) => {
 
                 const data = await response.json();
 
+                // Transform data for the chart
                 const formattedData = data.wrb_class_probability.map(([className, probability], index) => ({
                     soilClass: className,
                     probability: Math.round(probability * 100) / 100,
@@ -48,6 +60,7 @@ const SoilClassificationChart = (props) => {
                 }));
 
                 setSoilClasses(formattedData);
+                saveCache(cacheKey, formattedData);
             } catch (err) {
                 setError(err.message);
             } finally {
@@ -85,6 +98,7 @@ const SoilClassificationChart = (props) => {
                 <div className="w-full h-96 md:h-[600px] bg-gradient-to-r from-yellow-500/10 to-yellow-900/10 rounded-lg overflow-hidden">
                     <ResponsiveContainer width="100%" height="100%">
                         {isMobile ? (
+                            // Mobile layout - horizontal bars
                             <BarChart
                                 data={soilClasses}
                                 layout="vertical"
@@ -112,6 +126,7 @@ const SoilClassificationChart = (props) => {
                                 />
                             </BarChart>
                         ) : (
+                            // Desktop layout - vertical bars
                             <BarChart
                                 data={soilClasses}
                                 margin={{ top: 20, right: 30, left: 20, bottom: 100 }}
