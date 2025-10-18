@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { Button } from '@/components/ui/button';
 import { BarChart2, AlertTriangle, Search, Navigation, Database } from 'lucide-react';
@@ -40,38 +40,56 @@ function AnalyticsPage() {
     });
   }, []);
 
-  // Track loading state of each component
-  const [locationDetailsLoaded, setLocationDetailsLoaded] = useState(false);
-  const [populationLoaded, setPopulationLoaded] = useState(false);
-  const [weatherLoaded, setWeatherLoaded] = useState(false);
-  const [soilLoaded, setSoilLoaded] = useState(false);
-  const [soilPropertiesLoaded, setSoilPropertiesLoaded] = useState(false);
+  // Track loading state of each component - use refs to prevent re-renders
+  const [loadingStates, setLoadingStates] = useState({
+    locationDetails: false,
+    population: false,
+    weather: false,
+    soil: false,
+    soilProperties: false
+  });
+
   const [isCheckingLocation, setIsCheckingLocation] = useState(false);
-
-  // Callback props for child components to signal when loaded
-  const handleLocationDetailsLoaded = () => setLocationDetailsLoaded(true);
-  const handlePopulationLoaded = () => setPopulationLoaded(true);
-  const handleWeatherLoaded = () => setWeatherLoaded(true);
-  const handleSoilLoaded = () => setSoilLoaded(true);
-  const handleSoilPropertiesLoaded = () => setSoilPropertiesLoaded(true);
-
   const [cacheSaved, setCacheSaved] = useState(false);
+
+  // Use useCallback to prevent unnecessary re-renders of child components
+  const handleLocationDetailsLoaded = useCallback(() => {
+    setLoadingStates(prev => ({ ...prev, locationDetails: true }));
+  }, []);
+
+  const handlePopulationLoaded = useCallback(() => {
+    setLoadingStates(prev => ({ ...prev, population: true }));
+  }, []);
+
+  const handleWeatherLoaded = useCallback(() => {
+    setLoadingStates(prev => ({ ...prev, weather: true }));
+  }, []);
+
+  const handleSoilLoaded = useCallback(() => {
+    setLoadingStates(prev => ({ ...prev, soil: true }));
+  }, []);
+
+  const handleSoilPropertiesLoaded = useCallback(() => {
+    setLoadingStates(prev => ({ ...prev, soilProperties: true }));
+  }, []);
 
   // Cache only when all analysis components are fully rendered
   useEffect(() => {
-    if (!cacheSaved && locationDetailsLoaded && populationLoaded && weatherLoaded && soilLoaded && soilPropertiesLoaded) {
+    const allLoaded = Object.values(loadingStates).every(state => state === true);
+    
+    if (!cacheSaved && allLoaded && scannedLocation) {
       // Use setTimeout to prevent blocking the UI
       const timer = setTimeout(() => {
         try {
           console.log('🔄 Starting analytics cache save...');
-          
+
           // Instead of capturing HTML, just save the data
           const success = saveAnalyticsCache({
             scannedLocation,
             zoom,
             timestamp: new Date().toISOString(),
           });
-          
+
           console.log('💾 Cache saved:', success);
           if (success) {
             setCacheSaved(true);
@@ -82,22 +100,32 @@ function AnalyticsPage() {
         } catch (error) {
           console.error('❌ Cache error:', error);
         }
-      }, 500); // Reduced delay
-      
+      }, 300); // Reduced delay
+
       return () => clearTimeout(timer);
     }
-  }, [locationDetailsLoaded, populationLoaded, weatherLoaded, soilLoaded, soilPropertiesLoaded, cacheSaved, scannedLocation, zoom]);
+  }, [loadingStates, cacheSaved, scannedLocation, zoom]);
 
-  const handleLocationSelect = (location) => {
+  const handleLocationSelect = useCallback((location) => {
     setScannedLocation(location);
     setShowLocationPrompt(false);
+    // Reset loading states when location changes
+    setLoadingStates({
+      locationDetails: false,
+      population: false,
+      weather: false,
+      soil: false,
+      soilProperties: false
+    });
+    setCacheSaved(false);
+    
     const searchParams = new URLSearchParams(window.location.search);
     searchParams.set('lat', location.lat);
     searchParams.set('lon', location.lng);
     window.history.pushState({}, '', `?${searchParams.toString()}`);
-  };
+  }, []);
 
-  const requestLocationPermission = async () => {
+  const requestLocationPermission = useCallback(async () => {
     if (isCheckingLocation) return;
     setIsCheckingLocation(true);
     try {
@@ -144,18 +172,18 @@ function AnalyticsPage() {
     } finally {
       setIsCheckingLocation(false);
     }
-  };
+  }, [isCheckingLocation, handleLocationSelect]);
 
-  const triggerHeaderLocationSearch = () => {
+  const triggerHeaderLocationSearch = useCallback(() => {
     window.dispatchEvent(new CustomEvent('openLocationSearch'));
-  };
+  }, []);
 
-  const handleSearchOptionClick = () => {
+  const handleSearchOptionClick = useCallback(() => {
     triggerHeaderLocationSearch();
     setShowLocationRequiredModal(false);
-  };
+  }, [triggerHeaderLocationSearch]);
 
-  const handleTrackLocationClick = async (checkPermissionOnly = false) => {
+  const handleTrackLocationClick = useCallback(async (checkPermissionOnly = false) => {
     if (isCheckingLocation) return;
     setIsCheckingLocation(true);
     setShowLocationRequiredModal(false);
@@ -247,7 +275,7 @@ function AnalyticsPage() {
       triggerHeaderLocationSearch();
       setIsCheckingLocation(false);
     }
-  };
+  }, [isCheckingLocation, watchId, scannedLocation, handleLocationSelect, router, triggerHeaderLocationSearch]);
 
   useEffect(() => {
     if (status === 'loading') return;
@@ -284,14 +312,20 @@ function AnalyticsPage() {
         navigator.geolocation.clearWatch(watchId);
       }
     };
-  }, [router, watchId, scannedLocation, status, isCheckingLocation]);
+  }, [router, watchId, handleLocationSelect, status]);
 
-  const handleViewAnalyticsData = () => {
+  const handleViewAnalyticsData = useCallback(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const lat = urlParams.get('lat');
     const lon = urlParams.get('lon');
     router.push(`/analytics/data?lat=${lat}&lon=${lon}`);
-  };
+  }, [router]);
+
+  const handleRefresh = useCallback(() => {
+    window.location.reload();
+  }, []);
+
+  const allComponentsLoaded = Object.values(loadingStates).every(state => state === true);
 
   return (
     <div className='mt-16 p-1 pb-20 md:pb-1'>
@@ -303,10 +337,7 @@ function AnalyticsPage() {
           icon={icon}
           onLocationSelect={handleLocationSelect}
         />
-        <Button className='mt-4'
-          onClick={() => (
-            window.location.reload()
-          )}>
+        <Button className='mt-4' onClick={handleRefresh}>
           <BarChart2 />Analyse
         </Button>
       </div>
@@ -327,29 +358,28 @@ function AnalyticsPage() {
           </div>
         </>
       )}
-      {!cacheSaved && (
-        (!locationDetailsLoaded || !populationLoaded || !weatherLoaded || !soilLoaded || !soilPropertiesLoaded) ? (
-          <div className='mt-8 text-center text-yellow-700 font-semibold'>
-            {`Please wait, collecting: `}
-            {(!locationDetailsLoaded ? 'Location Details ' : '')}
-            {(!populationLoaded ? 'Population ' : '')}
-            {(!weatherLoaded ? 'Weather ' : '')}
-            {(!soilLoaded ? 'Soil Classification ' : '')}
-            {(!soilPropertiesLoaded ? 'Soil Properties ' : '')}
-          </div>
-        ) : null
+      
+      {!cacheSaved && scannedLocation && !allComponentsLoaded && (
+        <div className='mt-8 text-center text-yellow-700 font-semibold'>
+          {`Please wait, collecting: `}
+          {(!loadingStates.locationDetails ? 'Location Details ' : '')}
+          {(!loadingStates.population ? 'Population ' : '')}
+          {(!loadingStates.weather ? 'Weather ' : '')}
+          {(!loadingStates.soil ? 'Soil Classification ' : '')}
+          {(!loadingStates.soilProperties ? 'Soil Properties ' : '')}
+        </div>
       )}
 
-        <div className='mt-8 flex flex-col sm:flex-row gap-3 justify-center items-center'>
-          <Button onClick={handleViewAnalyticsData} className="w-full sm:w-auto">
-            <Database className="w-4 h-4 mr-2" />
-            View Analytics Data
-          </Button>
-          <Button onClick={() => window.location.href = '/Experts'} className="w-full sm:w-auto">
-            Get Expert Advice
-          </Button>
-        </div>
-      
+      <div className='mt-8 flex flex-col sm:flex-row gap-3 justify-center items-center'>
+        <Button onClick={handleViewAnalyticsData} className="w-full sm:w-auto">
+          <Database className="w-4 h-4 mr-2" />
+          View Analytics Data
+        </Button>
+        <Button onClick={() => window.location.href = '/Experts'} className="w-full sm:w-auto">
+          Get Expert Advice
+        </Button>
+      </div>
+
       {showLocationRequiredModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full mx-4">
