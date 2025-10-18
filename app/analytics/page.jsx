@@ -340,7 +340,6 @@ function AnalyticsPage() {
         ) : null
       )}
 
-      {cacheSaved && (
         <div className='mt-8 flex flex-col sm:flex-row gap-3 justify-center items-center'>
           <Button onClick={handleViewAnalyticsData} className="w-full sm:w-auto">
             <Database className="w-4 h-4 mr-2" />
@@ -350,8 +349,7 @@ function AnalyticsPage() {
             Get Expert Advice
           </Button>
         </div>
-      )}
-
+      
       {showLocationRequiredModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full mx-4">
