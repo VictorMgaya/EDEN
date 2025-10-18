@@ -17,12 +17,12 @@ const AnalyticsDataVisualization = () => {
     const data = getCachedOverview(lat, lon);
     setOverview(data);
     
-    // Extract text summary from cached data
-    const summary = extractTextSummary(data);
+    // Extract detailed text summary from cached data
+    const summary = extractDetailedTextSummary(data);
     setTextSummary(summary);
   }, []);
 
-  const extractTextSummary = (data) => {
+  const extractDetailedTextSummary = (data) => {
     const summaryItems = [];
     
     Object.entries(data).forEach(([key, value]) => {
@@ -33,47 +33,58 @@ const AnalyticsDataVisualization = () => {
       
       let content = '';
       
-      // Handle different data types
-      if (Array.isArray(value)) {
-        // For weather array
-        if (key.toLowerCase().includes('weather')) {
-          const temps = value.map(d => d.main?.temp).filter(Boolean);
-          const avgTemp = (temps.reduce((a, b) => a + b, 0) / temps.length).toFixed(1);
-          const conditions = value.map(d => d.weather?.[0]?.main).filter(Boolean);
-          const uniqueConditions = [...new Set(conditions)];
-          content = `${value.length} forecasts | Average temp: ${avgTemp}°C | Conditions: ${uniqueConditions.join(', ')}`;
-        }
-        // For soil classification array
-        else if (key.toLowerCase().includes('soil') && value[0]?.soilClass) {
-          const topSoils = value.slice(0, 3).map(s => `${s.soilClass} (${s.probability}%)`);
-          content = `Top soil types: ${topSoils.join(', ')}`;
-        }
-        // For soil properties array
-        else if (value[0]?.name && value[0]?.depths) {
-          const properties = value.map(p => p.name);
-          content = `${value.length} soil properties measured: ${properties.slice(0, 5).join(', ')}${properties.length > 5 ? '...' : ''}`;
-        }
-        // Generic array
-        else {
-          content = `${value.length} data points`;
-        }
-      } 
+      // Handle weather data
+      if (Array.isArray(value) && value[0]?.weather) {
+        const weatherDetails = value.map((day, index) => {
+          const date = new Date(day.dt * 1000).toLocaleDateString();
+          const temp = day.main?.temp?.toFixed(1);
+          const humidity = day.main?.humidity;
+          const condition = day.weather?.[0]?.description || 'N/A';
+          const windSpeed = day.main?.wind?.speed || day.wind?.speed || 'N/A';
+          return `Day ${index + 1} (${date}): ${temp}°C, ${condition}, Humidity: ${humidity}%, Wind: ${windSpeed} m/s`;
+        }).join('\n');
+        content = weatherDetails;
+      }
+      // Handle population data
+      else if (value?.populationHistory && value?.ageGenderData) {
+        let popText = 'Population History:\n';
+        value.populationHistory.forEach(year => {
+          popText += `  ${year.year}: ${year.population} people/100m², Density: ${year.density}, Growth Rate: ${year.growthRate.toFixed(2)}%\n`;
+        });
+        
+        popText += '\nAge & Gender Distribution (Year ' + value.ageGenderData.year + '):\n';
+        value.ageGenderData.ageData.forEach(age => {
+          popText += `  ${age.age}: Male ${age.male}, Female ${age.female}\n`;
+        });
+        content = popText;
+      }
+      // Handle soil classification array
+      else if (Array.isArray(value) && value[0]?.soilClass) {
+        const soilText = value.map(soil => 
+          `${soil.soilClass}: ${soil.probability}% probability`
+        ).join('\n');
+        content = soilText;
+      }
+      // Handle soil properties array
+      else if (Array.isArray(value) && value[0]?.name && value[0]?.depths) {
+        let propsText = '';
+        value.forEach(prop => {
+          propsText += `\n${prop.name.toUpperCase()} (${prop.unit}):\n`;
+          prop.depths.forEach(depth => {
+            propsText += `  ${depth.depth}: Mean ${depth.mean}, Q05 ${depth.q05}, Q95 ${depth.q95}\n`;
+          });
+        });
+        content = propsText;
+      }
+      // Generic array
+      else if (Array.isArray(value)) {
+        content = JSON.stringify(value, null, 2);
+      }
+      // Generic object
       else if (typeof value === 'object' && value !== null) {
-        // For population data
-        if (value.populationHistory && value.ageGenderData) {
-          const latestPop = value.populationHistory[value.populationHistory.length - 1];
-          const year = latestPop?.year || 'N/A';
-          const population = latestPop?.population || 'N/A';
-          const growthRate = latestPop?.growthRate?.toFixed(2) || 'N/A';
-          const ageGroups = value.ageGenderData?.ageData?.length || 0;
-          content = `Latest (${year}): ${population} people per 100m² | Growth rate: ${growthRate}% | ${ageGroups} age groups tracked`;
-        }
-        // Generic object
-        else {
-          const keys = Object.keys(value).slice(0, 3);
-          content = `Contains: ${keys.join(', ')}${Object.keys(value).length > 3 ? '...' : ''}`;
-        }
-      } 
+        content = JSON.stringify(value, null, 2);
+      }
+      // Primitive values
       else {
         content = String(value);
       }
@@ -86,28 +97,28 @@ const AnalyticsDataVisualization = () => {
 
   return (
     <div className="space-y-6">
-      {/* Text Summary Section - Display on top */}
+      {/* Detailed Text Summary Section */}
       {textSummary.length > 0 && (
         <div className="bg-blue-50 rounded-2xl p-6 border border-blue-200">
           <h2 className="text-xl font-bold text-gray-900 mb-4 pb-3 border-b-2 border-blue-300">
-            Analytics Summary
+            Analytics Summary - Complete Data
           </h2>
           <div className="space-y-4">
             {textSummary.map((item, index) => (
               <div key={index} className="bg-white rounded-lg p-4 border border-blue-100">
-                <h3 className="text-base font-semibold text-gray-900 mb-2">
+                <h3 className="text-base font-semibold text-gray-900 mb-3">
                   {item.heading}
                 </h3>
-                <p className="text-sm text-gray-700 leading-relaxed">
+                <pre className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap font-sans">
                   {item.content}
-                </p>
+                </pre>
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {/* Original Component - Actual Data View */}
+      {/* Original Component - JSON Data View */}
       <AnalyticsCachePreview />
     </div>
   );
