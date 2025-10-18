@@ -2,8 +2,9 @@
 
 import React, { useEffect, useState } from 'react';
 import { getCachedOverview } from '@/utils/dataCache/analyticsCache';
+import AnalyticsCachePreview from '@/components/AnalyticsCachePreview';
 
-const AnalyticsCachePreview = () => {
+const AnalyticsDataVisualization = () => {
   const [overview, setOverview] = useState({});
   const [textSummary, setTextSummary] = useState([]);
 
@@ -51,13 +52,6 @@ const AnalyticsCachePreview = () => {
     return summaryItems;
   };
 
-  const formatValue = (value) => {
-    if (typeof value === 'object' && value !== null) {
-      return JSON.stringify(value, null, 2);
-    }
-    return String(value);
-  };
-
   return (
     <div className="space-y-8">
       {/* Text Summary Section - Display on top */}
@@ -81,30 +75,12 @@ const AnalyticsCachePreview = () => {
         </div>
       )}
 
-      {/* Original Full Data Display */}
-      {Object.keys(overview).length === 0 ? (
-        <p className="text-sm text-gray-500 text-center py-8">No cached data available for the selected location.</p>
-      ) : (
-        <div className="space-y-5">
-          <h2 className="text-xl font-bold text-gray-900 mb-4 pb-3 border-b-2 border-gray-300">
-            Detailed Cached Data
-          </h2>
-          {Object.entries(overview).map(([key, value]) => (
-            <div key={key} className="border-b border-gray-200 pb-5 last:border-b-0 last:pb-0">
-              <h3 className="text-lg font-semibold text-gray-900 mb-3 capitalize">
-                {key.replace(/([A-Z])/g, ' $1').trim()}
-              </h3>
-              <div className="bg-gray-50 rounded-lg p-4 border border-gray-100">
-                <pre className="text-sm text-gray-700 font-mono whitespace-pre-wrap break-words leading-relaxed">
-                  {formatValue(value)}
-                </pre>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+      {/* Original Component - Actual Data View */}
+      <div className="mt-6">
+        <AnalyticsCachePreview />
+      </div>
     </div>
   );
 };
 
-export default AnalyticsCachePreview;
+export default AnalyticsDataVisualization;
