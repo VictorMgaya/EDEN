@@ -44,7 +44,6 @@ function AnalyticsPage() {
   const [locationDetailsLoaded, setLocationDetailsLoaded] = useState(false);
   const [populationLoaded, setPopulationLoaded] = useState(false);
   const [weatherLoaded, setWeatherLoaded] = useState(false);
-  const [oceanDepthLoaded, setOceanDepthLoaded] = useState(false);
   const [soilLoaded, setSoilLoaded] = useState(false);
   const [soilPropertiesLoaded, setSoilPropertiesLoaded] = useState(false);
   const [isCheckingLocation, setIsCheckingLocation] = useState(false);
@@ -53,7 +52,6 @@ function AnalyticsPage() {
   const handleLocationDetailsLoaded = () => setLocationDetailsLoaded(true);
   const handlePopulationLoaded = () => setPopulationLoaded(true);
   const handleWeatherLoaded = () => setWeatherLoaded(true);
-  const handleOceanDepthLoaded = () => setOceanDepthLoaded(true);
   const handleSoilLoaded = () => setSoilLoaded(true);
   const handleSoilPropertiesLoaded = () => setSoilPropertiesLoaded(true);
 
@@ -61,7 +59,7 @@ function AnalyticsPage() {
 
   // Cache only when all analysis components are fully rendered
   useEffect(() => {
-    if (!cacheSaved && locationDetailsLoaded && populationLoaded && weatherLoaded && oceanDepthLoaded && soilLoaded && soilPropertiesLoaded) {
+    if (!cacheSaved && locationDetailsLoaded && populationLoaded && weatherLoaded && soilLoaded && soilPropertiesLoaded) {
       setTimeout(() => {
         const container = document.querySelector('.mt-16');
         if (container) {
@@ -86,7 +84,7 @@ function AnalyticsPage() {
         }
       }, 1000);
     }
-  }, [locationDetailsLoaded, populationLoaded, weatherLoaded, oceanDepthLoaded, soilLoaded, soilPropertiesLoaded, cacheSaved, scannedLocation, zoom]);
+  }, [locationDetailsLoaded, populationLoaded, weatherLoaded, soilLoaded, soilPropertiesLoaded, cacheSaved, scannedLocation, zoom]);
 
   const handleLocationSelect = (location) => {
     setScannedLocation(location);
@@ -330,13 +328,12 @@ function AnalyticsPage() {
       {!cacheSaved && (
         (!locationDetailsLoaded || !populationLoaded || !weatherLoaded || !soilLoaded || !soilPropertiesLoaded) ? (
           <div className='mt-8 text-center text-yellow-700 font-semibold'>
-            {`please Waiting for: `}
+            {`Please wait, collecting: `}
             {(!locationDetailsLoaded ? 'Location Details ' : '')}
             {(!populationLoaded ? 'Population ' : '')}
             {(!weatherLoaded ? 'Weather ' : '')}
             {(!soilLoaded ? 'Soil Classification ' : '')}
             {(!soilPropertiesLoaded ? 'Soil Properties ' : '')}
-            {`Data to be collected and loaded...`}
           </div>
         ) : null
       )}
