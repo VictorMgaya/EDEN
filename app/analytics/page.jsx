@@ -4,7 +4,6 @@ import React, { useEffect, useState, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { Button } from '@/components/ui/button';
 import { BarChart2, AlertTriangle, Search, Navigation } from 'lucide-react';
-import { saveAnalyticsCache } from '@/utils/analyticsCache';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
@@ -315,9 +314,6 @@ function AnalyticsPage() {
           icon={icon}
           onLocationSelect={handleLocationSelect}
         />
-        <div className="mt-4">
-          <AnalyticsCachePreview />
-        </div>
         <Button className='mt-4'
           onClick={() => (
             window.location.reload()
