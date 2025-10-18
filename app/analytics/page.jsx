@@ -60,18 +60,18 @@ function AnalyticsPage() {
   // Cache only when all analysis components are fully rendered
   useEffect(() => {
     if (!cacheSaved && locationDetailsLoaded && populationLoaded && weatherLoaded && soilLoaded && soilPropertiesLoaded) {
-      setTimeout(() => {
-        const container = document.querySelector('.mt-16');
-        if (container) {
+      // Use setTimeout to prevent blocking the UI
+      const timer = setTimeout(() => {
+        try {
           console.log('🔄 Starting analytics cache save...');
-          const pageHtml = container.outerHTML;
-          console.log('📄 HTML captured, length:', pageHtml.length);
+          
+          // Instead of capturing HTML, just save the data
           const success = saveAnalyticsCache({
             scannedLocation,
             zoom,
             timestamp: new Date().toISOString(),
-            pageHtml
           });
+          
           console.log('💾 Cache saved:', success);
           if (success) {
             setCacheSaved(true);
@@ -79,10 +79,12 @@ function AnalyticsPage() {
           } else {
             console.error('❌ Failed to save analytics cache');
           }
-        } else {
-          console.error('❌ Container not found for caching');
+        } catch (error) {
+          console.error('❌ Cache error:', error);
         }
-      }, 1000);
+      }, 500); // Reduced delay
+      
+      return () => clearTimeout(timer);
     }
   }, [locationDetailsLoaded, populationLoaded, weatherLoaded, soilLoaded, soilPropertiesLoaded, cacheSaved, scannedLocation, zoom]);
 
@@ -338,6 +340,7 @@ function AnalyticsPage() {
         ) : null
       )}
 
+      {cacheSaved && (
         <div className='mt-8 flex flex-col sm:flex-row gap-3 justify-center items-center'>
           <Button onClick={handleViewAnalyticsData} className="w-full sm:w-auto">
             <Database className="w-4 h-4 mr-2" />
@@ -347,6 +350,7 @@ function AnalyticsPage() {
             Get Expert Advice
           </Button>
         </div>
+      )}
 
       {showLocationRequiredModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
